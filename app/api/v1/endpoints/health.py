@@ -13,7 +13,7 @@ import logging
 
 from app.database import check_database_health, db_performance_monitor
 from app.core.cache_manager import check_cache_health
-from app.core.ai_client import get_ai_client
+from app.core.ai_client import get_ai_service
 from app.config import settings
 
 logger = logging.getLogger(__name__)
