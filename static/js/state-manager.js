@@ -55,7 +55,7 @@ class StateManager {
     
     init() {
         this.loadSettings();
-        this.setupWebSocket();
+        // this.setupWebSocket(); // Disabled until backend WebSocket endpoint is ready
         this.setupAutoRefresh();
         this.setupEventListeners();
     }

@@ -105,15 +105,12 @@ function initializeDashboardComponents() {
     });
     loadDashboardData();
     
-    // Initialize all charts after a short delay to ensure DOM is ready
-    setTimeout(() => {
-        dashboardLogger.log('INFO', '📈 Starting initializeAllCharts...', {
-            'step': 'chart_initialization',
-            'delay_ms': 100,
-            'timestamp': new Date().toISOString()
-        });
-        initializeAllCharts();
-    }, 100);
+    // Initialize charts immediately - no delay needed with proper DOM checks
+    dashboardLogger.log('INFO', '📈 Starting initializeAllCharts...', {
+        'step': 'chart_initialization',
+        'timestamp': new Date().toISOString()
+    });
+    initializeAllCharts();
     
     // Setup event listeners
     dashboardLogger.log('INFO', '🎧 Setting up event listeners...', {
@@ -177,7 +174,7 @@ async function loadDashboardData() {
             { key: 'resourceUtil', url: '/resources/analytics/workload', fallback: [] },
             { key: 'riskOverview', url: '/reports/risks', fallback: [] },
             { key: 'recentActivity', url: '/reports/project-summary', fallback: [] },
-            { key: 'aiInsights', url: '/ai-insights/insights', fallback: { insights: [] } }
+            { key: 'aiInsights', url: '/ai/insights', fallback: { insights: [] } }
         ];
         
         // Load data with individual error handling and retry logic
@@ -1860,16 +1857,28 @@ function setupRealTimeUpdates() {
         isRealTimeEnabled = true;
     }
     
-    // Clear any existing interval to prevent multiple intervals
+    // Clear ALL existing intervals to prevent conflicts
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
     }
     
-    // Also clear any global interval
+    // Clear global dashboard interval
     if (window.dashboardRefreshInterval) {
         clearInterval(window.dashboardRefreshInterval);
         window.dashboardRefreshInterval = null;
+    }
+    
+    // Clear state manager interval
+    if (window.stateManager?.syncInterval) {
+        clearInterval(window.stateManager.syncInterval);
+        window.stateManager.syncInterval = null;
+    }
+    
+    // Clear sync manager interval
+    if (window.syncManager?.syncInterval) {
+        clearInterval(window.syncManager.syncInterval);
+        window.syncManager.syncInterval = null;
     }
     
     if (isRealTimeEnabled) {
