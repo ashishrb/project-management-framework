@@ -5,8 +5,7 @@ let dashboardCharts = {};
 let dashboardData = {};
 let refreshInterval = null;
 
-// Initialize dashboard logger
-const dashboardLogger = new FrontendLogger('dashboard', 'DEBUG');
+// Dashboard logger is initialized in logging.js
 var isRealTimeEnabled = true; // Use var to avoid temporal dead zone issues
 
 // Initialize dashboard
