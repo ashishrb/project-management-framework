@@ -12,7 +12,10 @@ from app.api.v1.endpoints import (
     ai_services,
     analytics,
     user,
-    risks
+    risks,
+    ai,
+    ai_dashboard,
+    performance
 )
 
 api_router = APIRouter()
@@ -27,3 +30,6 @@ api_router.include_router(ai_services.router, prefix="/ai", tags=["ai-services"]
 api_router.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 api_router.include_router(user.router, prefix="/user", tags=["user"])
 api_router.include_router(risks.router, prefix="/risks", tags=["risks"])
+api_router.include_router(ai.router, prefix="/ai", tags=["ai"])
+api_router.include_router(ai_dashboard.router, prefix="/ai-dashboard", tags=["ai-dashboard"])
+api_router.include_router(performance.router, prefix="/performance", tags=["performance"])
