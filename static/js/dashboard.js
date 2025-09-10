@@ -7,7 +7,7 @@ let refreshInterval = null;
 
 // Initialize dashboard logger
 const dashboardLogger = new FrontendLogger('dashboard', 'DEBUG');
-let isRealTimeEnabled = true;
+var isRealTimeEnabled = true; // Use var to avoid temporal dead zone issues
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
@@ -1077,6 +1077,11 @@ function drillDownToBacklogs(functionName, priority) {
 
 // Setup real-time updates
 function setupRealTimeUpdates() {
+    // Safety check to prevent initialization errors
+    if (typeof isRealTimeEnabled === 'undefined') {
+        isRealTimeEnabled = true;
+    }
+    
     if (isRealTimeEnabled) {
         refreshInterval = setInterval(() => {
             loadDashboardData();
