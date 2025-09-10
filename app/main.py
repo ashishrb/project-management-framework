@@ -64,10 +64,11 @@ app.include_router(websocket_router, prefix="/ws")
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Root endpoint
-@app.get("/")
-async def root():
-    """Root endpoint with API information"""
+# API information endpoint
+# NOTE: moved from root path to avoid conflicting with dashboard view routes
+@app.get("/api")
+async def api_info():
+    """Return API metadata and documentation links"""
     return {
         "message": "GenAI Metrics Dashboard API",
         "version": settings.VERSION,

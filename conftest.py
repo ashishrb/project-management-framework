@@ -4,7 +4,6 @@ Pytest Configuration and Fixtures for Phase 8 Testing
 
 import asyncio
 import pytest
-import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
