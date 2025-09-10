@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+@router.get("", response_model=List[FeatureResponse])
 @router.get("/", response_model=List[FeatureResponse])
 def get_features(
     skip: int = Query(0, ge=0),

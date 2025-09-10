@@ -205,6 +205,9 @@ class AIMonitoringRequest(BaseModel):
     model_id: Optional[str] = None
     time_period: str = "daily"  # hourly, daily, weekly, monthly
     include_details: bool = True
+    
+    class Config:
+        protected_namespaces = ()
 
 class AIMonitoringResponse(BaseModel):
     """AI monitoring response"""

@@ -116,6 +116,9 @@ class SmartAnalysisResponse(BaseModel):
     model_used: str
     processing_time: float
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class PredictiveAnalyticsRequest(BaseModel):
@@ -135,6 +138,9 @@ class PredictiveAnalyticsResponse(BaseModel):
     model_used: str
     processing_time: float
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class IntelligentRecommendationRequest(BaseModel):
@@ -155,6 +161,9 @@ class IntelligentRecommendationResponse(BaseModel):
     model_used: str
     processing_time: float
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class AutomationWorkflowRequest(BaseModel):
@@ -195,6 +204,9 @@ class KnowledgeQueryResponse(BaseModel):
     model_used: str
     processing_time: float
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 # Intelligent Dashboard Endpoints

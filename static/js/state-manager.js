@@ -39,7 +39,7 @@ class StateManager {
             
             // Settings
             settings: {
-                autoRefresh: true,
+                autoRefresh: false, // DISABLED BY DEFAULT - Manual loading only
                 refreshInterval: 30000, // 30 seconds
                 notifications: true,
                 theme: 'light'
@@ -428,11 +428,13 @@ class StateManager {
     // ==================== AUTO REFRESH ====================
     
     setupAutoRefresh() {
-        if (this.state.settings.autoRefresh) {
-            this.syncInterval = setInterval(() => {
-                this.refreshAllData();
-            }, this.state.settings.refreshInterval);
-        }
+        // DISABLED AUTO-REFRESH - Manual loading only
+        // if (this.state.settings.autoRefresh) {
+        //     this.syncInterval = setInterval(() => {
+        //         this.refreshAllData();
+        //     }, this.state.settings.refreshInterval);
+        // }
+        console.log('⏸️ Auto-refresh disabled - Manual loading only');
     }
     
     async refreshAllData() {
@@ -455,13 +457,13 @@ class StateManager {
     // ==================== EVENT LISTENERS ====================
     
     setupEventListeners() {
-        // Handle page visibility changes
+        // Handle page visibility changes - DISABLED AUTO-REFRESH
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.setState('syncStatus', 'paused');
             } else {
                 this.setState('syncStatus', 'connected');
-                this.refreshAllData();
+                // this.refreshAllData(); // DISABLED - Manual loading only
             }
         });
         

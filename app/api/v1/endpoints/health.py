@@ -69,11 +69,11 @@ class HealthChecker:
     async def check_ai_services(self) -> Dict[str, Any]:
         """Check AI services health"""
         try:
-            ai_client = get_ai_client()
+            ai_service = await get_ai_service()
             start_time = time.time()
             
             # Test AI service connectivity
-            test_result = await ai_client.test_connection()
+            test_result = await ai_service.ollama_client.test_connection()
             response_time = time.time() - start_time
             
             return {
@@ -215,7 +215,8 @@ class HealthChecker:
 # Global health checker instance
 health_checker = HealthChecker()
 
-@router.get("/health", summary="Basic Health Check")
+@router.get("", summary="Basic Health Check")
+@router.get("/", summary="Basic Health Check")
 async def basic_health_check():
     """Basic health check endpoint"""
     return {
@@ -225,32 +226,32 @@ async def basic_health_check():
         "version": settings.VERSION
     }
 
-@router.get("/health/detailed", summary="Detailed Health Check")
+@router.get("/detailed", summary="Detailed Health Check")
 async def detailed_health_check():
     """Detailed health check with all system components"""
     return await health_checker.run_all_checks()
 
-@router.get("/health/database", summary="Database Health Check")
+@router.get("/database", summary="Database Health Check")
 async def database_health_check():
     """Database-specific health check"""
     return await health_checker.check_database()
 
-@router.get("/health/cache", summary="Cache Health Check")
+@router.get("/cache", summary="Cache Health Check")
 async def cache_health_check():
     """Cache-specific health check"""
     return await health_checker.check_cache()
 
-@router.get("/health/ai-services", summary="AI Services Health Check")
+@router.get("/ai-services", summary="AI Services Health Check")
 async def ai_services_health_check():
     """AI services-specific health check"""
     return await health_checker.check_ai_services()
 
-@router.get("/health/system", summary="System Resources Health Check")
+@router.get("/system", summary="System Resources Health Check")
 async def system_health_check():
     """System resources health check"""
     return await health_checker.check_system_resources()
 
-@router.get("/health/ready", summary="Readiness Check")
+@router.get("/ready", summary="Readiness Check")
 async def readiness_check():
     """Kubernetes readiness probe"""
     health_result = await health_checker.run_all_checks()
@@ -266,7 +267,7 @@ async def readiness_check():
             content={"status": "not ready", "details": health_result}
         )
 
-@router.get("/health/live", summary="Liveness Check")
+@router.get("/live", summary="Liveness Check")
 async def liveness_check():
     """Kubernetes liveness probe"""
     return {
@@ -275,7 +276,7 @@ async def liveness_check():
         "uptime_seconds": (datetime.utcnow() - health_checker.start_time).total_seconds()
     }
 
-@router.get("/health/metrics", summary="Health Metrics")
+@router.get("/metrics", summary="Health Metrics")
 async def health_metrics():
     """Health metrics for monitoring"""
     db_stats = db_performance_monitor.get_stats()

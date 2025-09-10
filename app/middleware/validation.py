@@ -185,19 +185,35 @@ class InputValidator:
         
         return False
     
-    def check_command_injection(self, value: str) -> bool:
+    def check_command_injection(self, value: str, is_frontend_log: bool = False) -> bool:
         """Check for command injection patterns"""
         if not isinstance(value, str):
             return False
         
-        for pattern in self.command_patterns:
-            if re.search(pattern, value, re.IGNORECASE):
-                logger.warning(f"Potential command injection detected: {pattern}")
-                return True
+        # For frontend logs, be more permissive with user agent and function names
+        if is_frontend_log:
+            # Only check for actual command injection patterns, not user agent characters
+            dangerous_patterns = [
+                r"\b(cat|ls|pwd|whoami|id|uname|ps|netstat|ifconfig)\b",
+                r"\b(wget|curl|nc|telnet|ssh|ftp)\b",
+                r"\b(rm|mv|cp|chmod|chown)\b",
+                r"`[^`]*`",  # Backticks for command execution
+                r"\$\{[^}]*\}",  # Variable substitution
+            ]
+            for pattern in dangerous_patterns:
+                if re.search(pattern, value, re.IGNORECASE):
+                    logger.warning(f"Potential command injection detected: {pattern}")
+                    return True
+        else:
+            # Original strict validation for other endpoints
+            for pattern in self.command_patterns:
+                if re.search(pattern, value, re.IGNORECASE):
+                    logger.warning(f"Potential command injection detected: {pattern}")
+                    return True
         
         return False
     
-    def validate_and_sanitize_input(self, data: Any, field_name: str = None) -> Any:
+    def validate_and_sanitize_input(self, data: Any, field_name: str = None, is_frontend_log: bool = False) -> Any:
         """Validate and sanitize input data recursively"""
         if isinstance(data, str):
             # Check for malicious patterns
@@ -219,7 +235,7 @@ class InputValidator:
                     detail=f"Invalid input detected in field: {field_name or 'unknown'}"
                 )
             
-            if self.check_command_injection(data):
+            if self.check_command_injection(data, is_frontend_log):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid input detected in field: {field_name or 'unknown'}"
@@ -233,7 +249,7 @@ class InputValidator:
             sanitized_dict = {}
             for key, value in data.items():
                 sanitized_key = self.sanitize_string(str(key), max_length=100)
-                sanitized_value = self.validate_and_sanitize_input(value, f"{field_name}.{key}" if field_name else key)
+                sanitized_value = self.validate_and_sanitize_input(value, f"{field_name}.{key}" if field_name else key, is_frontend_log)
                 sanitized_dict[sanitized_key] = sanitized_value
             return sanitized_dict
         
@@ -241,7 +257,7 @@ class InputValidator:
             # Recursively validate list
             sanitized_list = []
             for i, item in enumerate(data):
-                sanitized_item = self.validate_and_sanitize_input(item, f"{field_name}[{i}]" if field_name else f"item_{i}")
+                sanitized_item = self.validate_and_sanitize_input(item, f"{field_name}[{i}]" if field_name else f"item_{i}", is_frontend_log)
                 sanitized_list.append(sanitized_item)
             return sanitized_list
         
@@ -321,10 +337,12 @@ async def input_validation_middleware(request: Request, call_next):
                 # Validate JSON body
                 try:
                     body = await request.json()
-                    validated_body = input_validator.validate_and_sanitize_input(body, "request_body")
+                    # Check if this is a frontend logging endpoint
+                    is_frontend_log = request.url.path.startswith("/api/v1/logs/frontend")
+                    validated_body = input_validator.validate_and_sanitize_input(body, "request_body", is_frontend_log)
                     
-                    # Replace request body with validated data
-                    request._json = validated_body
+                    # Store validated body for the endpoint to use
+                    request.state.validated_body = validated_body
                 except json.JSONDecodeError:
                     logger.warning("Invalid JSON in request body")
                     return JSONResponse(

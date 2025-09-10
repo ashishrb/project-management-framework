@@ -98,6 +98,14 @@ class OllamaClient:
         """Async context manager exit."""
         await self.client.aclose()
     
+    async def test_connection(self) -> bool:
+        """Test connection to Ollama service."""
+        try:
+            response = await self.client.get(f"{self.base_url}/api/tags")
+            return response.status_code == 200
+        except Exception:
+            return False
+    
     async def check_health(self) -> Dict[str, Any]:
         """Check Ollama service health."""
         try:

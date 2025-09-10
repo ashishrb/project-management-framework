@@ -90,6 +90,9 @@ class RAGResponseModel(BaseModel):
     tokens_used: int
     response_time: float
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class SummaryRequest(BaseModel):
@@ -109,6 +112,9 @@ class SummaryResponse(BaseModel):
     model_used: str
     tokens_used: int
     timestamp: datetime
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class CollectionStatsResponse(BaseModel):

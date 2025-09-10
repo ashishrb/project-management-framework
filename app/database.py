@@ -2,7 +2,7 @@
 Database configuration and connection management for GenAI Metrics Dashboard
 Optimized for performance with connection pooling and monitoring
 """
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
@@ -106,7 +106,7 @@ def check_database_health() -> dict:
     try:
         # Test connection
         with engine.connect() as connection:
-            result = connection.execute("SELECT 1").fetchone()
+            result = connection.execute(text("SELECT 1")).fetchone()
             
         # Get pool status
         pool = engine.pool
@@ -115,7 +115,7 @@ def check_database_health() -> dict:
             "checked_in": pool.checkedin(),
             "checked_out": pool.checkedout(),
             "overflow": pool.overflow(),
-            "invalid": pool.invalid()
+            "invalid": 0  # QueuePool doesn't have invalid() method
         }
         
         return {

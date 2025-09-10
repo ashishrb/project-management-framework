@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
@@ -13,36 +13,30 @@ class FrontendLogEntry(BaseModel):
     level: str
     message: str
     module: str
-    timestamp: str
-    url: str
-    userAgent: str
-    stackTrace: Optional[str] = None
+    timestamp: Optional[str] = None
+    url: Optional[str] = None
+    user_agent: Optional[str] = None
+    function: Optional[str] = None
+    data: Optional[Dict[str, Any]] = None
+    stack_trace: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
 
 class FrontendLogRequest(BaseModel):
     logs: List[FrontendLogEntry]
 
 @router.post("/frontend")
-async def receive_frontend_logs(request_data: dict):
+async def receive_frontend_logs(request: Request):
     """
     Receive and process frontend logs
     """
     try:
-        # Handle both single log entry and batch log entries
-        if "logs" in request_data:
-            # Batch format: {"logs": [log1, log2, ...]}
-            log_entries = request_data["logs"]
-        else:
-            # Single log entry format: {level, message, module, ...}
-            log_entries = [request_data]
+        # Get validated body from middleware
+        request_data = getattr(request.state, 'validated_body', {})
+        logs = request_data.get("logs", [])
         
-        logger.info(f"🔍 [DEBUG] Received {len(log_entries)} frontend log entries", extra={
-            "log_entries_count": len(log_entries),
-            "request_data_keys": list(request_data.keys()) if request_data else [],
-            "timestamp": datetime.now().isoformat()
-        })
+        logger.info(f"🔍 [DEBUG] Received {len(logs)} frontend log entries")
         
-        for log_entry in log_entries:
+        for log_entry in logs:
             # Extract log data with defaults
             level = log_entry.get("level", "INFO")
             message = log_entry.get("message", "No message")
@@ -50,7 +44,7 @@ async def receive_frontend_logs(request_data: dict):
             function_name = log_entry.get("function", "unknown")
             data = log_entry.get("data")
             url = log_entry.get("url", "unknown")
-            user_agent = log_entry.get("userAgent", "unknown")
+            user_agent = log_entry.get("user_agent", "unknown")
             
             # Convert frontend log level to Python logging level
             log_level = getattr(logging, level.upper(), logging.INFO)
@@ -71,7 +65,7 @@ async def receive_frontend_logs(request_data: dict):
             # Log the entry
             logger.log(log_level, log_message)
         
-        return {"status": "success", "message": f"Processed {len(log_entries)} log entries"}
+        return {"status": "success", "message": f"Processed {len(logs)} log entries"}
         
     except Exception as e:
         logger.error(f"Error processing frontend logs: {str(e)}")

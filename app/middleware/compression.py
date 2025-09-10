@@ -59,6 +59,11 @@ class CompressionMiddleware:
     def compress_response(self, response: Response) -> Response:
         """Compress response content"""
         try:
+            # Skip compression for StreamingResponse and other special response types
+            if not hasattr(response, 'body'):
+                logger.debug("Skipping compression for response without body attribute")
+                return response
+            
             # Get response body
             body = response.body
             

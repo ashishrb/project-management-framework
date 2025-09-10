@@ -40,8 +40,8 @@ class RateLimiter:
                 socket_timeout=5,
                 retry_on_timeout=True
             )
-            # Test connection
-            await self.redis_client.ping()
+            # Test connection (synchronous ping)
+            self.redis_client.ping()
             logger.info("✅ Rate limiter Redis connection established")
         except Exception as e:
             logger.error(f"❌ Failed to connect to Redis for rate limiting: {e}")
@@ -121,7 +121,7 @@ class RateLimiter:
             pipe.expire(key, limits["window"])
             
             # Execute pipeline
-            results = await pipe.execute()
+            results = pipe.execute()
             
             current_requests = results[1]
             
@@ -189,10 +189,11 @@ async def rate_limit_middleware(request: Request, call_next):
     # Add rate limit headers to response
     response = await call_next(request)
     
-    # Add rate limit headers
-    response.headers["X-RateLimit-Limit"] = str(rate_limit_info["limit"])
-    response.headers["X-RateLimit-Remaining"] = str(rate_limit_info["remaining"])
-    response.headers["X-RateLimit-Reset"] = str(rate_limit_info["reset_time"])
+    # Add rate limit headers (only if rate limiting was successful)
+    if rate_limit_info and "limit" in rate_limit_info:
+        response.headers["X-RateLimit-Limit"] = str(rate_limit_info["limit"])
+        response.headers["X-RateLimit-Remaining"] = str(rate_limit_info["remaining"])
+        response.headers["X-RateLimit-Reset"] = str(rate_limit_info["reset_time"])
     
     return response
 

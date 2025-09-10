@@ -101,7 +101,7 @@ class ErrorHandler:
         
         log_data = {
             "error_code": error_code,
-            "message": message,
+            "error_message": message,
             "details": details,
             "request_id": request_id,
             "status_code": status_code,

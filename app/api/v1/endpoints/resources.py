@@ -19,6 +19,7 @@ router = APIRouter()
 
 # ==================== RESOURCES ====================
 
+@router.get("", response_model=List[ResourceResponse])
 @router.get("/", response_model=List[ResourceResponse])
 def get_resources(
     skip: int = Query(0, ge=0),

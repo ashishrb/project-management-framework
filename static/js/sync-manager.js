@@ -26,12 +26,13 @@ class SyncManager {
     // ==================== SYNC MANAGEMENT ====================
     
     setupSyncInterval() {
-        // Sync every 30 seconds when online
-        this.syncInterval = setInterval(() => {
-            if (this.stateManager.isConnected() && !this.syncInProgress) {
-                this.syncAllData();
-            }
-        }, 30000);
+        // DISABLED AUTO-SYNC - Manual loading only
+        // this.syncInterval = setInterval(() => {
+        //     if (this.stateManager.isConnected() && !this.syncInProgress) {
+        //         this.syncAllData();
+        //     }
+        // }, 30000);
+        console.log('⏸️ Auto-sync disabled - Manual loading only');
     }
     
     async syncAllData() {

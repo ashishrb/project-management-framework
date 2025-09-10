@@ -162,6 +162,10 @@ class CSRFProtection:
         if path.startswith("/ws/"):
             return True
         
+        # Skip for frontend logging endpoints (internal logging)
+        if path in ["/api/v1/logs/frontend", "/api/v1/logs/frontend/test"]:
+            return True
+        
         return False
 
 # Global CSRF protection instance

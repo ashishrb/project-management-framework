@@ -124,7 +124,7 @@ class FrontendLogger {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(logEntry)
+                body: JSON.stringify({ logs: [logEntry] })
             });
         } catch (error) {
             // Don't log this error to avoid infinite loops

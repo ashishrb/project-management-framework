@@ -9,9 +9,11 @@ let loadDashboardDataCallCount = 0; // Track function calls to identify loops
 
 // Global initialization flag to prevent multiple initializations across modules
 window.dashboardInitialized = false;
+// DISABLED AUTO-LOADING - Dashboard will only load when manually triggered
+window.autoLoadingDisabled = true;
 
 // Dashboard logger is initialized in logging.js
-let isRealTimeEnabled = true; // Proper initialization
+let isRealTimeEnabled = false; // DISABLED BY DEFAULT - Manual loading only
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', function() {
@@ -26,7 +28,7 @@ window.addEventListener('beforeunload', function() {
     window.dashboardInitialized = false;
 });
 
-// Initialize dashboard
+// Initialize dashboard - COMPLETELY DISABLED AUTO-LOADING
 document.addEventListener('DOMContentLoaded', function() {
     // Check global initialization flag first
     if (window.dashboardInitialized) {
@@ -35,14 +37,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
-        console.log('🚀 DOMContentLoaded - Starting dashboard initialization');
-        window.dashboardInitialized = true; // Set immediately
-        initializeDashboard();
-        setupRealTimeUpdates();
+        console.log('🚀 DOMContentLoaded - Dashboard setup completed (AUTO-LOADING DISABLED)');
+        // COMPLETELY DISABLED AUTO-LOADING - Dashboard will only load when manually triggered
+        // initializeDashboard(); // DISABLED
+        // setupRealTimeUpdates(); // DISABLED
         setupDashboardCustomization();
-        console.log('✅ DOMContentLoaded - Dashboard initialization completed');
+        console.log('✅ DOMContentLoaded - Dashboard setup completed - click Dashboard link to load manually');
     } catch (error) {
-        console.error('❌ DOMContentLoaded - Dashboard initialization failed:', error);
+        console.error('❌ DOMContentLoaded - Dashboard setup failed:', error);
         window.dashboardInitialized = false; // Reset on error
         // Prevent infinite loops by not retrying on error
     }
@@ -174,7 +176,7 @@ async function loadDashboardData() {
             { key: 'resourceUtil', url: '/resources/analytics/workload', fallback: [] },
             { key: 'riskOverview', url: '/reports/risks', fallback: [] },
             { key: 'recentActivity', url: '/reports/project-summary', fallback: [] },
-            { key: 'aiInsights', url: '/ai/insights', fallback: { insights: [] } }
+            { key: 'aiInsights', url: '/ai-insights/insights', fallback: { insights: [] } }
         ];
         
         // Load data with individual error handling and retry logic
@@ -1850,11 +1852,11 @@ function drillDownToBacklogs(functionName, priority) {
     GenAIDashboard.showInfo(`Viewing ${priority} priority backlogs for ${functionName}`);
 }
 
-// Setup real-time updates
+// Setup real-time updates - DISABLED BY DEFAULT
 function setupRealTimeUpdates() {
     // Safety check to prevent initialization errors
     if (typeof isRealTimeEnabled === 'undefined') {
-        isRealTimeEnabled = true;
+        isRealTimeEnabled = false; // DISABLED BY DEFAULT
     }
     
     // Clear ALL existing intervals to prevent conflicts
@@ -1881,6 +1883,7 @@ function setupRealTimeUpdates() {
         window.syncManager.syncInterval = null;
     }
     
+    // DISABLED BY DEFAULT - Only enable if explicitly requested
     if (isRealTimeEnabled) {
         refreshInterval = setInterval(() => {
             dashboardLogger.log('INFO', '🔄 Real-time refresh triggered', {
@@ -1898,6 +1901,8 @@ function setupRealTimeUpdates() {
             'refresh_interval_ms': 30000,
             'timestamp': new Date().toISOString()
         });
+    } else {
+        console.log('⏸️ Real-time updates disabled by default - manual loading only');
     }
 }
 
@@ -2292,6 +2297,29 @@ function hideLoadingState() {
     });
 }
 
+// Manual dashboard loading function
+function loadDashboardManually() {
+    console.log('🚀 Manual dashboard loading triggered');
+    
+    // Check if already initialized
+    if (window.dashboardInitialized) {
+        console.log('⏸️ Dashboard already initialized, refreshing data instead');
+        refreshDashboard();
+        return;
+    }
+    
+    try {
+        console.log('🚀 Starting manual dashboard initialization');
+        window.dashboardInitialized = true; // Set immediately
+        initializeDashboard();
+        setupRealTimeUpdates();
+        console.log('✅ Manual dashboard initialization completed');
+    } catch (error) {
+        console.error('❌ Manual dashboard initialization failed:', error);
+        window.dashboardInitialized = false; // Reset on error
+    }
+}
+
 // Export functions for global use
 window.DashboardManager = {
     refreshDashboard,
@@ -2302,5 +2330,9 @@ window.DashboardManager = {
     loadDashboardData,
     updateAllCharts,
     showLoadingState,
-    hideLoadingState
+    hideLoadingState,
+    loadDashboardManually
 };
+
+// Make loadDashboardManually globally available
+window.loadDashboardManually = loadDashboardManually;

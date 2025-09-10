@@ -92,7 +92,7 @@ class SecurityHeadersMiddleware:
             "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com",
             "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net",
             "img-src 'self' data: https:",
-            "connect-src 'self' ws: wss:",
+            "connect-src 'self' ws: wss: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
             "media-src 'self'",
             "object-src 'none'",
             "base-uri 'self'",
@@ -115,8 +115,11 @@ class SecurityHeadersMiddleware:
         # Static files get different cache control
         if path.startswith("/static/"):
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-            response.headers.pop("Pragma", None)
-            response.headers.pop("Expires", None)
+            # Remove Pragma and Expires headers if they exist
+            if "Pragma" in response.headers:
+                del response.headers["Pragma"]
+            if "Expires" in response.headers:
+                del response.headers["Expires"]
         
         # Admin endpoints get stricter headers
         if "/admin" in path:

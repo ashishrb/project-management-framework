@@ -49,6 +49,9 @@ class RAGResponse(BaseModel):
     tokens_used: int = Field(..., description="Tokens used")
     response_time: float = Field(..., description="Response time in seconds")
     timestamp: datetime = Field(default_factory=datetime.now)
+    
+    class Config:
+        protected_namespaces = ()
 
 
 class VectorDatabase:

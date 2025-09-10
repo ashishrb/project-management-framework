@@ -21,6 +21,7 @@ router = APIRouter()
 
 # ==================== PROJECTS ====================
 
+@router.get("", response_model=List[ProjectResponse])
 @router.get("/", response_model=List[ProjectResponse])
 def get_projects(
     skip: int = Query(0, ge=0),
