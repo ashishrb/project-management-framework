@@ -4,46 +4,165 @@
 let dashboardCharts = {};
 let dashboardData = {};
 let refreshInterval = null;
+let dashboardInitialized = false; // Guard to prevent double initialization
+let loadDashboardDataCallCount = 0; // Track function calls to identify loops
+
+// Global initialization flag to prevent multiple initializations across modules
+window.dashboardInitialized = false;
 
 // Dashboard logger is initialized in logging.js
-var isRealTimeEnabled = true; // Use var to avoid temporal dead zone issues
+let isRealTimeEnabled = true; // Proper initialization
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+    if (window.dashboardRefreshInterval) {
+        clearInterval(window.dashboardRefreshInterval);
+        window.dashboardRefreshInterval = null;
+    }
+    window.dashboardInitialized = false;
+});
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDashboard();
-    setupRealTimeUpdates();
-    setupDashboardCustomization();
+    // Check global initialization flag first
+    if (window.dashboardInitialized) {
+        console.log('⏸️ Dashboard already initialized globally, skipping');
+        return;
+    }
+    
+    try {
+        console.log('🚀 DOMContentLoaded - Starting dashboard initialization');
+        window.dashboardInitialized = true; // Set immediately
+        initializeDashboard();
+        setupRealTimeUpdates();
+        setupDashboardCustomization();
+        console.log('✅ DOMContentLoaded - Dashboard initialization completed');
+    } catch (error) {
+        console.error('❌ DOMContentLoaded - Dashboard initialization failed:', error);
+        window.dashboardInitialized = false; // Reset on error
+        // Prevent infinite loops by not retrying on error
+    }
 });
 
 // Initialize dashboard
 function initializeDashboard() {
-    console.log('🚀 Initializing GenAI Metrics Dashboard...');
-    console.log('🔍 GenAIDashboard object available:', typeof GenAIDashboard);
-    console.log('🔍 GenAIDashboard.apiCall available:', typeof GenAIDashboard?.apiCall);
+    dashboardLogger.logFunctionEntry('initializeDashboard', [], {
+        'documentReadyState': document.readyState,
+        'dashboardInitialized': dashboardInitialized,
+        'GenAIDashboardType': typeof GenAIDashboard,
+        'GenAIDashboardApiCallType': typeof GenAIDashboard?.apiCall
+    });
     
-    // Load initial data
-    console.log('📊 Starting loadDashboardData...');
+    // Prevent double initialization
+    if (dashboardInitialized) {
+        dashboardLogger.log('WARN', 'Dashboard already initialized, skipping...', {
+            'reason': 'double_initialization_prevented',
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    dashboardLogger.log('INFO', '🚀 Initializing GenAI Metrics Dashboard...', {
+        'GenAIDashboard_available': typeof GenAIDashboard,
+        'GenAIDashboard_apiCall_available': typeof GenAIDashboard?.apiCall,
+        'document_ready_state': document.readyState
+    });
+    
+    // Wait for DOM to be fully ready
+    if (document.readyState === 'loading') {
+        dashboardLogger.log('INFO', 'DOM still loading, waiting for DOMContentLoaded event');
+        // Note: DOMContentLoaded listener is already set up at the top of the file
+        // No need to add another one here
+    } else {
+        dashboardLogger.log('INFO', 'DOM already ready, proceeding with initialization');
+        initializeDashboardComponents();
+    }
+}
+
+// Initialize dashboard components
+function initializeDashboardComponents() {
+    dashboardLogger.logFunctionEntry('initializeDashboardComponents');
+    
+    // Prevent double initialization
+    if (dashboardInitialized) {
+        dashboardLogger.log('WARN', '⏸️ Dashboard components already initialized, skipping...', {
+            'reason': 'double_initialization_prevented',
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    // Mark as initialized BEFORE calling loadDashboardData to prevent race conditions
+    dashboardInitialized = true;
+    
+    dashboardLogger.log('INFO', '📊 Starting loadDashboardData...', {
+        'step': 'data_loading',
+        'timestamp': new Date().toISOString()
+    });
     loadDashboardData();
     
-    // Initialize all charts
-    console.log('📈 Starting initializeAllCharts...');
-    initializeAllCharts();
+    // Initialize all charts after a short delay to ensure DOM is ready
+    setTimeout(() => {
+        dashboardLogger.log('INFO', '📈 Starting initializeAllCharts...', {
+            'step': 'chart_initialization',
+            'delay_ms': 100,
+            'timestamp': new Date().toISOString()
+        });
+        initializeAllCharts();
+    }, 100);
     
     // Setup event listeners
-    console.log('🎧 Setting up event listeners...');
+    dashboardLogger.log('INFO', '🎧 Setting up event listeners...', {
+        'step': 'event_listeners',
+        'timestamp': new Date().toISOString()
+    });
     setupEventListeners();
     
     // Setup dashboard interactions
-    console.log('⚙️ Setting up dashboard interactions...');
+    dashboardLogger.log('INFO', '⚙️ Setting up dashboard interactions...', {
+        'step': 'dashboard_interactions',
+        'timestamp': new Date().toISOString()
+    });
     setupDashboardInteractions();
+    dashboardLogger.log('SUCCESS', '✅ Dashboard initialized successfully', {
+        'step': 'initialization_complete',
+        'dashboardInitialized': dashboardInitialized,
+        'timestamp': new Date().toISOString()
+    });
     
-    console.log('✅ Dashboard initialized successfully');
+    dashboardLogger.logFunctionExit('initializeDashboardComponents', {
+        'dashboardInitialized': dashboardInitialized,
+        'initialization_time': new Date().toISOString()
+    });
 }
 
 // Load dashboard data with improved error handling
 async function loadDashboardData() {
+    // Prevent recursive calls
+    if (dashboardData.loading) {
+        dashboardLogger.log('WARN', '⏸️ loadDashboardData already in progress, skipping', {
+            'call_count': loadDashboardDataCallCount,
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    dashboardData.loading = true;
     dashboardLogger.logFunctionEntry('loadDashboardData');
     const startTime = performance.now();
+    
+    // Increment call counter and log call stack to identify what's triggering the loop
+    loadDashboardDataCallCount++;
+    const callStack = new Error().stack?.split('\n').slice(1, 6) || ['stack unavailable'];
+    dashboardLogger.log('INFO', `🔄 loadDashboardData called (call #${loadDashboardDataCallCount})`, {
+        'call_count': loadDashboardDataCallCount,
+        'call_stack': callStack,
+        'timestamp': new Date().toISOString()
+    });
     
     try {
         dashboardLogger.log('INFO', 'Starting dashboard data load');
@@ -58,45 +177,145 @@ async function loadDashboardData() {
             { key: 'resourceUtil', url: '/resources/analytics/workload', fallback: [] },
             { key: 'riskOverview', url: '/reports/risks', fallback: [] },
             { key: 'recentActivity', url: '/reports/project-summary', fallback: [] },
-            { key: 'aiInsights', url: '/ai/insights', fallback: { insights: [] } }
+            { key: 'aiInsights', url: '/ai-insights/insights', fallback: { insights: [] } }
         ];
         
         // Load data with individual error handling and retry logic
         const loadPromises = apiEndpoints.map(async (endpoint) => {
+            const apiCallStartTime = performance.now();
             try {
-                console.log(`🔄 Calling API: ${endpoint.url}`);
-                console.log(`🔍 GenAIDashboard.apiCall available:`, typeof GenAIDashboard.apiCall);
+                dashboardLogger.log('INFO', `🔄 Calling API: ${endpoint.url}`, {
+                    'endpoint': endpoint.key,
+                    'url': endpoint.url,
+                    'method': 'GET',
+                    'retries': 2,
+                    'timestamp': new Date().toISOString(),
+                    'GenAIDashboard_apiCall_type': typeof GenAIDashboard?.apiCall
+                });
                 
                 const data = await GenAIDashboard.apiCall(endpoint.url, 'GET', null, 2); // 2 retries
-                console.log(`✅ API call successful for ${endpoint.key}:`, data);
-                return { key: endpoint.key, data, success: true };
+                const apiCallEndTime = performance.now();
+                const responseTime = apiCallEndTime - apiCallStartTime;
+                
+                dashboardLogger.log('SUCCESS', `✅ API call successful for ${endpoint.key}`, {
+                    'endpoint': endpoint.key,
+                    'url': endpoint.url,
+                    'response_time_ms': responseTime,
+                    'response_data_keys': Object.keys(data || {}),
+                    'response_size_bytes': JSON.stringify(data).length,
+                    'timestamp': new Date().toISOString()
+                });
+                
+                return { key: endpoint.key, data, success: true, responseTime: responseTime };
             } catch (error) {
-                console.warn(`⚠️ Failed to load ${endpoint.key}:`, error.message);
-                console.error(`❌ Full error for ${endpoint.key}:`, error);
-                return { key: endpoint.key, data: endpoint.fallback, success: false, error: error.message };
+                const apiCallEndTime = performance.now();
+                const responseTime = apiCallEndTime - apiCallStartTime;
+                
+                dashboardLogger.log('ERROR', `❌ API call failed for ${endpoint.key}`, {
+                    'error_message': error.message,
+                    'error_stack': error.stack,
+                    'endpoint': endpoint.key,
+                    'url': endpoint.url,
+                    'response_time_ms': responseTime,
+                    'fallback_used': true,
+                    'fallback_data': endpoint.fallback,
+                    'timestamp': new Date().toISOString()
+                });
+                
+                return { 
+                    key: endpoint.key, 
+                    data: endpoint.fallback, 
+                    success: false, 
+                    error: error.message,
+                    responseTime: responseTime
+                };
             }
         });
         
         const results = await Promise.all(loadPromises);
         
-        console.log('📊 Dashboard API results:', results);
+        dashboardLogger.log('INFO', '📊 Dashboard API results received', {
+            'total_endpoints': results.length,
+            'results_summary': results.map(r => ({
+                key: r.key,
+                success: r.success,
+                responseTime: r.responseTime,
+                hasData: !!r.data,
+                dataKeys: Object.keys(r.data || {}),
+                error: r.error || null
+            })),
+            'timestamp': new Date().toISOString()
+        });
         
         // Build dashboard data object
         dashboardData = {};
         let successCount = 0;
+        let failedEndpoints = [];
         
         results.forEach(result => {
+            dashboardLogger.log('INFO', `Processing result for ${result.key}`, {
+                'endpoint': result.key,
+                'success': result.success,
+                'response_time_ms': result.responseTime,
+                'data_type': typeof result.data,
+                'data_keys': Object.keys(result.data || {}),
+                'error': result.error || null,
+                'timestamp': new Date().toISOString()
+            });
+            
             dashboardData[result.key] = result.data;
-            if (result.success) successCount++;
-            console.log(`📈 ${result.key}:`, result.success ? 'SUCCESS' : 'FAILED', result.data);
+            if (result.success) {
+                successCount++;
+                dashboardLogger.log('SUCCESS', `📈 ${result.key}: SUCCESS`, {
+                    'endpoint': result.key,
+                    'data': result.data,
+                    'timestamp': new Date().toISOString()
+                });
+            } else {
+                failedEndpoints.push({
+                    endpoint: result.key,
+                    error: result.error,
+                    fallback_used: true
+                });
+                dashboardLogger.log('ERROR', `📈 ${result.key}: FAILED`, {
+                    'endpoint': result.key,
+                    'error': result.error,
+                    'fallback_data': result.data,
+                    'timestamp': new Date().toISOString()
+                });
+            }
+        });
+        
+        dashboardLogger.log('SUCCESS', `📈 Dashboard loaded: ${successCount}/${results.length} endpoints successful`, {
+            'success_count': successCount,
+            'total_endpoints': results.length,
+            'success_rate': `${(successCount/results.length*100).toFixed(1)}%`,
+            'failed_endpoints': failedEndpoints,
+            'dashboard_data_keys': Object.keys(dashboardData),
+            'timestamp': new Date().toISOString()
         });
         
         // Update UI components
+        dashboardLogger.log('INFO', '🎨 Starting UI component updates', {
+            'components_to_update': [
+                'updateDashboardOverview',
+                'updateGenAIMetrics', 
+                'updateAllCharts',
+                'updateRecentActivity',
+                'updateAIInsights'
+            ],
+            'timestamp': new Date().toISOString()
+        });
+        
         updateDashboardOverview();
         updateGenAIMetrics();
         updateAllCharts();
         updateRecentActivity();
         updateAIInsights();
+        
+        dashboardLogger.log('INFO', '🎨 UI component updates completed, hiding loading state', {
+            'timestamp': new Date().toISOString()
+        });
         
         hideLoadingState();
         
@@ -118,33 +337,126 @@ async function loadDashboardData() {
             if (retryBtn) retryBtn.style.display = 'inline-block';
         }
         
-        } catch (error) {
-            const executionTime = performance.now() - startTime;
-            dashboardLogger.logError('loadDashboardData', error, { executionTime });
-            console.error('❌ Critical error loading dashboard data:', error);
-            hideLoadingState();
-            GenAIDashboard.showError('Failed to load dashboard data. Please refresh the page.');
-        }
-        
         const executionTime = performance.now() - startTime;
         dashboardLogger.logFunctionExit('loadDashboardData', null, executionTime);
+        
+    } catch (error) {
+        const executionTime = performance.now() - startTime;
+        dashboardLogger.logError('loadDashboardData', error, { executionTime });
+        console.error('❌ Critical error loading dashboard data:', error);
+        hideLoadingState();
+        GenAIDashboard.showError('Failed to load dashboard data. Please refresh the page.');
+    } finally {
+        // Always clear the loading flag
+        dashboardData.loading = false;
+    }
 }
 
 // Initialize all charts
 function initializeAllCharts() {
-    initializeFeaturesByFunctionChart();
-    initializeBacklogsByFunctionChart();
-    initializeFeaturesByPlatformChart();
-    initializeBacklogsByPlatformChart();
-    initializeProjectStatusChart();
-    initializeResourceUtilizationChart();
-    initializeRiskOverviewChart();
-    initializeTrendCharts();
+    dashboardLogger.logFunctionEntry('initializeAllCharts', [], {
+        'charts_to_initialize': [
+            'featuresByFunctionChart',
+            'backlogsByFunctionChart', 
+            'featuresByPlatformChart',
+            'backlogsByPlatformChart',
+            'projectStatusChart',
+            'resourceUtilizationChart',
+            'riskOverviewChart',
+            'trendCharts'
+        ],
+        'timestamp': new Date().toISOString()
+    });
+    
+    const chartInitStartTime = performance.now();
+    
+    try {
+        dashboardLogger.log('INFO', 'Initializing Features by Function Chart', {
+            'chart': 'featuresByFunctionChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeFeaturesByFunctionChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Backlogs by Function Chart', {
+            'chart': 'backlogsByFunctionChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeBacklogsByFunctionChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Features by Platform Chart', {
+            'chart': 'featuresByPlatformChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeFeaturesByPlatformChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Backlogs by Platform Chart', {
+            'chart': 'backlogsByPlatformChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeBacklogsByPlatformChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Project Status Chart', {
+            'chart': 'projectStatusChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeProjectStatusChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Resource Utilization Chart', {
+            'chart': 'resourceUtilizationChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeResourceUtilizationChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Risk Overview Chart', {
+            'chart': 'riskOverviewChart',
+            'timestamp': new Date().toISOString()
+        });
+        initializeRiskOverviewChart();
+        
+        dashboardLogger.log('INFO', 'Initializing Trend Charts', {
+            'chart': 'trendCharts',
+            'timestamp': new Date().toISOString()
+        });
+        initializeTrendCharts();
+        
+        const chartInitEndTime = performance.now();
+        const totalInitTime = chartInitEndTime - chartInitStartTime;
+        
+        dashboardLogger.log('SUCCESS', 'All charts initialized successfully', {
+            'total_init_time_ms': totalInitTime,
+            'charts_initialized': Object.keys(dashboardCharts).length,
+            'timestamp': new Date().toISOString()
+        });
+        
+    } catch (error) {
+        dashboardLogger.log('ERROR', 'Error during chart initialization', {
+            'error_message': error.message,
+            'error_stack': error.stack,
+            'timestamp': new Date().toISOString()
+        });
+    }
+    
+    dashboardLogger.logFunctionExit('initializeAllCharts', {
+        'charts_initialized': Object.keys(dashboardCharts).length,
+        'total_init_time_ms': performance.now() - chartInitStartTime
+    });
 }
 
 // Initialize features by function chart
 function initializeFeaturesByFunctionChart() {
-    const ctx = document.getElementById('featuresByFunctionChart').getContext('2d');
+    const canvas = document.getElementById('featuresByFunctionChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element featuresByFunctionChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.featuresByFunction) {
+        dashboardCharts.featuresByFunction.destroy();
+        dashboardCharts.featuresByFunction = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.featuresByFunction = new Chart(ctx, {
         type: 'bar',
@@ -260,33 +572,53 @@ function initializeFeaturesByFunctionChart() {
 
 // Initialize backlogs by function chart
 function initializeBacklogsByFunctionChart() {
-    const ctx = document.getElementById('backlogsByFunctionChart').getContext('2d');
+    const canvas = document.getElementById('backlogsByFunctionChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element backlogsByFunctionChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.backlogsByFunction) {
+        dashboardCharts.backlogsByFunction.destroy();
+        dashboardCharts.backlogsByFunction = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.backlogsByFunction = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: [],
             datasets: [{
-                label: 'Highest Priority',
+                label: 'Completed',
                 data: [],
-                backgroundColor: '#dc3545',
-                borderColor: '#bd2130',
+                backgroundColor: '#28a745',
+                borderColor: '#1e7e34',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
             }, {
-                label: 'High Priority',
+                label: 'On Track',
                 data: [],
-                backgroundColor: '#fd7e14',
-                borderColor: '#e55a00',
+                backgroundColor: '#17a2b8',
+                borderColor: '#117a8b',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
             }, {
-                label: 'Medium Priority',
+                label: 'At Risk',
                 data: [],
                 backgroundColor: '#ffc107',
                 borderColor: '#e0a800',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+            }, {
+                label: 'Off Track',
+                data: [],
+                backgroundColor: '#dc3545',
+                borderColor: '#bd2130',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
@@ -355,7 +687,19 @@ function initializeBacklogsByFunctionChart() {
 
 // Initialize features by platform chart
 function initializeFeaturesByPlatformChart() {
-    const ctx = document.getElementById('featuresByPlatformChart').getContext('2d');
+    const canvas = document.getElementById('featuresByPlatformChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element featuresByPlatformChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.featuresByPlatform) {
+        dashboardCharts.featuresByPlatform.destroy();
+        dashboardCharts.featuresByPlatform = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.featuresByPlatform = new Chart(ctx, {
         type: 'bar',
@@ -458,33 +802,53 @@ function initializeFeaturesByPlatformChart() {
 
 // Initialize backlogs by platform chart
 function initializeBacklogsByPlatformChart() {
-    const ctx = document.getElementById('backlogsByPlatformChart').getContext('2d');
+    const canvas = document.getElementById('backlogsByPlatformChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element backlogsByPlatformChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.backlogsByPlatform) {
+        dashboardCharts.backlogsByPlatform.destroy();
+        dashboardCharts.backlogsByPlatform = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.backlogsByPlatform = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: [],
             datasets: [{
-                label: 'Highest Priority',
+                label: 'Completed',
                 data: [],
-                backgroundColor: '#dc3545',
-                borderColor: '#bd2130',
+                backgroundColor: '#28a745',
+                borderColor: '#1e7e34',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
             }, {
-                label: 'High Priority',
+                label: 'On Track',
                 data: [],
-                backgroundColor: '#fd7e14',
-                borderColor: '#e55a00',
+                backgroundColor: '#17a2b8',
+                borderColor: '#117a8b',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
             }, {
-                label: 'Medium Priority',
+                label: 'At Risk',
                 data: [],
                 backgroundColor: '#ffc107',
                 borderColor: '#e0a800',
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false
+            }, {
+                label: 'Off Track',
+                data: [],
+                backgroundColor: '#dc3545',
+                borderColor: '#bd2130',
                 borderWidth: 1,
                 borderRadius: 4,
                 borderSkipped: false
@@ -553,7 +917,19 @@ function initializeBacklogsByPlatformChart() {
 
 // Initialize project status chart
 function initializeProjectStatusChart() {
-    const ctx = document.getElementById('projectStatusChart').getContext('2d');
+    const canvas = document.getElementById('projectStatusChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element projectStatusChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.projectStatus) {
+        dashboardCharts.projectStatus.destroy();
+        dashboardCharts.projectStatus = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.projectStatus = new Chart(ctx, {
         type: 'doughnut',
@@ -634,7 +1010,19 @@ function initializeProjectStatusChart() {
 
 // Initialize resource utilization chart
 function initializeResourceUtilizationChart() {
-    const ctx = document.getElementById('resourceUtilizationChart').getContext('2d');
+    const canvas = document.getElementById('resourceUtilizationChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element resourceUtilizationChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.resourceUtilization) {
+        dashboardCharts.resourceUtilization.destroy();
+        dashboardCharts.resourceUtilization = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.resourceUtilization = new Chart(ctx, {
         type: 'line',
@@ -717,7 +1105,19 @@ function initializeResourceUtilizationChart() {
 
 // Initialize risk overview chart
 function initializeRiskOverviewChart() {
-    const ctx = document.getElementById('riskOverviewChart').getContext('2d');
+    const canvas = document.getElementById('riskOverviewChart');
+    if (!canvas) {
+        console.warn('⚠️ Canvas element riskOverviewChart not found');
+        return;
+    }
+    
+    // Destroy existing chart if it exists
+    if (dashboardCharts.riskOverview) {
+        dashboardCharts.riskOverview.destroy();
+        dashboardCharts.riskOverview = null;
+    }
+    
+    const ctx = canvas.getContext('2d');
     
     dashboardCharts.riskOverview = new Chart(ctx, {
         type: 'bar',
@@ -793,36 +1193,192 @@ function initializeTrendCharts() {
 
 // Update dashboard overview
 function updateDashboardOverview() {
-    console.log('🔄 Updating dashboard overview...');
+    dashboardLogger.logFunctionEntry('updateDashboardOverview', [], {
+        'has_overview_data': !!dashboardData.overview,
+        'overview_data_keys': dashboardData.overview ? Object.keys(dashboardData.overview) : [],
+        'timestamp': new Date().toISOString()
+    });
+    
+    dashboardLogger.log('INFO', '🔄 Updating dashboard overview...', {
+        'timestamp': new Date().toISOString()
+    });
+    
     if (!dashboardData.overview) {
-        console.log('❌ No overview data available');
+        dashboardLogger.log('WARN', '❌ No overview data available', {
+            'dashboard_data_keys': Object.keys(dashboardData),
+            'timestamp': new Date().toISOString()
+        });
         return;
     }
     
     const data = dashboardData.overview;
-    console.log('📊 Overview data:', data);
+    dashboardLogger.log('INFO', '📊 Overview data received', {
+        'overview_data': data,
+        'data_keys': Object.keys(data),
+        'timestamp': new Date().toISOString()
+    });
     
     const currentEl = document.getElementById('current-projects');
     const approvedEl = document.getElementById('approved-projects');
     const backlogEl = document.getElementById('backlog-projects');
     const totalEl = document.getElementById('total-projects');
     
-    if (currentEl) currentEl.textContent = data.current_projects || 0;
-    if (approvedEl) approvedEl.textContent = data.approved_projects || 0;
-    if (backlogEl) backlogEl.textContent = data.backlog_projects || 0;
-    if (totalEl) totalEl.textContent = data.total_projects || 0;
+    dashboardLogger.log('INFO', 'Checking DOM elements for overview update', {
+        'current_projects_element': !!currentEl,
+        'approved_projects_element': !!approvedEl,
+        'backlog_projects_element': !!backlogEl,
+        'total_projects_element': !!totalEl,
+        'timestamp': new Date().toISOString()
+    });
+    
+    try {
+        if (currentEl) {
+            currentEl.textContent = data.current_projects || 0;
+            dashboardLogger.log('SUCCESS', 'Updated current-projects element', {
+                'element_id': 'current-projects',
+                'value': data.current_projects || 0,
+                'timestamp': new Date().toISOString()
+            });
+        } else {
+            dashboardLogger.log('ERROR', 'current-projects element not found', {
+                'element_id': 'current-projects',
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        if (approvedEl) {
+            approvedEl.textContent = data.approved_projects || 0;
+            dashboardLogger.log('SUCCESS', 'Updated approved-projects element', {
+                'element_id': 'approved-projects',
+                'value': data.approved_projects || 0,
+                'timestamp': new Date().toISOString()
+            });
+        } else {
+            dashboardLogger.log('ERROR', 'approved-projects element not found', {
+                'element_id': 'approved-projects',
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        if (backlogEl) {
+            backlogEl.textContent = data.backlog_projects || 0;
+            dashboardLogger.log('SUCCESS', 'Updated backlog-projects element', {
+                'element_id': 'backlog-projects',
+                'value': data.backlog_projects || 0,
+                'timestamp': new Date().toISOString()
+            });
+        } else {
+            dashboardLogger.log('ERROR', 'backlog-projects element not found', {
+                'element_id': 'backlog-projects',
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        if (totalEl) {
+            totalEl.textContent = data.total_projects || 0;
+            dashboardLogger.log('SUCCESS', 'Updated total-projects element', {
+                'element_id': 'total-projects',
+                'value': data.total_projects || 0,
+                'timestamp': new Date().toISOString()
+            });
+        } else {
+            dashboardLogger.log('ERROR', 'total-projects element not found', {
+                'element_id': 'total-projects',
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        dashboardLogger.logFunctionExit('updateDashboardOverview', {
+            'overview_updated': true,
+            'timestamp': new Date().toISOString()
+        });
+        
+    } catch (error) {
+        dashboardLogger.log('ERROR', 'Error updating dashboard overview', {
+            'error_message': error.message,
+            'error_stack': error.stack,
+            'overview_data': data,
+            'timestamp': new Date().toISOString()
+        });
+    }
     
     console.log('✅ Dashboard overview updated');
 }
 
 // Update GenAI metrics
 function updateGenAIMetrics() {
-    if (!dashboardData.genai) return;
+    dashboardLogger.logFunctionEntry('updateGenAIMetrics', [], {
+        'has_genai_data': !!dashboardData.genai,
+        'genai_data_keys': dashboardData.genai ? Object.keys(dashboardData.genai) : [],
+        'timestamp': new Date().toISOString()
+    });
     
-    updateFeaturesByFunctionChart(dashboardData.genai.active_features_by_function);
-    updateBacklogsByFunctionChart(dashboardData.genai.backlogs_by_function);
-    updateFeaturesByPlatformChart(dashboardData.genai.active_features_by_platform);
-    updateBacklogsByPlatformChart(dashboardData.genai.backlogs_by_platform);
+    dashboardLogger.log('INFO', '🔄 Updating GenAI metrics...', {
+        'timestamp': new Date().toISOString()
+    });
+    
+    if (!dashboardData.genai) {
+        dashboardLogger.log('WARN', '❌ No GenAI data available', {
+            'dashboard_data_keys': Object.keys(dashboardData),
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    const genaiData = dashboardData.genai;
+    dashboardLogger.log('INFO', '📊 GenAI data received', {
+        'genai_data': genaiData,
+        'data_keys': Object.keys(genaiData),
+        'active_features_by_function_count': genaiData.active_features_by_function?.length || 0,
+        'backlogs_by_function_count': genaiData.backlogs_by_function?.length || 0,
+        'active_features_by_platform_count': genaiData.active_features_by_platform?.length || 0,
+        'backlogs_by_platform_count': genaiData.backlogs_by_platform?.length || 0,
+        'timestamp': new Date().toISOString()
+    });
+    
+    try {
+        dashboardLogger.log('INFO', 'Updating features by function chart', {
+            'data_count': genaiData.active_features_by_function?.length || 0,
+            'timestamp': new Date().toISOString()
+        });
+        updateFeaturesByFunctionChart(genaiData.active_features_by_function);
+        
+        dashboardLogger.log('INFO', 'Updating backlogs by function chart', {
+            'data_count': genaiData.backlogs_by_function?.length || 0,
+            'timestamp': new Date().toISOString()
+        });
+        updateBacklogsByFunctionChart(genaiData.backlogs_by_function);
+        
+        dashboardLogger.log('INFO', 'Updating features by platform chart', {
+            'data_count': genaiData.active_features_by_platform?.length || 0,
+            'timestamp': new Date().toISOString()
+        });
+        updateFeaturesByPlatformChart(genaiData.active_features_by_platform);
+        
+        dashboardLogger.log('INFO', 'Updating backlogs by platform chart', {
+            'data_count': genaiData.backlogs_by_platform?.length || 0,
+            'timestamp': new Date().toISOString()
+        });
+        updateBacklogsByPlatformChart(genaiData.backlogs_by_platform);
+        
+        dashboardLogger.log('SUCCESS', '✅ GenAI metrics updated successfully', {
+            'charts_updated': 4,
+            'timestamp': new Date().toISOString()
+        });
+        
+        dashboardLogger.logFunctionExit('updateGenAIMetrics', {
+            'genai_metrics_updated': true,
+            'timestamp': new Date().toISOString()
+        });
+        
+    } catch (error) {
+        dashboardLogger.log('ERROR', 'Error updating GenAI metrics', {
+            'error_message': error.message,
+            'error_stack': error.stack,
+            'genai_data': genaiData,
+            'timestamp': new Date().toISOString()
+        });
+    }
 }
 
 // Update features by function chart
@@ -848,14 +1404,16 @@ function updateBacklogsByFunctionChart(data) {
     if (!dashboardCharts.backlogsByFunction || !data) return;
     
     const labels = data.map(item => item.function_name);
-    const highest = data.map(item => item.highest_priority || 0);
-    const high = data.map(item => item.high_priority || 0);
-    const medium = data.map(item => item.medium_priority || 0);
+    const completed = data.map(item => item.completed || 0);
+    const onTrack = data.map(item => item.on_track || 0);
+    const atRisk = data.map(item => item.at_risk || 0);
+    const offTrack = data.map(item => item.off_track || 0);
     
     dashboardCharts.backlogsByFunction.data.labels = labels;
-    dashboardCharts.backlogsByFunction.data.datasets[0].data = highest;
-    dashboardCharts.backlogsByFunction.data.datasets[1].data = high;
-    dashboardCharts.backlogsByFunction.data.datasets[2].data = medium;
+    dashboardCharts.backlogsByFunction.data.datasets[0].data = completed;
+    dashboardCharts.backlogsByFunction.data.datasets[1].data = onTrack;
+    dashboardCharts.backlogsByFunction.data.datasets[2].data = atRisk;
+    dashboardCharts.backlogsByFunction.data.datasets[3].data = offTrack;
     dashboardCharts.backlogsByFunction.update('active');
 }
 
@@ -882,27 +1440,94 @@ function updateBacklogsByPlatformChart(data) {
     if (!dashboardCharts.backlogsByPlatform || !data) return;
     
     const labels = data.map(item => item.platform_name);
-    const highest = data.map(item => item.highest_priority || 0);
-    const high = data.map(item => item.high_priority || 0);
-    const medium = data.map(item => item.medium_priority || 0);
+    const completed = data.map(item => item.completed || 0);
+    const onTrack = data.map(item => item.on_track || 0);
+    const atRisk = data.map(item => item.at_risk || 0);
+    const offTrack = data.map(item => item.off_track || 0);
     
     dashboardCharts.backlogsByPlatform.data.labels = labels;
-    dashboardCharts.backlogsByPlatform.data.datasets[0].data = highest;
-    dashboardCharts.backlogsByPlatform.data.datasets[1].data = high;
-    dashboardCharts.backlogsByPlatform.data.datasets[2].data = medium;
+    dashboardCharts.backlogsByPlatform.data.datasets[0].data = completed;
+    dashboardCharts.backlogsByPlatform.data.datasets[1].data = onTrack;
+    dashboardCharts.backlogsByPlatform.data.datasets[2].data = atRisk;
+    dashboardCharts.backlogsByPlatform.data.datasets[3].data = offTrack;
     dashboardCharts.backlogsByPlatform.update('active');
 }
 
 // Update all charts
 function updateAllCharts() {
-    if (dashboardData.projectStatus) {
-        updateProjectStatusChart(dashboardData.projectStatus);
-    }
-    if (dashboardData.resourceUtil) {
-        updateResourceUtilizationChart(dashboardData.resourceUtil);
-    }
-    if (dashboardData.riskOverview) {
-        updateRiskOverviewChart(dashboardData.riskOverview);
+    dashboardLogger.logFunctionEntry('updateAllCharts', [], {
+        'has_project_status_data': !!dashboardData.projectStatus,
+        'has_resource_util_data': !!dashboardData.resourceUtil,
+        'has_risk_overview_data': !!dashboardData.riskOverview,
+        'timestamp': new Date().toISOString()
+    });
+    
+    dashboardLogger.log('INFO', '🔄 Updating all charts...', {
+        'timestamp': new Date().toISOString()
+    });
+    
+    let chartsUpdated = 0;
+    
+    try {
+        if (dashboardData.projectStatus) {
+            dashboardLogger.log('INFO', 'Updating project status chart', {
+                'data_keys': Object.keys(dashboardData.projectStatus),
+                'timestamp': new Date().toISOString()
+            });
+            updateProjectStatusChart(dashboardData.projectStatus);
+            chartsUpdated++;
+        } else {
+            dashboardLogger.log('WARN', 'No project status data available', {
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        if (dashboardData.resourceUtil) {
+            dashboardLogger.log('INFO', 'Updating resource utilization chart', {
+                'data_type': Array.isArray(dashboardData.resourceUtil) ? 'array' : typeof dashboardData.resourceUtil,
+                'data_length': Array.isArray(dashboardData.resourceUtil) ? dashboardData.resourceUtil.length : 'N/A',
+                'timestamp': new Date().toISOString()
+            });
+            updateResourceUtilizationChart(dashboardData.resourceUtil);
+            chartsUpdated++;
+        } else {
+            dashboardLogger.log('WARN', 'No resource utilization data available', {
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        if (dashboardData.riskOverview) {
+            dashboardLogger.log('INFO', 'Updating risk overview chart', {
+                'data_type': Array.isArray(dashboardData.riskOverview) ? 'array' : typeof dashboardData.riskOverview,
+                'data_length': Array.isArray(dashboardData.riskOverview) ? dashboardData.riskOverview.length : 'N/A',
+                'timestamp': new Date().toISOString()
+            });
+            updateRiskOverviewChart(dashboardData.riskOverview);
+            chartsUpdated++;
+        } else {
+            dashboardLogger.log('WARN', 'No risk overview data available', {
+                'timestamp': new Date().toISOString()
+            });
+        }
+        
+        dashboardLogger.log('SUCCESS', `✅ All charts updated successfully`, {
+            'charts_updated': chartsUpdated,
+            'total_possible_charts': 3,
+            'timestamp': new Date().toISOString()
+        });
+        
+        dashboardLogger.logFunctionExit('updateAllCharts', {
+            'charts_updated': chartsUpdated,
+            'timestamp': new Date().toISOString()
+        });
+        
+    } catch (error) {
+        dashboardLogger.log('ERROR', 'Error updating all charts', {
+            'error_message': error.message,
+            'error_stack': error.stack,
+            'charts_updated': chartsUpdated,
+            'timestamp': new Date().toISOString()
+        });
     }
 }
 
@@ -960,12 +1585,54 @@ function updateRiskOverviewChart(data) {
 
 // Update recent activity
 function updateRecentActivity() {
-    if (!dashboardData.recentActivity) return;
+    dashboardLogger.logFunctionEntry('updateRecentActivity', [], {
+        'has_recent_activity_data': !!dashboardData.recentActivity,
+        'recent_activity_type': typeof dashboardData.recentActivity,
+        'recent_activity_keys': dashboardData.recentActivity ? Object.keys(dashboardData.recentActivity) : [],
+        'timestamp': new Date().toISOString()
+    });
+    
+    dashboardLogger.log('INFO', '🔄 Updating recent activity...', {
+        'timestamp': new Date().toISOString()
+    });
+    
+    if (!dashboardData.recentActivity) {
+        dashboardLogger.log('WARN', '❌ No recent activity data available', {
+            'dashboard_data_keys': Object.keys(dashboardData),
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
     
     const container = document.getElementById('recent-activity');
-    if (!container) return;
+    dashboardLogger.log('INFO', 'Checking recent activity container', {
+        'container_found': !!container,
+        'container_id': 'recent-activity',
+        'timestamp': new Date().toISOString()
+    });
     
-    const activities = dashboardData.recentActivity.slice(0, 10);
+    if (!container) {
+        dashboardLogger.log('ERROR', '❌ Recent activity container not found', {
+            'container_id': 'recent-activity',
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    // Handle both array and object formats
+    let activities = [];
+    if (Array.isArray(dashboardData.recentActivity)) {
+        activities = dashboardData.recentActivity.slice(0, 10);
+    } else if (dashboardData.recentActivity.activities && Array.isArray(dashboardData.recentActivity.activities)) {
+        activities = dashboardData.recentActivity.activities.slice(0, 10);
+    } else {
+        // Convert object to array format for display
+        activities = [{
+            title: "Project Summary",
+            description: `Total Projects: ${dashboardData.recentActivity.total_projects || 0}, Active: ${dashboardData.recentActivity.active_projects || 0}`,
+            timestamp: "Just now"
+        }];
+    }
     
     if (activities.length === 0) {
         container.innerHTML = '<p class="text-muted">No recent activity</p>';
@@ -994,14 +1661,51 @@ function updateRecentActivity() {
 
 // Update AI insights
 function updateAIInsights() {
-    if (!dashboardData.aiInsights) return;
+    dashboardLogger.logFunctionEntry('updateAIInsights', [], {
+        'has_ai_insights_data': !!dashboardData.aiInsights,
+        'ai_insights_type': typeof dashboardData.aiInsights,
+        'ai_insights_keys': dashboardData.aiInsights ? Object.keys(dashboardData.aiInsights) : [],
+        'timestamp': new Date().toISOString()
+    });
+    
+    dashboardLogger.log('INFO', '🔄 Updating AI insights...', {
+        'timestamp': new Date().toISOString()
+    });
+    
+    if (!dashboardData.aiInsights) {
+        dashboardLogger.log('WARN', '❌ No AI insights data available', {
+            'dashboard_data_keys': Object.keys(dashboardData),
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
     
     const container = document.getElementById('ai-insights');
-    if (!container) return;
+    dashboardLogger.log('INFO', 'Checking AI insights container', {
+        'container_found': !!container,
+        'container_id': 'ai-insights',
+        'timestamp': new Date().toISOString()
+    });
+    
+    if (!container) {
+        dashboardLogger.log('ERROR', '❌ AI insights container not found', {
+            'container_id': 'ai-insights',
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
     
     const insights = dashboardData.aiInsights.insights || [];
+    dashboardLogger.log('INFO', 'Processing AI insights data', {
+        'insights_count': insights.length,
+        'insights_data': insights,
+        'timestamp': new Date().toISOString()
+    });
     
     if (insights.length === 0) {
+        dashboardLogger.log('WARN', 'No AI insights available, showing placeholder', {
+            'timestamp': new Date().toISOString()
+        });
         container.innerHTML = '<p class="text-muted">No AI insights available</p>';
         return;
     }
@@ -1015,6 +1719,50 @@ function updateAIInsights() {
     `).join('');
     
     container.innerHTML = html;
+}
+
+// Find element with multiple selectors and retries
+function findElementWithRetry(elementName, selectors, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        for (const selector of selectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                dashboardLogger.log('SUCCESS', `Found ${elementName} element`, {
+                    'selector': selector,
+                    'attempt': attempt,
+                    'element_tag': element.tagName,
+                    'timestamp': new Date().toISOString()
+                });
+                return element;
+            }
+        }
+        
+        if (attempt < maxRetries) {
+            dashboardLogger.log('WARN', `Retrying ${elementName} element search`, {
+                'attempt': attempt,
+                'max_retries': maxRetries,
+                'selectors_tried': selectors,
+                'timestamp': new Date().toISOString()
+            });
+            // Wait 50ms before retry
+            const start = performance.now();
+            while (performance.now() - start < 50) {
+                // Busy wait
+            }
+        }
+    }
+    
+    dashboardLogger.log('ERROR', `Could not find ${elementName} element after ${maxRetries} attempts`, {
+        'selectors_tried': selectors,
+        'available_elements': Array.from(document.querySelectorAll('*')).slice(0, 10).map(el => ({
+            id: el.id,
+            className: el.className,
+            tagName: el.tagName
+        })),
+        'timestamp': new Date().toISOString()
+    });
+    
+    return null;
 }
 
 // Get insight alert class
@@ -1032,26 +1780,30 @@ function getInsightAlertClass(type) {
 function setupEventListeners() {
     // Refresh button
     const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
-    if (refreshBtn) {
+    if (refreshBtn && !refreshBtn.hasAttribute('data-listener-attached')) {
         refreshBtn.addEventListener('click', refreshDashboard);
+        refreshBtn.setAttribute('data-listener-attached', 'true');
     }
     
     // Export button
     const exportBtn = document.querySelector('[onclick="exportDashboard()"]');
-    if (exportBtn) {
+    if (exportBtn && !exportBtn.hasAttribute('data-listener-attached')) {
         exportBtn.addEventListener('click', exportDashboard);
+        exportBtn.setAttribute('data-listener-attached', 'true');
     }
     
     // Customize button
     const customizeBtn = document.querySelector('[onclick="customizeDashboard()"]');
-    if (customizeBtn) {
+    if (customizeBtn && !customizeBtn.hasAttribute('data-listener-attached')) {
         customizeBtn.addEventListener('click', customizeDashboard);
+        customizeBtn.setAttribute('data-listener-attached', 'true');
     }
     
     // Real-time toggle
     const realTimeToggle = document.getElementById('realTimeToggle');
-    if (realTimeToggle) {
+    if (realTimeToggle && !realTimeToggle.hasAttribute('data-listener-attached')) {
         realTimeToggle.addEventListener('change', toggleRealTime);
+        realTimeToggle.setAttribute('data-listener-attached', 'true');
     }
 }
 
@@ -1108,10 +1860,35 @@ function setupRealTimeUpdates() {
         isRealTimeEnabled = true;
     }
     
+    // Clear any existing interval to prevent multiple intervals
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+    
+    // Also clear any global interval
+    if (window.dashboardRefreshInterval) {
+        clearInterval(window.dashboardRefreshInterval);
+        window.dashboardRefreshInterval = null;
+    }
+    
     if (isRealTimeEnabled) {
         refreshInterval = setInterval(() => {
+            dashboardLogger.log('INFO', '🔄 Real-time refresh triggered', {
+                'interval_id': refreshInterval,
+                'timestamp': new Date().toISOString()
+            });
             loadDashboardData();
         }, 30000); // Refresh every 30 seconds
+        
+        // Store globally to prevent conflicts
+        window.dashboardRefreshInterval = refreshInterval;
+        
+        dashboardLogger.log('SUCCESS', '✅ Real-time updates enabled', {
+            'interval_id': refreshInterval,
+            'refresh_interval_ms': 30000,
+            'timestamp': new Date().toISOString()
+        });
     }
 }
 
@@ -1142,8 +1919,24 @@ function setupDashboardCustomization() {
 
 // Refresh dashboard
 function refreshDashboard() {
+    // Prevent multiple simultaneous refreshes
+    if (dashboardData.refreshing) {
+        dashboardLogger.log('WARN', '⏸️ Refresh already in progress, skipping', {
+            'timestamp': new Date().toISOString()
+        });
+        return;
+    }
+    
+    dashboardData.refreshing = true;
+    dashboardLogger.log('INFO', '🔄 Manual refresh triggered', {
+        'call_count': loadDashboardDataCallCount,
+        'timestamp': new Date().toISOString()
+    });
+    
     console.log('🔄 Refreshing dashboard...');
-    loadDashboardData();
+    loadDashboardData().finally(() => {
+        dashboardData.refreshing = false;
+    });
 }
 
 // Retry failed components
@@ -1342,37 +2135,152 @@ window.addEventListener('beforeunload', function() {
 
 // Show loading state
 function showLoadingState() {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay) {
-        loadingOverlay.style.display = 'flex';
+    dashboardLogger.logFunctionEntry('showLoadingState', [], {
+        'timestamp': new Date().toISOString()
+    });
+    
+    // Wait for DOM to be ready if needed
+    if (document.readyState === 'loading') {
+        dashboardLogger.log('INFO', 'DOM still loading, waiting for DOMContentLoaded', {
+            'ready_state': document.readyState,
+            'timestamp': new Date().toISOString()
+        });
+        // Note: DOMContentLoaded listener is already set up at the top of the file
+        // Just wait a bit and retry
+        setTimeout(showLoadingState, 100);
+        return;
     }
     
-    // Disable refresh button during loading
-    const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
+    // Try multiple ways to find the loading overlay with retries
+    let loadingOverlay = findElementWithRetry('loading-overlay', ['#loading-overlay', '.loading-overlay', '[id*="loading"]']);
+    
+    dashboardLogger.log('INFO', 'Showing loading state', {
+        'loading_overlay_found': !!loadingOverlay,
+        'loading_overlay_element': loadingOverlay ? loadingOverlay.tagName : 'not found',
+        'timestamp': new Date().toISOString()
+    });
+    
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+        dashboardLogger.log('SUCCESS', 'Loading overlay displayed', {
+            'element_id': 'loading-overlay',
+            'display_style': 'flex',
+            'timestamp': new Date().toISOString()
+        });
+    } else {
+        dashboardLogger.log('ERROR', 'Loading overlay element not found', {
+            'element_id': 'loading-overlay',
+            'available_elements': Array.from(document.querySelectorAll('[id*="loading"], [class*="loading"]')).map(el => ({
+                id: el.id,
+                className: el.className,
+                tagName: el.tagName
+            })),
+            'timestamp': new Date().toISOString()
+        });
+    }
+    
+    // Try multiple ways to find the refresh button with retries
+    let refreshBtn = findElementWithRetry('refresh button', [
+        '[onclick="refreshDashboard()"]',
+        'button[onclick*="refreshDashboard"]',
+        '.btn[onclick*="refresh"]',
+        'button[onclick*="refresh"]'
+    ]);
+    
+    dashboardLogger.log('INFO', 'Updating refresh button for loading state', {
+        'refresh_button_found': !!refreshBtn,
+        'refresh_button_element': refreshBtn ? refreshBtn.tagName : 'not found',
+        'timestamp': new Date().toISOString()
+    });
+    
     if (refreshBtn) {
         refreshBtn.disabled = true;
         refreshBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        dashboardLogger.log('SUCCESS', 'Refresh button disabled and updated', {
+            'button_disabled': true,
+            'button_text': 'Loading...',
+            'timestamp': new Date().toISOString()
+        });
+    } else {
+        dashboardLogger.log('ERROR', 'Refresh button not found', {
+            'selector': '[onclick="refreshDashboard()"]',
+            'available_buttons': Array.from(document.querySelectorAll('button')).map(btn => ({
+                id: btn.id,
+                className: btn.className,
+                onclick: btn.onclick ? btn.onclick.toString() : 'none',
+                textContent: btn.textContent?.trim()
+            })),
+            'timestamp': new Date().toISOString()
+        });
     }
+    
+    dashboardLogger.logFunctionExit('showLoadingState', {
+        'loading_state_shown': true,
+        'timestamp': new Date().toISOString()
+    });
 }
 
 // Hide loading state
 function hideLoadingState() {
-    console.log('🔄 Hiding loading state...');
-    const loadingOverlay = document.getElementById('loading-overlay');
+    dashboardLogger.logFunctionEntry('hideLoadingState', [], {
+        'timestamp': new Date().toISOString()
+    });
+    
+    dashboardLogger.log('INFO', '🔄 Hiding loading state...', {
+        'timestamp': new Date().toISOString()
+    });
+    
+    const loadingOverlay = findElementWithRetry('loading overlay', ['#loading-overlay', '.loading-overlay', '[id*="loading"]']);
+    dashboardLogger.log('INFO', 'Checking loading overlay element', {
+        'loading_overlay_found': !!loadingOverlay,
+        'timestamp': new Date().toISOString()
+    });
+    
     if (loadingOverlay) {
         loadingOverlay.style.display = 'none';
-        console.log('✅ Loading overlay hidden');
+        dashboardLogger.log('SUCCESS', '✅ Loading overlay hidden', {
+            'element_id': 'loading-overlay',
+            'display_style': 'none',
+            'timestamp': new Date().toISOString()
+        });
     } else {
-        console.log('❌ Loading overlay element not found');
+        dashboardLogger.log('ERROR', '❌ Loading overlay element not found', {
+            'element_id': 'loading-overlay',
+            'timestamp': new Date().toISOString()
+        });
     }
     
     // Re-enable refresh button
-    const refreshBtn = document.querySelector('[onclick="refreshDashboard()"]');
+    const refreshBtn = findElementWithRetry('refresh button', [
+        '[onclick="refreshDashboard()"]',
+        'button[onclick*="refreshDashboard"]',
+        '.btn[onclick*="refresh"]',
+        'button[onclick*="refresh"]'
+    ]);
+    dashboardLogger.log('INFO', 'Re-enabling refresh button', {
+        'refresh_button_found': !!refreshBtn,
+        'timestamp': new Date().toISOString()
+    });
+    
     if (refreshBtn) {
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Refresh';
-        console.log('✅ Refresh button re-enabled');
+        dashboardLogger.log('SUCCESS', '✅ Refresh button re-enabled', {
+            'button_disabled': false,
+            'button_text': 'Refresh',
+            'timestamp': new Date().toISOString()
+        });
+    } else {
+        dashboardLogger.log('ERROR', '❌ Refresh button not found', {
+            'selector': '[onclick="refreshDashboard()"]',
+            'timestamp': new Date().toISOString()
+        });
     }
+    
+    dashboardLogger.logFunctionExit('hideLoadingState', {
+        'loading_state_hidden': true,
+        'timestamp': new Date().toISOString()
+    });
 }
 
 // Export functions for global use

@@ -366,28 +366,108 @@ class NavigationManager {
     }
     
     initializeView(view, params) {
+        navigationLogger.log('INFO', `🔧 Initializing view: ${view}`, {
+            'view_name': view,
+            'params': params,
+            'timestamp': new Date().toISOString(),
+            'GenAIDashboard_available': typeof window.GenAIDashboard,
+            'GenAIDashboard_init_available': typeof window.GenAIDashboard?.init
+        });
+        
         // Initialize view-specific functionality
         switch (view) {
             case 'dashboard':
-                console.log('🔍 Checking GenAIDashboard availability...');
-                console.log('window.GenAIDashboard:', window.GenAIDashboard);
+                navigationLogger.log('INFO', '🔍 Checking GenAIDashboard availability...', {
+                    'view': 'dashboard',
+                    'GenAIDashboard_type': typeof window.GenAIDashboard,
+                    'GenAIDashboard_init_type': typeof window.GenAIDashboard?.init,
+                    'available_methods': window.GenAIDashboard ? Object.keys(window.GenAIDashboard) : 'GenAIDashboard not defined',
+                    'timestamp': new Date().toISOString()
+                });
+                
                 if (window.GenAIDashboard && typeof window.GenAIDashboard.init === 'function') {
-                    console.log('✅ Calling GenAIDashboard.init()');
-                    window.GenAIDashboard.init();
-                } else {
-                    console.error('❌ GenAIDashboard.init is not available');
-                    console.log('Available methods:', window.GenAIDashboard ? Object.keys(window.GenAIDashboard) : 'GenAIDashboard not defined');
+                    navigationLogger.log('INFO', '✅ Calling GenAIDashboard.init()', {
+                        'function': 'GenAIDashboard.init',
+                        'timestamp': new Date().toISOString()
+                    });
                     
-                    // Retry after a short delay
-                    setTimeout(() => {
-                        console.log('🔄 Retrying GenAIDashboard.init()...');
-                        if (window.GenAIDashboard && typeof window.GenAIDashboard.init === 'function') {
-                            console.log('✅ Retry successful - calling GenAIDashboard.init()');
-                            window.GenAIDashboard.init();
-                        } else {
-                            console.error('❌ Retry failed - GenAIDashboard.init still not available');
+                    try {
+                        const initStartTime = performance.now();
+                        window.GenAIDashboard.init();
+                        const initEndTime = performance.now();
+                        const initTime = initEndTime - initStartTime;
+                        
+                        navigationLogger.log('SUCCESS', '✅ GenAIDashboard.init() completed', {
+                            'init_time_ms': initTime,
+                            'timestamp': new Date().toISOString()
+                        });
+                    } catch (error) {
+                        navigationLogger.log('ERROR', '❌ Error calling GenAIDashboard.init()', {
+                            'error_message': error.message,
+                            'error_stack': error.stack,
+                            'timestamp': new Date().toISOString()
+                        });
+                    }
+                } else {
+                    navigationLogger.log('ERROR', '❌ GenAIDashboard.init is not available', {
+                        'GenAIDashboard_type': typeof window.GenAIDashboard,
+                        'GenAIDashboard_init_type': typeof window.GenAIDashboard?.init,
+                        'available_methods': window.GenAIDashboard ? Object.keys(window.GenAIDashboard) : 'GenAIDashboard not defined',
+                        'timestamp': new Date().toISOString()
+                    });
+                    
+                    // Retry after a short delay (with retry limit)
+                    const maxRetries = 3;
+                    let retryCount = 0;
+                    
+                    const retryInit = () => {
+                        retryCount++;
+                        if (retryCount > maxRetries) {
+                            navigationLogger.log('ERROR', '❌ Max retries exceeded for GenAIDashboard.init()', {
+                                'max_retries': maxRetries,
+                                'timestamp': new Date().toISOString()
+                            });
+                            return;
                         }
-                    }, 100);
+                        
+                        navigationLogger.log('INFO', `🔄 Retrying GenAIDashboard.init()... (attempt ${retryCount}/${maxRetries})`, {
+                            'retry_attempt': retryCount,
+                            'timestamp': new Date().toISOString()
+                        });
+                        
+                        if (window.GenAIDashboard && typeof window.GenAIDashboard.init === 'function') {
+                            try {
+                                const retryStartTime = performance.now();
+                                window.GenAIDashboard.init();
+                                const retryEndTime = performance.now();
+                                const retryTime = retryEndTime - retryStartTime;
+                                
+                                navigationLogger.log('SUCCESS', '✅ Retry successful - GenAIDashboard.init() completed', {
+                                    'retry_time_ms': retryTime,
+                                    'timestamp': new Date().toISOString()
+                                });
+                            } catch (retryError) {
+                                navigationLogger.log('ERROR', '❌ Retry failed - Error in GenAIDashboard.init()', {
+                                    'retry_error_message': retryError.message,
+                                    'retry_error_stack': retryError.stack,
+                                    'timestamp': new Date().toISOString()
+                                });
+                            }
+                        } else {
+                            navigationLogger.log('ERROR', '❌ Retry failed - GenAIDashboard.init still not available', {
+                                'GenAIDashboard_type': typeof window.GenAIDashboard,
+                                'GenAIDashboard_init_type': typeof window.GenAIDashboard?.init,
+                                'timestamp': new Date().toISOString()
+                            });
+                            
+                            // Retry again if under limit
+                            if (retryCount < maxRetries) {
+                                setTimeout(retryInit, 100 * retryCount); // Exponential backoff
+                            }
+                        }
+                    };
+                    
+                    setTimeout(retryInit, 100);
                 }
                 break;
                 

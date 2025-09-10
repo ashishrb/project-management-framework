@@ -328,23 +328,76 @@ async function apiCall(endpoint, method = 'GET', data = null, retries = 3) {
                 options.body = JSON.stringify(data);
             }
             
-                const response = await fetch(`${apiBaseUrl}${endpoint}`, options);
-                const responseTime = performance.now() - startTime;
+            apiLogger.log('INFO', `🔄 Making API call (attempt ${attempt}/${retries})`, {
+                'endpoint': endpoint,
+                'method': method,
+                'full_url': `${apiBaseUrl}${endpoint}`,
+                'has_data': !!data,
+                'data_size': data ? JSON.stringify(data).length : 0,
+                'attempt': attempt,
+                'max_retries': retries,
+                'timestamp': new Date().toISOString()
+            });
+            
+            const response = await fetch(`${apiBaseUrl}${endpoint}`, options);
+            const responseTime = performance.now() - startTime;
+            
+            apiLogger.log('INFO', `📡 API response received`, {
+                'endpoint': endpoint,
+                'status': response.status,
+                'status_text': response.statusText,
+                'response_time_ms': responseTime,
+                'response_ok': response.ok,
+                'attempt': attempt,
+                'timestamp': new Date().toISOString()
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                apiLogger.log('SUCCESS', `✅ API call successful`, {
+                    'endpoint': endpoint,
+                    'method': method,
+                    'status': response.status,
+                    'response_time_ms': responseTime,
+                    'result_keys': Object.keys(result || {}),
+                    'result_size_bytes': JSON.stringify(result).length,
+                    'attempt': attempt,
+                    'timestamp': new Date().toISOString()
+                });
                 
-                if (response.ok) {
-                    const result = await response.json();
-                    apiLogger.logApiCall(method, endpoint, response.status, responseTime, data, result);
-                    apiLogger.logFunctionExit('apiCall', result, responseTime);
-                    return result;
-                } else {
+                apiLogger.logApiCall(method, endpoint, response.status, responseTime, data, result);
+                apiLogger.logFunctionExit('apiCall', result, responseTime);
+                return result;
+            } else {
                 const errorText = await response.text();
                 let errorMessage = `API call failed with status ${response.status}`;
+                
+                apiLogger.log('ERROR', `❌ API call failed`, {
+                    'endpoint': endpoint,
+                    'method': method,
+                    'status': response.status,
+                    'status_text': response.statusText,
+                    'response_time_ms': responseTime,
+                    'error_text': errorText,
+                    'attempt': attempt,
+                    'timestamp': new Date().toISOString()
+                });
                 
                 try {
                     const errorData = JSON.parse(errorText);
                     errorMessage = errorData.message || errorData.detail || errorMessage;
+                    apiLogger.log('INFO', `📝 Parsed error data`, {
+                        'error_data': errorData,
+                        'error_message': errorMessage,
+                        'timestamp': new Date().toISOString()
+                    });
                 } catch {
                     errorMessage = errorText || errorMessage;
+                    apiLogger.log('INFO', `📝 Using raw error text`, {
+                        'error_text': errorText,
+                        'error_message': errorMessage,
+                        'timestamp': new Date().toISOString()
+                    });
                 }
                 
                 // Don't retry on client errors (4xx)

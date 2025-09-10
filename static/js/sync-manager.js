@@ -187,6 +187,12 @@ class SyncManager {
     
     // ==================== CONFLICT RESOLUTION ====================
     
+    setupConflictHandling() {
+        // Setup conflict resolution strategies
+        this.conflictResolver = new ConflictResolver();
+        console.log('Conflict handling setup completed');
+    }
+    
     detectConflict(dataType, serverChange, localData) {
         const localItem = localData.get(serverChange.id);
         
@@ -351,7 +357,7 @@ class SyncManager {
             errors.push('Resource name is required');
         }
         
-        if (!resource.email || !this.isValidEmail(resource.email)) {
+        if (!resource.email || !SyncManager.isValidEmail(resource.email)) {
             errors.push('Valid email is required');
         }
         
@@ -365,18 +371,22 @@ class SyncManager {
     validateRisk(risk) {
         const errors = [];
         
-        if (!risk.title || risk.title.trim() === '') {
+        // Check for risk name (can be 'title' or 'risk_name')
+        const riskName = risk.title || risk.risk_name;
+        if (!riskName || riskName.trim() === '') {
             errors.push('Risk title is required');
         }
         
-        if (!risk.severity || !['low', 'medium', 'high', 'critical'].includes(risk.severity)) {
+        // Check for severity level (can be 'severity' or 'risk_level')
+        const severity = risk.severity || risk.risk_level;
+        if (!severity || !['low', 'medium', 'high', 'critical', 'Low', 'Medium', 'High', 'Critical'].includes(severity)) {
             errors.push('Valid severity level is required');
         }
         
         return errors;
     }
     
-    isValidEmail(email) {
+    static isValidEmail(email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
     }

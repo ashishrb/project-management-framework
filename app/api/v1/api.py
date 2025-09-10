@@ -18,7 +18,9 @@ from app.api.v1.endpoints import (
     performance,
     rag,
     ai_insights,
-    features
+    features,
+    logs,
+    backlogs
 )
 
 api_router = APIRouter()
@@ -39,3 +41,5 @@ api_router.include_router(ai_dashboard.router, prefix="/ai-dashboard", tags=["ai
 api_router.include_router(performance.router, prefix="/performance", tags=["performance"])
 api_router.include_router(rag.router, prefix="/rag", tags=["rag"])
 api_router.include_router(ai_insights.router, prefix="/ai-insights", tags=["ai-insights"])
+api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
+api_router.include_router(backlogs.router, prefix="/backlogs", tags=["backlogs"])
