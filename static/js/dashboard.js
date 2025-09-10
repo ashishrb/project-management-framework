@@ -69,6 +69,8 @@ async function loadDashboardData() {
         
         const results = await Promise.all(loadPromises);
         
+        console.log('📊 Dashboard API results:', results);
+        
         // Build dashboard data object
         dashboardData = {};
         let successCount = 0;
@@ -76,6 +78,7 @@ async function loadDashboardData() {
         results.forEach(result => {
             dashboardData[result.key] = result.data;
             if (result.success) successCount++;
+            console.log(`📈 ${result.key}:`, result.success ? 'SUCCESS' : 'FAILED', result.data);
         });
         
         // Update UI components
@@ -780,13 +783,26 @@ function initializeTrendCharts() {
 
 // Update dashboard overview
 function updateDashboardOverview() {
-    if (!dashboardData.overview) return;
+    console.log('🔄 Updating dashboard overview...');
+    if (!dashboardData.overview) {
+        console.log('❌ No overview data available');
+        return;
+    }
     
     const data = dashboardData.overview;
-    document.getElementById('current-projects').textContent = data.current_projects || 0;
-    document.getElementById('approved-projects').textContent = data.approved_projects || 0;
-    document.getElementById('backlog-projects').textContent = data.backlog_projects || 0;
-    document.getElementById('total-projects').textContent = data.total_projects || 0;
+    console.log('📊 Overview data:', data);
+    
+    const currentEl = document.getElementById('current-projects');
+    const approvedEl = document.getElementById('approved-projects');
+    const backlogEl = document.getElementById('backlog-projects');
+    const totalEl = document.getElementById('total-projects');
+    
+    if (currentEl) currentEl.textContent = data.current_projects || 0;
+    if (approvedEl) approvedEl.textContent = data.approved_projects || 0;
+    if (backlogEl) backlogEl.textContent = data.backlog_projects || 0;
+    if (totalEl) totalEl.textContent = data.total_projects || 0;
+    
+    console.log('✅ Dashboard overview updated');
 }
 
 // Update GenAI metrics
@@ -1331,9 +1347,13 @@ function showLoadingState() {
 
 // Hide loading state
 function hideLoadingState() {
+    console.log('🔄 Hiding loading state...');
     const loadingOverlay = document.getElementById('loading-overlay');
     if (loadingOverlay) {
         loadingOverlay.style.display = 'none';
+        console.log('✅ Loading overlay hidden');
+    } else {
+        console.log('❌ Loading overlay element not found');
     }
     
     // Re-enable refresh button
@@ -1341,6 +1361,7 @@ function hideLoadingState() {
     if (refreshBtn) {
         refreshBtn.disabled = false;
         refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Refresh';
+        console.log('✅ Refresh button re-enabled');
     }
 }
 
