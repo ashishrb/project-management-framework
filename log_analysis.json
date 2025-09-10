@@ -1,0 +1,18 @@
+{
+  "summary": {
+    "total_errors": 0,
+    "api_errors": 0,
+    "frontend_errors": 0,
+    "database_errors": 0,
+    "performance_issues": 0,
+    "analysis_timestamp": "2025-09-10T09:50:46.362135",
+    "errors_by_module": {},
+    "errors_by_function": {}
+  },
+  "errors": [],
+  "performance_issues": [],
+  "api_issues": [],
+  "frontend_issues": [],
+  "database_issues": [],
+  "recommendations": []
+}
