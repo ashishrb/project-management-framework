@@ -1,0 +1,49 @@
+# Testing Dependencies for Phase 8
+
+# Core Testing Framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+
+# API Testing
+httpx==0.25.2
+requests==2.31.0
+
+# Database Testing
+pytest-postgresql==5.0.0
+pytest-mock-resources==2.3.2
+
+# End-to-End Testing
+selenium==4.15.2
+webdriver-manager==4.0.1
+
+# Performance Testing
+locust==2.17.0
+pytest-benchmark==4.0.0
+memory-profiler==0.61.0
+
+# Security Testing
+bandit==1.7.5
+safety==2.3.5
+pytest-security==0.0.1
+
+# Code Quality
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+mypy==1.7.1
+
+# Test Utilities
+factory-boy==3.3.0
+faker==20.1.0
+freezegun==1.2.2
+
+# Coverage and Reporting
+coverage==7.3.2
+pytest-html==4.1.1
+pytest-json-report==1.5.0
+
+# Load Testing
+pytest-loadtest==0.1.0

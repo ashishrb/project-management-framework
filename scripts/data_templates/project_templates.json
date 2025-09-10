@@ -1,0 +1,72 @@
+{
+  "project_templates": [
+    {
+      "name_prefix": "AI-Powered",
+      "description_template": "AI-driven {type} solution for {industry}",
+      "domains": ["Machine Learning", "Natural Language Processing", "Computer Vision"],
+      "budget_range": [100000, 2000000],
+      "duration_days": [90, 365],
+      "complexity": "high"
+    },
+    {
+      "name_prefix": "Cloud-Native",
+      "description_template": "Cloud-native {type} platform for {industry}",
+      "domains": ["Cloud Infrastructure", "Microservices", "DevOps"],
+      "budget_range": [75000, 1500000],
+      "duration_days": [60, 300],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Data-Driven",
+      "description_template": "Data analytics {type} system for {industry}",
+      "domains": ["Data Analytics", "Business Intelligence", "Data Visualization"],
+      "budget_range": [50000, 1000000],
+      "duration_days": [45, 180],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Mobile-First",
+      "description_template": "Mobile-first {type} application for {industry}",
+      "domains": ["Mobile Development", "User Experience", "Cross-Platform"],
+      "budget_range": [30000, 800000],
+      "duration_days": [30, 150],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Enterprise",
+      "description_template": "Enterprise {type} solution for {industry}",
+      "domains": ["Enterprise Software", "Integration", "Security"],
+      "budget_range": [200000, 5000000],
+      "duration_days": [120, 730],
+      "complexity": "high"
+    },
+    {
+      "name_prefix": "Rapid Prototype",
+      "description_template": "Rapid prototype {type} for {industry} validation",
+      "domains": ["Prototyping", "User Research", "MVP Development"],
+      "budget_range": [10000, 100000],
+      "duration_days": [14, 60],
+      "complexity": "low"
+    }
+  ],
+  "industries": [
+    "Healthcare", "Finance", "E-commerce", "Manufacturing", "Education", 
+    "Retail", "Technology", "Government", "Non-profit", "Entertainment"
+  ],
+  "project_types": [
+    "Platform", "Application", "Service", "System", "Solution", 
+    "Tool", "Framework", "API", "Dashboard", "Integration"
+  ],
+  "modernization_domains": [
+    "Machine Learning", "Natural Language Processing", "Computer Vision",
+    "Cloud Infrastructure", "Microservices", "DevOps",
+    "Data Analytics", "Business Intelligence", "Data Visualization",
+    "Mobile Development", "User Experience", "Cross-Platform",
+    "Enterprise Software", "Integration", "Security",
+    "Prototyping", "User Research", "MVP Development"
+  ],
+  "digitization_categories": [
+    "Digital Transformation", "Process Automation", "Data Analytics",
+    "Customer Experience", "Operational Efficiency", "Innovation"
+  ]
+}

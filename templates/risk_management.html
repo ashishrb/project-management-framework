@@ -1,0 +1,839 @@
+{% extends "base.html" %}
+
+{% block title %}Risk Management{% endblock %}
+
+{% block page_title %}Risk Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="addRisk()">
+        <i class="fas fa-plus me-1"></i>Add Risk
+    </button>
+    <button type="button" class="btn btn-outline-primary" onclick="importRisks()">
+        <i class="fas fa-upload me-1"></i>Import
+    </button>
+    <button type="button" class="btn btn-outline-secondary" onclick="exportRisks()">
+        <i class="fas fa-download me-1"></i>Export
+    </button>
+    <button type="button" class="btn btn-outline-info" onclick="generateRiskReport()">
+        <i class="fas fa-chart-bar me-1"></i>Generate Report
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Risk List -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Project Risks</h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control search-input" placeholder="Search risks...">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <select class="form-select filter-select" data-filter="risk-level">
+                            <option value="all">All Risk Levels</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select filter-select" data-filter="status">
+                            <option value="all">All Statuses</option>
+                            <option value="Open">Open</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Mitigated">Mitigated</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select filter-select" data-filter="project">
+                            <option value="all">All Projects</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Risk Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Risk</th>
+                                <th>Project</th>
+                                <th>Level</th>
+                                <th>Probability</th>
+                                <th>Impact</th>
+                                <th>Score</th>
+                                <th>Status</th>
+                                <th>Owner</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="risks-table">
+                            <!-- Risks will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Risk pagination">
+                    <ul class="pagination justify-content-center" id="risks-pagination">
+                        <!-- Pagination will be loaded here -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Analytics -->
+    <div class="col-lg-4">
+        <!-- Risk Overview -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Risk Overview</h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="metric-value text-primary" id="total-risks">0</div>
+                        <div class="metric-label">Total Risks</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-value text-danger" id="high-risks">0</div>
+                        <div class="metric-label">High Risks</div>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="metric-value text-warning" id="medium-risks">0</div>
+                        <div class="metric-label">Medium Risks</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="metric-value text-success" id="low-risks">0</div>
+                        <div class="metric-label">Low Risks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Matrix -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Risk Matrix</h6>
+            </div>
+            <div class="card-body">
+                <div class="risk-matrix" id="risk-matrix">
+                    <!-- Risk matrix will be generated here -->
+                </div>
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>Legend:</strong><br>
+                        <span class="risk-cell risk-low me-2"></span> Low Risk<br>
+                        <span class="risk-cell risk-medium me-2"></span> Medium Risk<br>
+                        <span class="risk-cell risk-high me-2"></span> High Risk
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Trends -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">Risk Trends</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="riskTrendsChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Risks -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">Top Risks</h6>
+            </div>
+            <div class="card-body">
+                <div id="top-risks">
+                    <!-- Top risks will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Detail Modal -->
+<div class="modal fade" id="riskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Risk Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="risk-detail-content">
+                    <!-- Risk details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Risk Modal -->
+<div class="modal fade" id="riskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="riskModalTitle">Add Risk</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="riskForm">
+                    <input type="hidden" id="riskId">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskName" class="form-label">Risk Name</label>
+                                <input type="text" class="form-control" id="riskName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskProject" class="form-label">Project</label>
+                                <select class="form-select" id="riskProject" required>
+                                    <option value="">Select Project</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="riskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="riskDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="riskLevel" class="form-label">Risk Level</label>
+                                <select class="form-select" id="riskLevel" required>
+                                    <option value="">Select Level</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="riskProbability" class="form-label">Probability (0-1)</label>
+                                <input type="number" class="form-control" id="riskProbability" 
+                                       min="0" max="1" step="0.1" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="riskImpact" class="form-label">Impact (0-1)</label>
+                                <input type="number" class="form-control" id="riskImpact" 
+                                       min="0" max="1" step="0.1" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskStatus" class="form-label">Status</label>
+                                <select class="form-select" id="riskStatus">
+                                    <option value="Open">Open</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Mitigated">Mitigated</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskOwner" class="form-label">Risk Owner</label>
+                                <input type="text" class="form-control" id="riskOwner">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="riskMitigation" class="form-label">Mitigation Plan</label>
+                        <textarea class="form-control" id="riskMitigation" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskMitigationOwner" class="form-label">Mitigation Owner</label>
+                                <input type="text" class="form-control" id="riskMitigationOwner">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="riskMitigationDate" class="form-label">Mitigation Due Date</label>
+                                <input type="date" class="form-control" id="riskMitigationDate">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveRisk()">Save Risk</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Assessment Modal -->
+<div class="modal fade" id="riskAssessmentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Risk Assessment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="risk-assessment-content">
+                    <!-- Risk assessment will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Risk Management JavaScript
+let risksData = [];
+let riskTrendsChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRisks();
+    loadProjects();
+    loadRiskAnalytics();
+    initializeRiskMatrix();
+    initializeRiskTrendsChart();
+});
+
+// Load risks
+async function loadRisks() {
+    try {
+        const data = await GenAIDashboard.apiCall('/reports/risks');
+        risksData = data;
+        renderRisks(data);
+        updateRiskOverview(data);
+        updateTopRisks(data);
+    } catch (error) {
+        console.error('Error loading risks:', error);
+        GenAIDashboard.showError('Failed to load risks');
+    }
+}
+
+// Render risks table
+function renderRisks(risks) {
+    const container = document.getElementById('risks-table');
+    if (!container) return;
+    
+    if (risks.length === 0) {
+        container.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No risks found</td></tr>';
+        return;
+    }
+    
+    const html = risks.map(risk => `
+        <tr class="filterable-item" data-filter-value="${risk.risk_level}">
+            <td>
+                <div>
+                    <h6 class="mb-0">${risk.risk_name}</h6>
+                    <small class="text-muted">${risk.description || 'No description'}</small>
+                </div>
+            </td>
+            <td>
+                <span class="badge bg-secondary">${risk.project_name || 'N/A'}</span>
+            </td>
+            <td>
+                <span class="badge bg-${getRiskLevelColor(risk.risk_level)}">${risk.risk_level}</span>
+            </td>
+            <td>
+                <div class="progress" style="width: 60px; height: 8px;">
+                    <div class="progress-bar bg-${getProbabilityColor(risk.probability)}" 
+                         style="width: ${(risk.probability * 100)}%"></div>
+                </div>
+                <small>${Math.round(risk.probability * 100)}%</small>
+            </td>
+            <td>
+                <div class="progress" style="width: 60px; height: 8px;">
+                    <div class="progress-bar bg-${getImpactColor(risk.impact)}" 
+                         style="width: ${(risk.impact * 100)}%"></div>
+                </div>
+                <small>${Math.round(risk.impact * 100)}%</small>
+            </td>
+            <td>
+                <span class="badge bg-${getRiskScoreColor(risk.risk_score)}">${risk.risk_score}</span>
+            </td>
+            <td>
+                <span class="badge bg-${getStatusColor(risk.status)}">${risk.status}</span>
+            </td>
+            <td>
+                <small>${risk.mitigation_owner || 'N/A'}</small>
+            </td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" onclick="viewRisk('${risk.risk_name}')" title="View Details">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline-warning" onclick="editRisk('${risk.risk_name}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-outline-info" onclick="assessRisk('${risk.risk_name}')" title="Assess">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="deleteRisk('${risk.risk_name}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+// Get risk level color
+function getRiskLevelColor(level) {
+    const colorMap = {
+        'Low': 'success',
+        'Medium': 'warning',
+        'High': 'danger',
+        'Critical': 'dark'
+    };
+    return colorMap[level] || 'secondary';
+}
+
+// Get probability color
+function getProbabilityColor(probability) {
+    if (probability <= 0.3) return 'success';
+    if (probability <= 0.7) return 'warning';
+    return 'danger';
+}
+
+// Get impact color
+function getImpactColor(impact) {
+    if (impact <= 0.3) return 'success';
+    if (impact <= 0.7) return 'warning';
+    return 'danger';
+}
+
+// Get risk score color
+function getRiskScoreColor(score) {
+    if (score <= 0.3) return 'success';
+    if (score <= 0.7) return 'warning';
+    return 'danger';
+}
+
+// Get status color
+function getStatusColor(status) {
+    const colorMap = {
+        'Open': 'danger',
+        'In Progress': 'warning',
+        'Mitigated': 'info',
+        'Closed': 'success'
+    };
+    return colorMap[status] || 'secondary';
+}
+
+// Update risk overview
+function updateRiskOverview(risks) {
+    const total = risks.length;
+    const high = risks.filter(r => r.risk_level === 'High' || r.risk_level === 'Critical').length;
+    const medium = risks.filter(r => r.risk_level === 'Medium').length;
+    const low = risks.filter(r => r.risk_level === 'Low').length;
+    
+    document.getElementById('total-risks').textContent = total;
+    document.getElementById('high-risks').textContent = high;
+    document.getElementById('medium-risks').textContent = medium;
+    document.getElementById('low-risks').textContent = low;
+}
+
+// Initialize risk matrix
+function initializeRiskMatrix() {
+    const container = document.getElementById('risk-matrix');
+    if (!container) return;
+    
+    // Create 5x5 risk matrix
+    let html = '';
+    for (let impact = 5; impact >= 1; impact--) {
+        for (let probability = 1; probability <= 5; probability++) {
+            const riskScore = (probability * impact) / 25;
+            const riskLevel = getRiskLevelFromScore(riskScore);
+            const cellClass = `risk-${riskLevel}`;
+            
+            html += `<div class="risk-cell ${cellClass}" 
+                         data-probability="${probability}" 
+                         data-impact="${impact}"
+                         onclick="showRiskMatrixDetails(${probability}, ${impact})">
+                        ${probability}x${impact}
+                     </div>`;
+        }
+    }
+    
+    container.innerHTML = html;
+}
+
+// Get risk level from score
+function getRiskLevelFromScore(score) {
+    if (score <= 0.2) return 'low';
+    if (score <= 0.6) return 'medium';
+    return 'high';
+}
+
+// Show risk matrix details
+function showRiskMatrixDetails(probability, impact) {
+    const risks = risksData.filter(risk => 
+        Math.round(risk.probability * 5) === probability && 
+        Math.round(risk.impact * 5) === impact
+    );
+    
+    if (risks.length === 0) {
+        GenAIDashboard.showInfo(`No risks found for probability ${probability} and impact ${impact}`);
+        return;
+    }
+    
+    const modal = new bootstrap.Modal(document.getElementById('riskDetailModal'));
+    const content = document.getElementById('risk-detail-content');
+    
+    content.innerHTML = `
+        <h6>Risks in Probability ${probability} x Impact ${impact}</h6>
+        <div class="list-group">
+            ${risks.map(risk => `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${risk.risk_name}</h6>
+                            <p class="mb-1">${risk.description || 'No description'}</p>
+                            <small>Project: ${risk.project_name || 'N/A'}</small>
+                        </div>
+                        <span class="badge bg-${getRiskLevelColor(risk.risk_level)}">${risk.risk_level}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    modal.show();
+}
+
+// Initialize risk trends chart
+function initializeRiskTrendsChart() {
+    const ctx = document.getElementById('riskTrendsChart').getContext('2d');
+    
+    // Sample data - in real implementation, this would come from API
+    const data = {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+            label: 'High Risks',
+            data: [3, 5, 4, 6, 5, 7],
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Medium Risks',
+            data: [8, 10, 12, 9, 11, 13],
+            borderColor: '#ffc107',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'Low Risks',
+            data: [15, 12, 14, 16, 18, 20],
+            borderColor: '#28a745',
+            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+            tension: 0.4
+        }]
+    };
+    
+    riskTrendsChart = new Chart(ctx, {
+        type: 'line',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// Load projects for risk form
+async function loadProjects() {
+    try {
+        const data = await GenAIDashboard.apiCall('/projects/');
+        const select = document.getElementById('riskProject');
+        select.innerHTML = '<option value="">Select Project</option>' +
+            data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+// Load risk analytics
+async function loadRiskAnalytics() {
+    try {
+        const data = await GenAIDashboard.apiCall('/ai/risk-analysis', 'POST', {
+            project_id: null,
+            analysis_type: 'comprehensive'
+        });
+        updateRiskTrendsChart(data);
+    } catch (error) {
+        console.error('Error loading risk analytics:', error);
+    }
+}
+
+// Update risk trends chart
+function updateRiskTrendsChart(data) {
+    // Update chart with real data
+    if (riskTrendsChart && data.trends) {
+        riskTrendsChart.data.labels = data.trends.map(t => t.period);
+        riskTrendsChart.data.datasets[0].data = data.trends.map(t => t.high_risks);
+        riskTrendsChart.data.datasets[1].data = data.trends.map(t => t.medium_risks);
+        riskTrendsChart.data.datasets[2].data = data.trends.map(t => t.low_risks);
+        riskTrendsChart.update();
+    }
+}
+
+// Update top risks
+function updateTopRisks(risks) {
+    const container = document.getElementById('top-risks');
+    if (!container) return;
+    
+    const topRisks = risks
+        .sort((a, b) => b.risk_score - a.risk_score)
+        .slice(0, 5);
+    
+    if (topRisks.length === 0) {
+        container.innerHTML = '<p class="text-muted">No risks found</p>';
+        return;
+    }
+    
+    const html = topRisks.map((risk, index) => `
+        <div class="d-flex align-items-start mb-2">
+            <div class="flex-shrink-0">
+                <span class="badge bg-${getRiskLevelColor(risk.risk_level)}">${index + 1}</span>
+            </div>
+            <div class="flex-grow-1 ms-2">
+                <h6 class="mb-0 small">${risk.risk_name}</h6>
+                <small class="text-muted">${risk.project_name || 'N/A'}</small>
+                <div class="small text-muted">Score: ${risk.risk_score}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    container.innerHTML = html;
+}
+
+// Action functions
+function addRisk() {
+    const modal = new bootstrap.Modal(document.getElementById('riskModal'));
+    document.getElementById('riskModalTitle').textContent = 'Add Risk';
+    document.getElementById('riskForm').reset();
+    modal.show();
+}
+
+function saveRisk() {
+    const form = document.getElementById('riskForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Calculate risk score
+    data.risk_score = (parseFloat(data.riskProbability) * parseFloat(data.riskImpact)).toFixed(2);
+    
+    // Submit risk
+    GenAIDashboard.apiCall('/risks/', 'POST', data)
+        .then(() => {
+            GenAIDashboard.showSuccess('Risk saved successfully');
+            bootstrap.Modal.getInstance(document.getElementById('riskModal')).hide();
+            loadRisks();
+        })
+        .catch(error => {
+            GenAIDashboard.showError('Failed to save risk');
+        });
+}
+
+function viewRisk(riskName) {
+    const risk = risksData.find(r => r.risk_name === riskName);
+    if (!risk) return;
+    
+    const modal = new bootstrap.Modal(document.getElementById('riskDetailModal'));
+    const content = document.getElementById('risk-detail-content');
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Risk Information</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Name:</strong></td>
+                        <td>${risk.risk_name}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Project:</strong></td>
+                        <td>${risk.project_name || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Level:</strong></td>
+                        <td><span class="badge bg-${getRiskLevelColor(risk.risk_level)}">${risk.risk_level}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Probability:</strong></td>
+                        <td>${Math.round(risk.probability * 100)}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Impact:</strong></td>
+                        <td>${Math.round(risk.impact * 100)}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Score:</strong></td>
+                        <td><span class="badge bg-${getRiskScoreColor(risk.risk_score)}">${risk.risk_score}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td><span class="badge bg-${getStatusColor(risk.status)}">${risk.status}</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Description</h6>
+                <p class="text-muted">${risk.description || 'No description available'}</p>
+                
+                <h6>Mitigation Plan</h6>
+                <p class="text-muted">${risk.mitigation_plan || 'No mitigation plan available'}</p>
+                
+                <h6>Mitigation Details</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Owner:</strong></td>
+                        <td>${risk.mitigation_owner || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Due Date:</strong></td>
+                        <td>${risk.mitigation_due_date || 'N/A'}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function editRisk(riskName) {
+    const risk = risksData.find(r => r.risk_name === riskName);
+    if (!risk) return;
+    
+    const modal = new bootstrap.Modal(document.getElementById('riskModal'));
+    document.getElementById('riskModalTitle').textContent = 'Edit Risk';
+    
+    // Populate form with risk data
+    document.getElementById('riskId').value = risk.id;
+    document.getElementById('riskName').value = risk.risk_name;
+    document.getElementById('riskProject').value = risk.project_id;
+    document.getElementById('riskDescription').value = risk.description || '';
+    document.getElementById('riskLevel').value = risk.risk_level;
+    document.getElementById('riskProbability').value = risk.probability;
+    document.getElementById('riskImpact').value = risk.impact;
+    document.getElementById('riskStatus').value = risk.status;
+    document.getElementById('riskOwner').value = risk.mitigation_owner || '';
+    document.getElementById('riskMitigation').value = risk.mitigation_plan || '';
+    document.getElementById('riskMitigationOwner').value = risk.mitigation_owner || '';
+    document.getElementById('riskMitigationDate').value = risk.mitigation_due_date || '';
+    
+    modal.show();
+}
+
+function assessRisk(riskName) {
+    const risk = risksData.find(r => r.risk_name === riskName);
+    if (!risk) return;
+    
+    const modal = new bootstrap.Modal(document.getElementById('riskAssessmentModal'));
+    const content = document.getElementById('risk-assessment-content');
+    
+    content.innerHTML = `
+        <div class="alert alert-info">
+            <h6>Risk Assessment for: ${risk.risk_name}</h6>
+            <p>This feature will provide AI-powered risk assessment and recommendations.</p>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+function deleteRisk(riskName) {
+    if (confirm('Are you sure you want to delete this risk?')) {
+        const risk = risksData.find(r => r.risk_name === riskName);
+        if (!risk) return;
+        
+        GenAIDashboard.apiCall(`/risks/${risk.id}`, 'DELETE')
+            .then(() => {
+                GenAIDashboard.showSuccess('Risk deleted successfully');
+                loadRisks();
+            })
+            .catch(error => {
+                GenAIDashboard.showError('Failed to delete risk');
+            });
+    }
+}
+
+function importRisks() {
+    // Implement import risks functionality
+    console.log('Import risks');
+}
+
+function exportRisks() {
+    // Implement export risks functionality
+    console.log('Export risks');
+}
+
+function generateRiskReport() {
+    // Implement generate risk report functionality
+    console.log('Generate risk report');
+}
+
+function clearFilters() {
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.value = 'all';
+    });
+    
+    document.querySelectorAll('.filterable-item').forEach(item => {
+        item.style.display = '';
+    });
+}
+</script>
+{% endblock %}

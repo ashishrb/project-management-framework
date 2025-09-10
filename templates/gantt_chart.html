@@ -1,0 +1,859 @@
+{% extends "base.html" %}
+
+{% block title %}Gantt Chart - Project Timeline{% endblock %}
+
+{% block page_title %}Gantt Chart{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="addTask()">
+        <i class="fas fa-plus me-1"></i>Add Task
+    </button>
+    <button type="button" class="btn btn-outline-primary" onclick="editTask()">
+        <i class="fas fa-edit me-1"></i>Edit Task
+    </button>
+    <button type="button" class="btn btn-outline-secondary" onclick="exportGantt()">
+        <i class="fas fa-download me-1"></i>Export
+    </button>
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-outline-info dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="fas fa-cog me-1"></i>View Options
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="changeView('day')">
+                <i class="fas fa-calendar-day me-2"></i>Day View
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="changeView('week')">
+                <i class="fas fa-calendar-week me-2"></i>Week View
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="changeView('month')">
+                <i class="fas fa-calendar-alt me-2"></i>Month View
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="toggleCriticalPath()">
+                <i class="fas fa-route me-2"></i>Toggle Critical Path
+            </a></li>
+            <li><a class="dropdown-item" href="#" onclick="toggleDependencies()">
+                <i class="fas fa-link me-2"></i>Toggle Dependencies
+            </a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Gantt Chart Controls -->
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="mb-0">Project Timeline</h5>
+                    </div>
+                    <div class="col-auto">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" onclick="zoomIn()">
+                                <i class="fas fa-search-plus"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="zoomOut()">
+                                <i class="fas fa-search-minus"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" onclick="fitToScreen()">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Project Selection -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="projectSelect" class="form-label">Project</label>
+                        <select class="form-select" id="projectSelect" onchange="loadProjectGantt()">
+                            <option value="">Select Project</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="viewSelect" class="form-label">View</label>
+                        <select class="form-select" id="viewSelect" onchange="changeView(this.value)">
+                            <option value="week">Week View</option>
+                            <option value="day">Day View</option>
+                            <option value="month">Month View</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="dateRange" class="form-label">Date Range</label>
+                        <div class="input-group">
+                            <input type="date" class="form-control" id="startDate">
+                            <span class="input-group-text">to</span>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gantt Chart Container -->
+                <div class="gantt-container" id="ganttContainer">
+                    <div class="gantt-header" id="ganttHeader">
+                        <!-- Header will be generated dynamically -->
+                    </div>
+                    <div class="gantt-body" id="ganttBody">
+                        <!-- Tasks will be generated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Task Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="task-detail-content">
+                    <!-- Task details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Task Modal -->
+<div class="modal fade" id="taskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="taskModalTitle">Add Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId">
+                    <div class="mb-3">
+                        <label for="taskName" class="form-label">Task Name</label>
+                        <input type="text" class="form-control" id="taskName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskStartDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="taskStartDate" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskEndDate" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="taskEndDate" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskStatus" class="form-label">Status</label>
+                                <select class="form-select" id="taskStatus">
+                                    <option value="not-started">Not Started</option>
+                                    <option value="in-progress">In Progress</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="on-hold">On Hold</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskPriority" class="form-label">Priority</label>
+                                <select class="form-select" id="taskPriority">
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                    <option value="critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskProgress" class="form-label">Progress (%)</label>
+                                <input type="number" class="form-control" id="taskProgress" min="0" max="100" value="0">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="taskAssignee" class="form-label">Assignee</label>
+                                <select class="form-select" id="taskAssignee">
+                                    <option value="">Select Assignee</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskDependencies" class="form-label">Dependencies</label>
+                        <select class="form-select" id="taskDependencies" multiple>
+                            <!-- Dependencies will be loaded dynamically -->
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveTask()">Save Task</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dependency Modal -->
+<div class="modal fade" id="dependencyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Task Dependencies</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dependency-content">
+                    <!-- Dependencies will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.gantt-container {
+    background: white;
+    border-radius: 0.5rem;
+    padding: 0;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    overflow-x: auto;
+    min-height: 400px;
+}
+
+.gantt-header {
+    display: flex;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    min-width: 800px;
+}
+
+.gantt-header-cell {
+    padding: 0.75rem;
+    border-right: 1px solid #dee2e6;
+    min-width: 120px;
+    text-align: center;
+    background-color: #f8f9fa;
+}
+
+.gantt-header-cell:first-child {
+    min-width: 200px;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    background-color: #f8f9fa;
+}
+
+.gantt-body {
+    min-width: 800px;
+}
+
+.gantt-row {
+    display: flex;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 40px;
+    align-items: center;
+    position: relative;
+}
+
+.gantt-row:hover {
+    background-color: #f8f9fa;
+}
+
+.gantt-cell {
+    padding: 0.75rem;
+    border-right: 1px solid #dee2e6;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.gantt-cell:first-child {
+    min-width: 200px;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: white;
+    font-weight: 500;
+}
+
+.gantt-task {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+    z-index: 2;
+}
+
+.gantt-task:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+.gantt-task.completed {
+    background-color: var(--success-color);
+}
+
+.gantt-task.in-progress {
+    background-color: var(--info-color);
+}
+
+.gantt-task.on-hold {
+    background-color: var(--warning-color);
+}
+
+.gantt-task.critical {
+    background-color: var(--danger-color);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.gantt-milestone {
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 12px solid var(--warning-color);
+    position: relative;
+    z-index: 3;
+}
+
+.gantt-dependency {
+    position: absolute;
+    height: 2px;
+    background-color: #6c757d;
+    z-index: 1;
+}
+
+.gantt-dependency::after {
+    content: '';
+    position: absolute;
+    right: -4px;
+    top: -3px;
+    width: 0;
+    height: 0;
+    border-left: 4px solid #6c757d;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
+.gantt-timeline {
+    position: relative;
+    height: 2px;
+    background-color: #e9ecef;
+    margin: 0.5rem 0;
+}
+
+.gantt-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: -1px;
+    width: 100%;
+    height: 4px;
+    background-color: #dee2e6;
+}
+
+.gantt-zoom-controls {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: white;
+    padding: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.gantt-legend {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.gantt-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.gantt-legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 0.25rem;
+}
+
+.gantt-tooltip {
+    position: absolute;
+    background-color: #333;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.gantt-tooltip.show {
+    opacity: 1;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gantt Chart JavaScript
+let ganttData = [];
+let currentView = 'week';
+let currentProject = null;
+let ganttChart = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadProjects();
+    initializeGanttChart();
+});
+
+// Load projects for selection
+async function loadProjects() {
+    try {
+        const data = await GenAIDashboard.apiCall('/projects/');
+        const select = document.getElementById('projectSelect');
+        select.innerHTML = '<option value="">Select Project</option>' +
+            data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+}
+
+// Load project Gantt chart
+async function loadProjectGantt() {
+    const projectId = document.getElementById('projectSelect').value;
+    if (!projectId) return;
+    
+    try {
+        const [tasks, features] = await Promise.all([
+            GenAIDashboard.apiCall(`/projects/${projectId}/tasks`),
+            GenAIDashboard.apiCall(`/projects/${projectId}/features`)
+        ]);
+        
+        ganttData = [...tasks, ...features];
+        currentProject = projectId;
+        renderGanttChart();
+    } catch (error) {
+        console.error('Error loading project data:', error);
+        GenAIDashboard.showError('Failed to load project data');
+    }
+}
+
+// Initialize Gantt chart
+function initializeGanttChart() {
+    // Set default date range
+    const today = new Date();
+    const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+    const endDate = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000); // 90 days from now
+    
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+}
+
+// Render Gantt chart
+function renderGanttChart() {
+    if (ganttData.length === 0) {
+        document.getElementById('ganttBody').innerHTML = '<p class="text-center text-muted p-4">No tasks found</p>';
+        return;
+    }
+    
+    renderGanttHeader();
+    renderGanttBody();
+    addGanttInteractions();
+}
+
+// Render Gantt header
+function renderGanttHeader() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    const header = document.getElementById('ganttHeader');
+    
+    // Task name column
+    let html = '<div class="gantt-header-cell">Task Name</div>';
+    
+    // Date columns based on view
+    const dates = generateDateRange(startDate, endDate, currentView);
+    dates.forEach(date => {
+        const dateStr = formatDateForHeader(date, currentView);
+        html += `<div class="gantt-header-cell">${dateStr}</div>`;
+    });
+    
+    header.innerHTML = html;
+}
+
+// Render Gantt body
+function renderGanttBody() {
+    const body = document.getElementById('ganttBody');
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+    
+    let html = '';
+    
+    ganttData.forEach((task, index) => {
+        html += renderGanttRow(task, index, startDate, endDate);
+    });
+    
+    body.innerHTML = html;
+}
+
+// Render Gantt row
+function renderGanttRow(task, index, startDate, endDate) {
+    const taskStartDate = new Date(task.start_date || task.planned_start_date);
+    const taskEndDate = new Date(task.due_date || task.planned_end_date);
+    const progress = task.percent_complete || 0;
+    
+    // Calculate position and width
+    const startPosition = calculatePosition(taskStartDate, startDate, endDate);
+    const endPosition = calculatePosition(taskEndDate, startDate, endDate);
+    const width = Math.max(endPosition - startPosition, 20); // Minimum width
+    
+    const statusClass = getTaskStatusClass(task.status || 'not-started');
+    const priorityClass = task.priority === 'critical' ? 'critical' : '';
+    
+    let html = `
+        <div class="gantt-row" data-task-id="${task.id}">
+            <div class="gantt-cell">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${task.feature_name ? 'cog' : 'tasks'} me-2 text-muted"></i>
+                    <div>
+                        <div class="fw-medium">${task.task_name || task.feature_name}</div>
+                        <small class="text-muted">${task.description || ''}</small>
+                    </div>
+                </div>
+            </div>
+    `;
+    
+    // Generate timeline cells
+    const dates = generateDateRange(startDate, endDate, currentView);
+    dates.forEach(date => {
+        const isTaskDate = isDateInRange(date, taskStartDate, taskEndDate);
+        const cellClass = isTaskDate ? 'bg-light' : '';
+        
+        html += `<div class="gantt-cell ${cellClass}"></div>`;
+    });
+    
+    html += '</div>';
+    
+    // Add task bar
+    html += `
+        <div class="gantt-task ${statusClass} ${priorityClass}" 
+             style="position: absolute; left: ${startPosition}px; width: ${width}px; top: ${index * 40 + 8}px;"
+             data-task-id="${task.id}"
+             data-progress="${progress}"
+             onclick="showTaskDetail(${task.id})">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-truncate">${task.task_name || task.feature_name}</span>
+                <small>${progress}%</small>
+            </div>
+            <div class="progress mt-1" style="height: 2px;">
+                <div class="progress-bar bg-white" style="width: ${progress}%"></div>
+            </div>
+        </div>
+    `;
+    
+    return html;
+}
+
+// Generate date range
+function generateDateRange(startDate, endDate, view) {
+    const dates = [];
+    const current = new Date(startDate);
+    
+    while (current <= endDate) {
+        dates.push(new Date(current));
+        
+        switch (view) {
+            case 'day':
+                current.setDate(current.getDate() + 1);
+                break;
+            case 'week':
+                current.setDate(current.getDate() + 7);
+                break;
+            case 'month':
+                current.setMonth(current.getMonth() + 1);
+                break;
+        }
+    }
+    
+    return dates;
+}
+
+// Format date for header
+function formatDateForHeader(date, view) {
+    switch (view) {
+        case 'day':
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        case 'week':
+            return `W${getWeekNumber(date)}`;
+        case 'month':
+            return date.toLocaleDateString('en-US', { month: 'short' });
+        default:
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+}
+
+// Get week number
+function getWeekNumber(date) {
+    const firstDay = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDay) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDay.getDay() + 1) / 7);
+}
+
+// Calculate position
+function calculatePosition(taskDate, startDate, endDate) {
+    const totalDays = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const taskDays = (taskDate - startDate) / (1000 * 60 * 60 * 24);
+    return (taskDays / totalDays) * 800; // 800px is the approximate width
+}
+
+// Check if date is in range
+function isDateInRange(date, startDate, endDate) {
+    return date >= startDate && date <= endDate;
+}
+
+// Get task status class
+function getTaskStatusClass(status) {
+    const statusMap = {
+        'not-started': '',
+        'in-progress': 'in-progress',
+        'completed': 'completed',
+        'on-hold': 'on-hold'
+    };
+    return statusMap[status] || '';
+}
+
+// Add Gantt interactions
+function addGanttInteractions() {
+    // Add hover effects
+    document.querySelectorAll('.gantt-task').forEach(task => {
+        task.addEventListener('mouseenter', showTaskTooltip);
+        task.addEventListener('mouseleave', hideTaskTooltip);
+    });
+}
+
+// Show task tooltip
+function showTaskTooltip(event) {
+    const task = event.currentTarget;
+    const taskId = task.dataset.taskId;
+    const taskData = ganttData.find(t => t.id == taskId);
+    
+    if (!taskData) return;
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'gantt-tooltip';
+    tooltip.innerHTML = `
+        <div><strong>${taskData.task_name || taskData.feature_name}</strong></div>
+        <div>Status: ${taskData.status || 'Not Started'}</div>
+        <div>Progress: ${taskData.percent_complete || 0}%</div>
+        <div>Start: ${taskData.start_date || taskData.planned_start_date}</div>
+        <div>End: ${taskData.due_date || taskData.planned_end_date}</div>
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = task.getBoundingClientRect();
+    tooltip.style.left = rect.left + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+    
+    setTimeout(() => tooltip.classList.add('show'), 10);
+    
+    task.tooltip = tooltip;
+}
+
+// Hide task tooltip
+function hideTaskTooltip(event) {
+    const task = event.currentTarget;
+    if (task.tooltip) {
+        task.tooltip.remove();
+        task.tooltip = null;
+    }
+}
+
+// Change view
+function changeView(view) {
+    currentView = view;
+    document.getElementById('viewSelect').value = view;
+    
+    if (ganttData.length > 0) {
+        renderGanttChart();
+    }
+}
+
+// Zoom in
+function zoomIn() {
+    // Implement zoom in functionality
+    console.log('Zoom in');
+}
+
+// Zoom out
+function zoomOut() {
+    // Implement zoom out functionality
+    console.log('Zoom out');
+}
+
+// Fit to screen
+function fitToScreen() {
+    // Implement fit to screen functionality
+    console.log('Fit to screen');
+}
+
+// Show task detail
+function showTaskDetail(taskId) {
+    const task = ganttData.find(t => t.id == taskId);
+    if (!task) return;
+    
+    const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+    const content = document.getElementById('task-detail-content');
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Task Information</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <td><strong>Name:</strong></td>
+                        <td>${task.task_name || task.feature_name}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Status:</strong></td>
+                        <td><span class="badge bg-${getStatusColor(task.status)}">${task.status || 'Not Started'}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Progress:</strong></td>
+                        <td>${task.percent_complete || 0}%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Start Date:</strong></td>
+                        <td>${task.start_date || task.planned_start_date || 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>End Date:</strong></td>
+                        <td>${task.due_date || task.planned_end_date || 'N/A'}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Description</h6>
+                <p class="text-muted">${task.description || 'No description available'}</p>
+            </div>
+        </div>
+    `;
+    
+    modal.show();
+}
+
+// Get status color
+function getStatusColor(status) {
+    const colorMap = {
+        'not-started': 'secondary',
+        'in-progress': 'primary',
+        'completed': 'success',
+        'on-hold': 'warning'
+    };
+    return colorMap[status] || 'secondary';
+}
+
+// Add task
+function addTask() {
+    const modal = new bootstrap.Modal(document.getElementById('taskModal'));
+    document.getElementById('taskModalTitle').textContent = 'Add Task';
+    document.getElementById('taskForm').reset();
+    modal.show();
+}
+
+// Edit task
+function editTask() {
+    // Implement edit task functionality
+    console.log('Edit task');
+}
+
+// Save task
+function saveTask() {
+    const form = document.getElementById('taskForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Process task data
+    data.project_id = currentProject;
+    data.percent_complete = parseInt(data.taskProgress);
+    
+    // Submit task
+    GenAIDashboard.apiCall('/tasks/', 'POST', data)
+        .then(() => {
+            GenAIDashboard.showSuccess('Task saved successfully');
+            bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+            loadProjectGantt();
+        })
+        .catch(error => {
+            GenAIDashboard.showError('Failed to save task');
+        });
+}
+
+// Export Gantt
+function exportGantt() {
+    // Implement export functionality
+    console.log('Export Gantt chart');
+}
+
+// Toggle critical path
+function toggleCriticalPath() {
+    // Implement critical path toggle
+    console.log('Toggle critical path');
+}
+
+// Toggle dependencies
+function toggleDependencies() {
+    // Implement dependencies toggle
+    console.log('Toggle dependencies');
+}
+</script>
+{% endblock %}

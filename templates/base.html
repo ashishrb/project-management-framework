@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GenAI Metrics Dashboard{% endblock %}</title>
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', path='/css/main.css') }}" rel="stylesheet">
+    
+    <!-- Meta Tags for SEO and Social -->
+    <meta name="description" content="GenAI Metrics Dashboard - Advanced project management and analytics platform">
+    <meta name="keywords" content="project management, analytics, dashboard, AI, metrics">
+    <meta name="author" content="GenAI Metrics Dashboard">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="GenAI Metrics Dashboard">
+    <meta property="og:description" content="Advanced project management and analytics platform">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', path='/favicon.ico') }}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link sr-only-focusable">Skip to main content</a>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <i class="fas fa-chart-line" aria-hidden="true"></i>
+            <span>GenAI Metrics Dashboard</span>
+        </div>
+        
+        <div class="header-actions">
+            <!-- Sync Status Indicator -->
+            <div class="sync-status">
+                <span id="sync-status" class="badge bg-success">Connected</span>
+                <small id="last-sync" class="text-muted ms-2"></small>
+            </div>
+            
+            <!-- Mobile Sidebar Toggle -->
+            <button class="sidebar-toggle" type="button" aria-label="Toggle sidebar" aria-expanded="false">
+                <i class="fas fa-bars" aria-hidden="true"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">Navigation</h2>
+        </div>
+        
+        <div class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard" aria-current="page">
+                        <i class="nav-icon fas fa-tachometer-alt" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/projects">
+                        <i class="nav-icon fas fa-project-diagram" aria-hidden="true"></i>
+                        <span>Projects</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/resources">
+                        <i class="nav-icon fas fa-users" aria-hidden="true"></i>
+                        <span>Resources</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/features">
+                        <i class="nav-icon fas fa-cogs" aria-hidden="true"></i>
+                        <span>Features</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/backlog">
+                        <i class="nav-icon fas fa-list" aria-hidden="true"></i>
+                        <span>Backlog</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/risks">
+                        <i class="nav-icon fas fa-exclamation-triangle" aria-hidden="true"></i>
+                        <span>Risks</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/reports">
+                        <i class="nav-icon fas fa-chart-bar" aria-hidden="true"></i>
+                        <span>Reports</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/ai-copilot">
+                        <i class="nav-icon fas fa-robot" aria-hidden="true"></i>
+                        <span>AI Copilot</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content" role="main">
+        <!-- Breadcrumb Navigation -->
+        <div id="breadcrumb-container" class="breadcrumb-container" aria-label="Breadcrumb navigation"></div>
+        
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <h1 class="h2">{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="btn-toolbar mb-2 mb-md-0">
+                {% block page_actions %}{% endblock %}
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        <div id="flash-messages" role="alert" aria-live="polite"></div>
+
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light" role="contentinfo">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">© 2025 GenAI Metrics Dashboard. All rights reserved.</span>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">Version 1.0.0</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Phase 5: Cross-View Integration JS -->
+    <script src="{{ url_for('static', path='/js/state-manager.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/navigation.js') }}"></script>
+    <script src="{{ url_for('static', path='/js/sync-manager.js') }}"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', path='/js/main.js') }}"></script>
+    
+    <!-- Mobile Sidebar Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarToggle = document.querySelector('.sidebar-toggle');
+            const sidebar = document.querySelector('#sidebar');
+            const sidebarOverlay = document.querySelector('#sidebar-overlay');
+            
+            if (sidebarToggle && sidebar && sidebarOverlay) {
+                // Toggle sidebar
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('show');
+                    sidebarOverlay.classList.toggle('show');
+                    sidebarToggle.setAttribute('aria-expanded', sidebar.classList.contains('show'));
+                });
+                
+                // Close sidebar when clicking overlay
+                sidebarOverlay.addEventListener('click', function() {
+                    sidebar.classList.remove('show');
+                    sidebarOverlay.classList.remove('show');
+                    sidebarToggle.setAttribute('aria-expanded', 'false');
+                });
+                
+                // Close sidebar when pressing Escape
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('show')) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        sidebarToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+                
+                // Handle window resize
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 991.98) {
+                        sidebar.classList.remove('show');
+                        sidebarOverlay.classList.remove('show');
+                        sidebarToggle.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

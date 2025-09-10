@@ -1,0 +1,103 @@
+{
+  "resource_templates": [
+    {
+      "role": "Software Engineer",
+      "skills": ["Python", "JavaScript", "React", "Node.js", "SQL", "Git", "Agile"],
+      "experience_levels": ["Junior", "Mid", "Senior", "Lead"],
+      "availability_range": [60, 100],
+      "complexity": "medium"
+    },
+    {
+      "role": "Data Scientist",
+      "skills": ["Python", "R", "Machine Learning", "Statistics", "SQL", "Pandas", "Scikit-learn"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [70, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "Product Manager",
+      "skills": ["Agile", "Scrum", "User Research", "Analytics", "Strategy", "Communication", "Leadership"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [80, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "UX Designer",
+      "skills": ["Figma", "Sketch", "User Research", "Prototyping", "Design Systems", "Accessibility", "Usability"],
+      "experience_levels": ["Junior", "Mid", "Senior", "Lead"],
+      "availability_range": [70, 100],
+      "complexity": "medium"
+    },
+    {
+      "role": "DevOps Engineer",
+      "skills": ["AWS", "Azure", "Docker", "Kubernetes", "CI/CD", "Terraform", "Monitoring"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [60, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "QA Engineer",
+      "skills": ["Testing", "Automation", "Selenium", "Jest", "API Testing", "Performance Testing", "Bug Tracking"],
+      "experience_levels": ["Junior", "Mid", "Senior", "Lead"],
+      "availability_range": [70, 100],
+      "complexity": "medium"
+    },
+    {
+      "role": "Project Manager",
+      "skills": ["Agile", "Scrum", "Project Planning", "Risk Management", "Stakeholder Management", "Budgeting"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [80, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "Business Analyst",
+      "skills": ["Requirements Analysis", "Process Mapping", "Data Analysis", "Stakeholder Management", "Documentation"],
+      "experience_levels": ["Junior", "Mid", "Senior", "Lead"],
+      "availability_range": [70, 100],
+      "complexity": "medium"
+    },
+    {
+      "role": "AI/ML Engineer",
+      "skills": ["Python", "TensorFlow", "PyTorch", "Machine Learning", "Deep Learning", "MLOps", "Data Engineering"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [60, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "Cloud Architect",
+      "skills": ["AWS", "Azure", "GCP", "Architecture", "Security", "Scalability", "Cost Optimization"],
+      "experience_levels": ["Senior", "Lead", "Principal"],
+      "availability_range": [50, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "Security Engineer",
+      "skills": ["Security", "Penetration Testing", "Compliance", "Risk Assessment", "Security Architecture", "Incident Response"],
+      "experience_levels": ["Mid", "Senior", "Lead", "Principal"],
+      "availability_range": [60, 100],
+      "complexity": "high"
+    },
+    {
+      "role": "Technical Lead",
+      "skills": ["Leadership", "Architecture", "Code Review", "Mentoring", "Technical Strategy", "Team Management"],
+      "experience_levels": ["Senior", "Lead", "Principal"],
+      "availability_range": [70, 100],
+      "complexity": "high"
+    }
+  ],
+  "common_skills": [
+    "Python", "JavaScript", "React", "Node.js", "SQL", "Git", "Agile", "Scrum",
+    "AWS", "Azure", "Docker", "Kubernetes", "Machine Learning", "Data Analysis",
+    "User Research", "Project Management", "Communication", "Leadership"
+  ],
+  "experience_levels": [
+    "Junior", "Mid", "Senior", "Lead", "Principal"
+  ],
+  "availability_ranges": {
+    "Junior": [80, 100],
+    "Mid": [70, 100],
+    "Senior": [60, 100],
+    "Lead": [50, 90],
+    "Principal": [40, 80]
+  }
+}

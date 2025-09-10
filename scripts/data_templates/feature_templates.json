@@ -1,0 +1,77 @@
+{
+  "feature_templates": [
+    {
+      "name_prefix": "User Authentication",
+      "description_template": "Implement {type} authentication system with {features}",
+      "types": ["OAuth", "SSO", "Multi-factor", "Biometric", "Token-based"],
+      "features": ["real-time updates", "data visualization", "user management", "security controls"],
+      "estimated_effort_range": [3, 15],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Data Analytics",
+      "description_template": "Build {type} analytics dashboard with {features}",
+      "types": ["Real-time", "Predictive", "Business Intelligence", "Machine Learning", "Statistical"],
+      "features": ["performance optimization", "scalability features", "monitoring capabilities", "data visualization"],
+      "estimated_effort_range": [5, 20],
+      "complexity": "high"
+    },
+    {
+      "name_prefix": "API Integration",
+      "description_template": "Develop {type} API integration for {features}",
+      "types": ["REST", "GraphQL", "WebSocket", "gRPC", "Event-driven"],
+      "features": ["real-time updates", "data synchronization", "error handling", "rate limiting"],
+      "estimated_effort_range": [2, 12],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Mobile Features",
+      "description_template": "Create {type} mobile functionality with {features}",
+      "types": ["Push Notifications", "Offline Sync", "Location Services", "Camera Integration", "Payment Processing"],
+      "features": ["user experience", "performance optimization", "security controls", "offline capabilities"],
+      "estimated_effort_range": [4, 18],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "AI/ML Capabilities",
+      "description_template": "Implement {type} AI/ML features including {features}",
+      "types": ["Natural Language Processing", "Computer Vision", "Recommendation Engine", "Predictive Analytics", "Chatbot"],
+      "features": ["machine learning models", "data processing", "real-time inference", "model training"],
+      "estimated_effort_range": [8, 25],
+      "complexity": "high"
+    },
+    {
+      "name_prefix": "Reporting System",
+      "description_template": "Build {type} reporting system with {features}",
+      "types": ["Automated", "Scheduled", "Real-time", "Custom", "Executive"],
+      "features": ["data visualization", "export capabilities", "scheduling", "customization"],
+      "estimated_effort_range": [3, 15],
+      "complexity": "medium"
+    },
+    {
+      "name_prefix": "Notification System",
+      "description_template": "Implement {type} notification system with {features}",
+      "types": ["Email", "SMS", "Push", "In-app", "Webhook"],
+      "features": ["real-time delivery", "user preferences", "templates", "analytics"],
+      "estimated_effort_range": [2, 10],
+      "complexity": "low"
+    },
+    {
+      "name_prefix": "Search Functionality",
+      "description_template": "Create {type} search with {features}",
+      "types": ["Full-text", "Fuzzy", "Faceted", "Semantic", "Auto-complete"],
+      "features": ["performance optimization", "relevance scoring", "filters", "suggestions"],
+      "estimated_effort_range": [4, 16],
+      "complexity": "medium"
+    }
+  ],
+  "feature_details": [
+    "real-time updates", "data visualization", "user management", "security controls",
+    "performance optimization", "scalability features", "monitoring capabilities",
+    "data synchronization", "error handling", "rate limiting", "user experience",
+    "offline capabilities", "machine learning models", "data processing",
+    "real-time inference", "model training", "export capabilities", "scheduling",
+    "customization", "real-time delivery", "user preferences", "templates",
+    "analytics", "relevance scoring", "filters", "suggestions"
+  ]
+}
