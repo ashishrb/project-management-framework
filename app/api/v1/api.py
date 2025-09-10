@@ -20,7 +20,9 @@ from app.api.v1.endpoints import (
     ai_insights,
     features,
     logs,
-    backlogs
+    backlogs,
+    health,
+    monitoring
 )
 
 api_router = APIRouter()
@@ -43,3 +45,5 @@ api_router.include_router(rag.router, prefix="/rag", tags=["rag"])
 api_router.include_router(ai_insights.router, prefix="/ai-insights", tags=["ai-insights"])
 api_router.include_router(logs.router, prefix="/logs", tags=["logs"])
 api_router.include_router(backlogs.router, prefix="/backlogs", tags=["backlogs"])
+api_router.include_router(health.router, prefix="/health", tags=["health"])
+api_router.include_router(monitoring.router, prefix="/monitoring", tags=["monitoring"])

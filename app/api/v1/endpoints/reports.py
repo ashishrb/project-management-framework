@@ -8,7 +8,8 @@ from sqlalchemy import func, and_, or_
 
 from app.database import get_db
 from app.api.deps import get_current_user
-from app.models.main_tables import Project, Feature, Backlog, Resource, Risk
+from app.models.main_tables import Project, Feature, Backlog, Resource, Risk, Task
+from app.models.junction_tables import TaskResource
 from app.models.lookup_tables import Function, Platform, Status, Priority, Portfolio
 from app.schemas.report_schemas import (
     ProjectReport, FeatureReport, BacklogReport, ResourceReport,

@@ -28,6 +28,15 @@ pandas==2.0.3
 redis==5.0.1
 redis[hiredis]==5.0.1
 
+# Security Dependencies
+cryptography==41.0.7
+python-multipart==0.0.6
+
+# Performance and Monitoring Dependencies
+psutil==5.9.6
+schedule==1.2.0
+redis==5.0.1
+
 # File Handling and Async Operations
 aiofiles==23.2.1
 websockets==12.0

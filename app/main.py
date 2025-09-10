@@ -8,11 +8,25 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 import time
 import logging
+import uuid
 
 from app.config import settings
 from app.api.v1.api import api_router
 from app.routes.views import router as views_router
 from app.websocket.endpoints import router as websocket_router
+
+# Import security middleware
+from app.middleware.rate_limiting import rate_limit_middleware, rate_limiter
+from app.middleware.security import security_headers_middleware
+from app.middleware.csrf import csrf_middleware, get_csrf_token
+from app.middleware.validation import input_validation_middleware
+from app.middleware.compression import compression_middleware_func
+
+# Import enhanced error handling
+from app.core.error_handler import (
+    enhanced_404_handler, enhanced_500_handler, enhanced_validation_handler,
+    error_handler, error_monitor
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +56,13 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=["*"]  # Allow all hosts for development
 )
+
+# Add security middleware (order matters!)
+app.middleware("http")(input_validation_middleware)  # First: validate input
+app.middleware("http")(csrf_middleware)             # Second: CSRF protection
+app.middleware("http")(rate_limit_middleware)       # Third: rate limiting
+app.middleware("http")(security_headers_middleware) # Fourth: security headers
+app.middleware("http")(compression_middleware_func) # Fifth: compression
 
 # Add request timing middleware
 @app.middleware("http")
@@ -98,30 +119,43 @@ async def api_status():
         "timestamp": time.time()
     }
 
-# Exception handlers
+# CSRF token endpoint
+@app.get("/csrf-token")
+async def get_csrf_token_endpoint(request: Request):
+    """Get CSRF token for forms"""
+    return get_csrf_token(request)
+
+# Error monitoring endpoint
+@app.get("/error-stats")
+async def get_error_stats():
+    """Get error statistics for monitoring"""
+    return error_monitor.get_error_stats()
+
+# Enhanced exception handlers
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    """Handle 404 errors"""
-    return JSONResponse(
-        status_code=404,
-        content={
-            "error": "Not Found",
-            "message": "The requested resource was not found",
-            "path": str(request.url.path)
-        }
-    )
+    """Handle 404 errors with enhanced logging"""
+    return await enhanced_404_handler(request, exc)
 
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc):
-    """Handle 500 errors"""
-    logger.error(f"Internal server error: {exc}")
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": "Internal Server Error",
-            "message": "An unexpected error occurred",
-            "path": str(request.url.path)
-        }
+    """Handle 500 errors with enhanced logging"""
+    return await enhanced_500_handler(request, exc)
+
+@app.exception_handler(422)
+async def validation_error_handler(request: Request, exc):
+    """Handle validation errors"""
+    return await enhanced_validation_handler(request, exc)
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Handle HTTP exceptions with enhanced logging"""
+    request_id = str(uuid.uuid4())
+    return error_handler.create_error_response(
+        error_code=f"HTTP_{exc.status_code}",
+        message=exc.detail,
+        status_code=exc.status_code,
+        request_id=request_id
     )
 
 # Startup event
@@ -132,6 +166,14 @@ async def startup_event():
     logger.info(f"📊 Project: {settings.PROJECT_NAME}")
     logger.info(f"🔢 Version: {settings.VERSION}")
     logger.info(f"🌐 API URL: {settings.API_V1_STR}")
+    
+    # Initialize security middleware
+    try:
+        await rate_limiter.initialize()
+        logger.info("✅ Security middleware initialized")
+    except Exception as e:
+        logger.error(f"❌ Failed to initialize security middleware: {e}")
+    
     logger.info("✅ API startup complete!")
 
 # Shutdown event
