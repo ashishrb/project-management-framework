@@ -454,7 +454,7 @@ def get_executive_summary(
 
 @router.get("/export/projects")
 def export_projects_report(
-    format: str = Query("csv", regex="^(csv|excel|pdf)$"),
+    format: str = Query("csv", pattern="^(csv|excel|pdf)$"),
     portfolio_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
@@ -470,7 +470,7 @@ def export_projects_report(
 
 @router.get("/export/features")
 def export_features_report(
-    format: str = Query("csv", regex="^(csv|excel|pdf)$"),
+    format: str = Query("csv", pattern="^(csv|excel|pdf)$"),
     project_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
