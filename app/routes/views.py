@@ -17,15 +17,15 @@ templates = Jinja2Templates(directory="templates")
 router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    """Main dashboard view"""
+async def home(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Home page view"""
     try:
-        return templates.TemplateResponse("dashboard.html", {
+        return templates.TemplateResponse("home.html", {
             "request": request,
             "user": current_user
         })
     except Exception as e:
-        return HTMLResponse(f"<h1>Error loading dashboard: {str(e)}</h1>", status_code=500)
+        return HTMLResponse(f"<h1>Error loading home page: {str(e)}</h1>", status_code=500)
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):

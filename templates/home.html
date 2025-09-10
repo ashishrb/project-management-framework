@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GenAI Metrics{% endblock %}
+
+{% block page_title %}Welcome{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="goToDashboard()">
+        <i class="fas fa-tachometer-alt me-1"></i>Go to Dashboard
+    </button>
+    <button type="button" class="btn btn-outline-secondary" onclick="goToProjects()">
+        <i class="fas fa-project-diagram me-1"></i>Go to Projects
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="card-title">Welcome to GenAI Metrics Dashboard</h1>
+                    <p class="card-text">Advanced project management and analytics platform</p>
+                    <p class="card-text text-muted">No auto-loading - Manual loading only</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Dashboard</h5>
+                                    <p class="card-text">View project metrics and analytics</p>
+                                    <button class="btn btn-primary" onclick="goToDashboard()">
+                                        <i class="fas fa-tachometer-alt me-1"></i>Open Dashboard
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Projects</h5>
+                                    <p class="card-text">Manage your projects</p>
+                                    <button class="btn btn-primary" onclick="goToProjects()">
+                                        <i class="fas fa-project-diagram me-1"></i>Open Projects
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Resources</h5>
+                                    <p class="card-text">Manage team resources</p>
+                                    <button class="btn btn-primary" onclick="goToResources()">
+                                        <i class="fas fa-users me-1"></i>Open Resources
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Navigation functions
+function goToDashboard() {
+    window.location.href = '/dashboard';
+}
+
+function goToProjects() {
+    window.location.href = '/projects';
+}
+
+function goToResources() {
+    window.location.href = '/resources';
+}
+</script>
+{% endblock %}

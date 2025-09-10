@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GenAI Metrics Dashboard{% endblock %}</title>
     
+    <!-- Cache Busting Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -162,13 +167,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Core JS - Load logging first, then main.js to define GenAIDashboard -->
-    <script src="{{ url_for('static', path='/js/logging.js') }}?v=1.3"></script>
-    <script src="{{ url_for('static', path='/js/main.js') }}?v=1.4"></script>
+    <script src="{{ url_for('static', path='/js/logging.js') }}?v=4.0"></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}?v=4.0"></script>
     
     <!-- Phase 5: Cross-View Integration JS -->
-    <script src="{{ url_for('static', path='/js/state-manager.js') }}?v=1.3"></script>
-    <script src="{{ url_for('static', path='/js/navigation.js') }}?v=1.4"></script>
-    <script src="{{ url_for('static', path='/js/sync-manager.js') }}?v=1.6"></script>
+    <script src="{{ url_for('static', path='/js/state-manager.js') }}?v=4.0"></script>
+    <script src="{{ url_for('static', path='/js/navigation.js') }}?v=4.0"></script>
+    <script src="{{ url_for('static', path='/js/sync-manager.js') }}?v=4.0"></script>
     
     <!-- Mobile Sidebar Toggle Script -->
     <script>
