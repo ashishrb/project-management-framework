@@ -50,15 +50,15 @@ async function loadDashboardData() {
         console.log('📊 Loading dashboard data...');
         showLoadingState();
         
-        // Define API endpoints with fallback data
+        // Define API endpoints with fallback data (apiBaseUrl already includes /api/v1)
         const apiEndpoints = [
-            { key: 'overview', url: '/api/v1/dashboards/all-projects', fallback: { current_projects: 0, approved_projects: 0, backlog_projects: 0, total_projects: 0 } },
-            { key: 'genai', url: '/api/v1/dashboards/genai-metrics', fallback: { active_features_by_function: [], backlogs_by_function: [], active_features_by_platform: [], backlogs_by_platform: [] } },
-            { key: 'projectStatus', url: '/api/v1/dashboards/summary-metrics', fallback: { active_projects: 0, completed_projects: 0, at_risk_projects: 0, off_track_projects: 0 } },
-            { key: 'resourceUtil', url: '/api/v1/resources/analytics/workload', fallback: [] },
-            { key: 'riskOverview', url: '/api/v1/reports/risks', fallback: [] },
-            { key: 'recentActivity', url: '/api/v1/reports/project-summary', fallback: [] },
-            { key: 'aiInsights', url: '/api/v1/ai/insights', fallback: { insights: [] } }
+            { key: 'overview', url: '/dashboards/all-projects', fallback: { current_projects: 0, approved_projects: 0, backlog_projects: 0, total_projects: 0 } },
+            { key: 'genai', url: '/dashboards/genai-metrics', fallback: { active_features_by_function: [], backlogs_by_function: [], active_features_by_platform: [], backlogs_by_platform: [] } },
+            { key: 'projectStatus', url: '/dashboards/summary-metrics', fallback: { active_projects: 0, completed_projects: 0, at_risk_projects: 0, off_track_projects: 0 } },
+            { key: 'resourceUtil', url: '/resources/analytics/workload', fallback: [] },
+            { key: 'riskOverview', url: '/reports/risks', fallback: [] },
+            { key: 'recentActivity', url: '/reports/project-summary', fallback: [] },
+            { key: 'aiInsights', url: '/ai/insights', fallback: { insights: [] } }
         ];
         
         // Load data with individual error handling and retry logic
