@@ -37,12 +37,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     try {
-        console.log('🚀 DOMContentLoaded - Dashboard setup completed (AUTO-LOADING DISABLED)');
+        console.log('🚀 DOMContentLoaded - Dashboard setup completed (AUTO-LOADING COMPLETELY DISABLED)');
         // COMPLETELY DISABLED AUTO-LOADING - Dashboard will only load when manually triggered
         // initializeDashboard(); // DISABLED
         // setupRealTimeUpdates(); // DISABLED
-        setupDashboardCustomization();
-        console.log('✅ DOMContentLoaded - Dashboard setup completed - click Dashboard link to load manually');
+        // setupDashboardCustomization(); // DISABLED
+        console.log('✅ DOMContentLoaded - Dashboard setup completed - NO AUTO-LOADING');
     } catch (error) {
         console.error('❌ DOMContentLoaded - Dashboard setup failed:', error);
         window.dashboardInitialized = false; // Reset on error

@@ -609,19 +609,8 @@ window.GenAIDashboard = {
     debounce,
     throttle,
     init: function() {
-        console.log('🚀 GenAIDashboard.init() called - AUTO-LOADING COMPLETELY DISABLED');
-        // COMPLETELY DISABLED AUTO-LOADING - Dashboard will only load when manually triggered
-        // if (typeof loadDashboardManually === 'function') {
-        //     loadDashboardManually(); // DISABLED
-        // } else if (typeof initializeDashboard === 'function') {
-        //     initializeDashboard(); // DISABLED
-        // }
-        // if (typeof setupRealTimeUpdates === 'function') {
-        //     setupRealTimeUpdates(); // DISABLED
-        // }
-        if (typeof setupDashboardCustomization === 'function') {
-            setupDashboardCustomization();
-        }
-        console.log('✅ GenAIDashboard.init() completed - Manual loading only');
+        console.log('🚀 GenAIDashboard.init() called - COMPLETELY DISABLED');
+        // COMPLETELY DISABLED - No dashboard initialization
+        console.log('✅ GenAIDashboard.init() completed - No auto-loading');
     }
 };

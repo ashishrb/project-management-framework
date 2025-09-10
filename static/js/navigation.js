@@ -130,9 +130,9 @@ class NavigationManager {
         const path = window.location.pathname;
         const params = this.parseUrlParams();
         
-        // Map URL paths to views
+        // Map URL paths to views - NO DEFAULT TO DASHBOARD
         const routeMap = {
-            '/': 'dashboard',
+            '/': 'home', // Changed from 'dashboard' to 'home'
             '/dashboard': 'dashboard',
             '/projects': 'projects',
             '/resources': 'resources',
@@ -142,7 +142,7 @@ class NavigationManager {
             '/settings': 'settings'
         };
         
-        const view = routeMap[path] || 'dashboard';
+        const view = routeMap[path] || 'home'; // Changed from 'dashboard' to 'home'
         this.navigateTo(view, params, false);
     }
     
@@ -182,7 +182,8 @@ class NavigationManager {
     buildUrl(view, params) {
         const baseUrl = window.location.origin;
         const pathMap = {
-            'dashboard': '/',
+            'home': '/',
+            'dashboard': '/dashboard',
             'projects': '/projects',
             'resources': '/resources',
             'risks': '/risks',
@@ -279,6 +280,7 @@ class NavigationManager {
         try {
             // Map view names to actual routes
             const routeMap = {
+                'home': '/',
                 'dashboard': '/dashboard',
                 'projects': '/projects',
                 'resources': '/resources',
@@ -376,6 +378,15 @@ class NavigationManager {
         
         // Initialize view-specific functionality
         switch (view) {
+            case 'home':
+                navigationLogger.log('INFO', '🏠 Home view loaded - NO AUTO-LOADING', {
+                    'view': 'home',
+                    'auto_loading_disabled': true,
+                    'timestamp': new Date().toISOString()
+                });
+                console.log('🏠 Home view loaded - No auto-loading');
+                break;
+                
             case 'dashboard':
                 navigationLogger.log('INFO', '🔍 Dashboard view loaded - AUTO-LOADING DISABLED', {
                     'view': 'dashboard',
