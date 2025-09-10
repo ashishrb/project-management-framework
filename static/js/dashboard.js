@@ -19,17 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize dashboard
 function initializeDashboard() {
     console.log('🚀 Initializing GenAI Metrics Dashboard...');
+    console.log('🔍 GenAIDashboard object available:', typeof GenAIDashboard);
+    console.log('🔍 GenAIDashboard.apiCall available:', typeof GenAIDashboard?.apiCall);
     
     // Load initial data
+    console.log('📊 Starting loadDashboardData...');
     loadDashboardData();
     
     // Initialize all charts
+    console.log('📈 Starting initializeAllCharts...');
     initializeAllCharts();
     
     // Setup event listeners
+    console.log('🎧 Setting up event listeners...');
     setupEventListeners();
     
     // Setup dashboard interactions
+    console.log('⚙️ Setting up dashboard interactions...');
     setupDashboardInteractions();
     
     console.log('✅ Dashboard initialized successfully');
@@ -59,10 +65,15 @@ async function loadDashboardData() {
         // Load data with individual error handling and retry logic
         const loadPromises = apiEndpoints.map(async (endpoint) => {
             try {
+                console.log(`🔄 Calling API: ${endpoint.url}`);
+                console.log(`🔍 GenAIDashboard.apiCall available:`, typeof GenAIDashboard.apiCall);
+                
                 const data = await GenAIDashboard.apiCall(endpoint.url, 'GET', null, 2); // 2 retries
+                console.log(`✅ API call successful for ${endpoint.key}:`, data);
                 return { key: endpoint.key, data, success: true };
             } catch (error) {
                 console.warn(`⚠️ Failed to load ${endpoint.key}:`, error.message);
+                console.error(`❌ Full error for ${endpoint.key}:`, error);
                 return { key: endpoint.key, data: endpoint.fallback, success: false, error: error.message };
             }
         });
