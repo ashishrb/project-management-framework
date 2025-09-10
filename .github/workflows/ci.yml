@@ -1,0 +1,346 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+
+env:
+  PYTHON_VERSION: "3.10"
+  NODE_VERSION: "18"
+
+jobs:
+  # Code Quality Checks
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pre-commit
+        pip install -r requirements.txt
+        
+    - name: Run pre-commit hooks
+      run: pre-commit run --all-files
+      
+    - name: Run Black formatter
+      run: black --check --diff app/ tests/ scripts/
+      
+    - name: Run isort
+      run: isort --check-only --diff app/ tests/ scripts/
+      
+    - name: Run Flake8
+      run: flake8 app/ tests/ scripts/
+      
+    - name: Run MyPy
+      run: mypy app/ --ignore-missing-imports
+      
+    - name: Run Bandit security check
+      run: bandit -r app/ -f json -o bandit-report.json
+      continue-on-error: true
+      
+    - name: Upload Bandit report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bandit-report
+        path: bandit-report.json
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run database migrations
+      run: |
+        alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        
+    - name: Run unit tests
+      run: |
+        pytest tests/unit/ -v --cov=app --cov-report=xml --cov-report=html
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+        
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        
+    - name: Upload coverage HTML
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run database migrations
+      run: |
+        alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v --cov=app --cov-append --cov-report=xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: Run database migrations
+      run: |
+        alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        
+    - name: Run performance tests
+      run: |
+        pytest tests/performance/ -v --tb=short
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+        REDIS_URL: redis://localhost:6379
+
+  # Security Tests
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety bandit semgrep
+        
+    - name: Run safety check
+      run: safety check --json --output safety-report.json
+      continue-on-error: true
+      
+    - name: Run Bandit security scan
+      run: bandit -r app/ -f json -o bandit-report.json
+      continue-on-error: true
+      
+    - name: Run Semgrep security scan
+      run: semgrep --config=auto app/ --json --output=semgrep-report.json
+      continue-on-error: true
+      
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          safety-report.json
+          bandit-report.json
+          semgrep-report.json
+
+  # Build and Test Docker Image
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      run: |
+        docker build -t project-management-framework:latest .
+        
+    - name: Test Docker image
+      run: |
+        docker run --rm -d --name test-container -p 8000:8000 project-management-framework:latest
+        sleep 10
+        curl -f http://localhost:8000/api/v1/performance/health || exit 1
+        docker stop test-container
+
+  # Deploy to Staging (if on master branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, performance-tests, security-tests, docker-build]
+    if: github.ref == 'refs/heads/master'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add actual deployment commands here
+        # This could include:
+        # - Deploy to cloud provider
+        # - Run database migrations
+        # - Update load balancer
+        # - Run smoke tests
+
+  # Notification
+  notify:
+    name: Notify
+    runs-on: ubuntu-latest
+    needs: [code-quality, unit-tests, integration-tests, performance-tests, security-tests]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: ${{ needs.code-quality.result == 'success' && needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' }}
+      run: |
+        echo "✅ All tests passed! Pipeline successful."
+        
+    - name: Notify on failure
+      if: ${{ needs.code-quality.result == 'failure' || needs.unit-tests.result == 'failure' || needs.integration-tests.result == 'failure' }}
+      run: |
+        echo "❌ Pipeline failed. Check the logs for details."
+        exit 1
