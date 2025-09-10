@@ -3,8 +3,7 @@ Database configuration and connection management for GenAI Metrics Dashboard
 Optimized for performance with connection pooling and monitoring
 """
 from sqlalchemy import create_engine, event
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy.pool import QueuePool
 import os
 import logging
