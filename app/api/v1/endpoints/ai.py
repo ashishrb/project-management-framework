@@ -215,7 +215,6 @@ class SemanticSearchResponse(BaseModel):
 
 # AI Service Endpoints
 @router.get("/health", response_model=AIHealthResponse)
-@log_api_endpoint
 async def get_ai_health():
     """Get AI service health status."""
     try:
@@ -228,7 +227,6 @@ async def get_ai_health():
 
 
 @router.get("/models", response_model=List[AIModelInfo])
-@log_api_endpoint
 async def get_ai_models():
     """Get available AI models."""
     try:
@@ -241,7 +239,6 @@ async def get_ai_models():
 
 
 @router.post("/generate", response_model=AIGenerateResponse)
-@log_api_endpoint
 async def generate_text(request: AIGenerateRequest):
     """Generate text using AI model."""
     try:
@@ -270,7 +267,6 @@ async def generate_text(request: AIGenerateRequest):
 
 
 @router.post("/embeddings", response_model=AIEmbeddingResponse)
-@log_api_endpoint
 async def generate_embeddings(request: AIEmbeddingRequest):
     """Generate embeddings for text."""
     try:
@@ -287,7 +283,6 @@ async def generate_embeddings(request: AIEmbeddingRequest):
 
 
 @router.post("/semantic-search", response_model=SemanticSearchResponse)
-@log_api_endpoint
 async def semantic_search(request: SemanticSearchRequest):
     """Perform semantic search using embeddings."""
     try:
@@ -312,7 +307,6 @@ async def semantic_search(request: SemanticSearchRequest):
 
 # Copilot Endpoints
 @router.get("/copilot/tasks", response_model=List[CopilotTask])
-@log_api_endpoint
 async def get_copilot_tasks():
     """Get active copilot tasks."""
     try:
@@ -324,7 +318,6 @@ async def get_copilot_tasks():
 
 
 @router.get("/copilot/tasks/history", response_model=List[CopilotTask])
-@log_api_endpoint
 async def get_copilot_task_history(limit: int = 50):
     """Get copilot task history."""
     try:
@@ -336,7 +329,6 @@ async def get_copilot_task_history(limit: int = 50):
 
 
 @router.get("/copilot/tasks/{task_id}", response_model=CopilotTask)
-@log_api_endpoint
 async def get_copilot_task(task_id: str):
     """Get specific copilot task."""
     try:
@@ -353,7 +345,6 @@ async def get_copilot_task(task_id: str):
 
 
 @router.post("/copilot/tasks/{task_id}/cancel")
-@log_api_endpoint
 async def cancel_copilot_task(task_id: str):
     """Cancel a copilot task."""
     try:
@@ -370,7 +361,6 @@ async def cancel_copilot_task(task_id: str):
 
 
 @router.get("/copilot/statistics")
-@log_api_endpoint
 async def get_copilot_statistics():
     """Get copilot statistics."""
     try:
@@ -383,7 +373,6 @@ async def get_copilot_statistics():
 
 # Project Analysis Endpoints
 @router.post("/copilot/project-analysis", response_model=ProjectAnalysisResponse)
-@log_api_endpoint
 async def analyze_project_health(
     request: ProjectAnalysisRequest,
     background_tasks: BackgroundTasks,
@@ -437,7 +426,6 @@ async def analyze_project_health(
 
 
 @router.post("/copilot/portfolio-insights", response_model=PortfolioInsightsResponse)
-@log_api_endpoint
 async def generate_portfolio_insights(
     request: PortfolioInsightsRequest,
     background_tasks: BackgroundTasks,
@@ -490,7 +478,6 @@ async def generate_portfolio_insights(
 
 
 @router.post("/copilot/code-review", response_model=CodeReviewResponse)
-@log_api_endpoint
 async def perform_code_review(request: CodeReviewRequest):
     """Perform AI-powered code review."""
     try:
@@ -514,7 +501,6 @@ async def perform_code_review(request: CodeReviewRequest):
 
 
 @router.post("/copilot/documentation", response_model=DocumentationResponse)
-@log_api_endpoint
 async def generate_documentation(request: DocumentationRequest):
     """Generate documentation using AI."""
     try:
@@ -538,7 +524,6 @@ async def generate_documentation(request: DocumentationRequest):
 
 
 @router.post("/copilot/risk-assessment", response_model=RiskAssessmentResponse)
-@log_api_endpoint
 async def assess_risks(
     request: RiskAssessmentRequest,
     background_tasks: BackgroundTasks,
@@ -592,7 +577,6 @@ async def assess_risks(
 
 
 @router.post("/copilot/resource-optimization", response_model=ResourceOptimizationResponse)
-@log_api_endpoint
 async def optimize_resources(
     request: ResourceOptimizationRequest,
     background_tasks: BackgroundTasks,
@@ -638,7 +622,6 @@ async def optimize_resources(
 
 
 @router.post("/copilot/timeline-analysis", response_model=TimelineAnalysisResponse)
-@log_api_endpoint
 async def analyze_timeline(
     request: TimelineAnalysisRequest,
     background_tasks: BackgroundTasks,
@@ -683,7 +666,6 @@ async def analyze_timeline(
 
 
 @router.post("/copilot/budget-analysis", response_model=BudgetAnalysisResponse)
-@log_api_endpoint
 async def analyze_budget(
     request: BudgetAnalysisRequest,
     background_tasks: BackgroundTasks,

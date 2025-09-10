@@ -157,7 +157,6 @@ class AutomationRequest(BaseModel):
 
 # Vector Database Endpoints
 @router.post("/documents", response_model=DocumentResponse)
-@log_api_endpoint
 async def add_document(request: DocumentRequest):
     """Add a document to the vector database."""
     try:
@@ -191,7 +190,6 @@ async def add_document(request: DocumentRequest):
 
 
 @router.post("/documents/bulk", response_model=BulkDocumentResponse)
-@log_api_endpoint
 async def add_documents_bulk(request: BulkDocumentRequest):
     """Add multiple documents to the vector database."""
     try:
@@ -225,7 +223,6 @@ async def add_documents_bulk(request: BulkDocumentRequest):
 
 
 @router.get("/documents/{collection_name}/{document_id}", response_model=DocumentResponse)
-@log_api_endpoint
 async def get_document(collection_name: str, document_id: str):
     """Get a specific document by ID."""
     try:
@@ -252,7 +249,6 @@ async def get_document(collection_name: str, document_id: str):
 
 
 @router.put("/documents/{collection_name}/{document_id}")
-@log_api_endpoint
 async def update_document(
     collection_name: str,
     document_id: str,
@@ -284,7 +280,6 @@ async def update_document(
 
 
 @router.delete("/documents/{collection_name}/{document_id}")
-@log_api_endpoint
 async def delete_document(collection_name: str, document_id: str):
     """Delete a document from the vector database."""
     try:
@@ -305,7 +300,6 @@ async def delete_document(collection_name: str, document_id: str):
 
 
 @router.post("/search", response_model=SearchResponse)
-@log_api_endpoint
 async def search_documents(request: SearchRequest):
     """Search for similar documents."""
     try:
@@ -333,7 +327,6 @@ async def search_documents(request: SearchRequest):
 
 # RAG Endpoints
 @router.post("/rag/query", response_model=RAGResponseModel)
-@log_api_endpoint
 async def rag_query(request: RAGRequest):
     """Generate an answer using RAG."""
     try:
@@ -365,7 +358,6 @@ async def rag_query(request: RAGRequest):
 
 
 @router.post("/rag/summary", response_model=SummaryResponse)
-@log_api_endpoint
 async def generate_summary(request: SummaryRequest):
     """Generate a summary of documents in a collection."""
     try:
@@ -395,7 +387,6 @@ async def generate_summary(request: SummaryRequest):
 
 # Collection Management Endpoints
 @router.get("/collections/stats", response_model=AllStatsResponse)
-@log_api_endpoint
 async def get_all_collection_stats():
     """Get statistics for all collections."""
     try:
@@ -425,7 +416,6 @@ async def get_all_collection_stats():
 
 
 @router.get("/collections/{collection_name}/stats", response_model=CollectionStatsResponse)
-@log_api_endpoint
 async def get_collection_stats(collection_name: str):
     """Get statistics for a specific collection."""
     try:
@@ -452,7 +442,6 @@ async def get_collection_stats(collection_name: str):
 
 
 @router.delete("/collections/{collection_name}")
-@log_api_endpoint
 async def clear_collection(collection_name: str):
     """Clear all documents from a collection."""
     try:
@@ -473,7 +462,6 @@ async def clear_collection(collection_name: str):
 
 
 @router.post("/collections/reset")
-@log_api_endpoint
 async def reset_database():
     """Reset the entire vector database."""
     try:
@@ -493,7 +481,6 @@ async def reset_database():
 
 # Advanced AI Endpoints
 @router.post("/insights/generate")
-@log_api_endpoint
 async def generate_insight(request: InsightRequest):
     """Generate AI insights from data."""
     try:
@@ -525,7 +512,6 @@ async def generate_insight(request: InsightRequest):
 
 
 @router.post("/predictions/generate")
-@log_api_endpoint
 async def generate_predictions(request: PredictionRequest):
     """Generate predictions from data."""
     try:
@@ -545,7 +531,6 @@ async def generate_predictions(request: PredictionRequest):
 
 
 @router.post("/recommendations/generate")
-@log_api_endpoint
 async def generate_recommendations(request: RecommendationRequest):
     """Generate smart recommendations."""
     try:
@@ -564,7 +549,6 @@ async def generate_recommendations(request: RecommendationRequest):
 
 
 @router.post("/automation/execute")
-@log_api_endpoint
 async def execute_automation_task(request: AutomationRequest):
     """Execute an automation task."""
     try:
@@ -584,7 +568,6 @@ async def execute_automation_task(request: AutomationRequest):
 
 
 @router.get("/insights")
-@log_api_endpoint
 async def get_insights(insight_type: Optional[AIInsightType] = None):
     """Get AI insights."""
     try:
@@ -600,7 +583,6 @@ async def get_insights(insight_type: Optional[AIInsightType] = None):
 
 
 @router.get("/predictions")
-@log_api_endpoint
 async def get_predictions(prediction_type: Optional[PredictionType] = None):
     """Get predictions."""
     try:
@@ -616,7 +598,6 @@ async def get_predictions(prediction_type: Optional[PredictionType] = None):
 
 
 @router.get("/automation/tasks")
-@log_api_endpoint
 async def get_automation_tasks(status: Optional[str] = None):
     """Get automation tasks."""
     try:
@@ -632,7 +613,6 @@ async def get_automation_tasks(status: Optional[str] = None):
 
 
 @router.get("/statistics")
-@log_api_endpoint
 async def get_advanced_ai_statistics():
     """Get advanced AI service statistics."""
     try:
@@ -649,7 +629,6 @@ async def get_advanced_ai_statistics():
 
 # Data Integration Endpoints
 @router.post("/data/projects/sync")
-@log_api_endpoint
 async def sync_projects_data(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
@@ -710,7 +689,6 @@ async def sync_projects_data(
 
 
 @router.post("/data/features/sync")
-@log_api_endpoint
 async def sync_features_data(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
@@ -774,7 +752,6 @@ async def sync_features_data(
 
 
 @router.post("/data/resources/sync")
-@log_api_endpoint
 async def sync_resources_data(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)

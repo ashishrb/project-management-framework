@@ -21,8 +21,7 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=Dict[str, Any])
-@log_api_endpoint("api.performance")
-async def get_system_health():
+def get_system_health():
     """Get overall system health status"""
     try:
         # Database health
@@ -37,8 +36,12 @@ async def get_system_health():
         ws_healthy = ws_stats["stats"]["active_connections"] < 800  # 80% of limit
         
         # Cache health
-        cache_stats = await cache_manager.cache.get_stats()
-        cache_healthy = cache_stats.get("hit_rate", 0) > 50  # 50% hit rate threshold
+        try:
+            cache_stats = cache_manager.cache.get_stats()
+            cache_healthy = cache_stats.get("hit_rate", 0) > 50  # 50% hit rate threshold
+        except:
+            cache_stats = {"hit_rate": 0}
+            cache_healthy = False
         
         # Overall health
         overall_healthy = all([

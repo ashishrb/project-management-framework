@@ -22,7 +22,6 @@ logger = get_logger("api.dashboards")
 router = APIRouter()
 
 @router.get("/all-projects", response_model=AllProjectsDashboard)
-@log_api_endpoint("api.dashboards")
 def get_all_projects_dashboard(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)

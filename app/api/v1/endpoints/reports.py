@@ -17,6 +17,84 @@ from app.schemas.report_schemas import (
 
 router = APIRouter()
 
+# ==================== PROJECT SUMMARY ====================
+
+@router.get("/project-summary", response_model=ExecutiveSummary)
+def get_project_summary(
+    portfolio_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get executive summary of all projects"""
+    try:
+        # Get total projects
+        total_projects = db.query(Project).filter(Project.is_active == True).count()
+        
+        # Get projects by status
+        projects_by_status = db.query(
+            Status.name,
+            func.count(Project.id).label('count')
+        ).join(Project).filter(Project.is_active == True).group_by(Status.name).all()
+        
+        # Get projects by priority
+        projects_by_priority = db.query(
+            Priority.name,
+            func.count(Project.id).label('count')
+        ).join(Project).filter(Project.is_active == True).group_by(Priority.name).all()
+        
+        # Get total budget
+        total_budget = db.query(func.sum(Project.budget_amount)).filter(
+            Project.is_active == True
+        ).scalar() or 0
+        
+        # Get average completion
+        avg_completion = db.query(func.avg(Project.percent_complete)).filter(
+            Project.is_active == True
+        ).scalar() or 0
+        
+        # Get additional metrics
+        active_projects = db.query(Project).filter(
+            Project.is_active == True,
+            Project.status_id == 1  # Active status
+        ).count()
+        
+        completed_projects = db.query(Project).filter(
+            Project.is_active == True,
+            Project.status_id == 2  # Completed status
+        ).count()
+        
+        at_risk_projects = db.query(Project).filter(
+            Project.is_active == True,
+            Project.status_id == 3  # At Risk status
+        ).count()
+        
+        total_features = db.query(Feature).count()
+        completed_features = db.query(Feature).filter(Feature.status_id == 2).count()
+        total_backlogs = db.query(Backlog).count()
+        total_resources = db.query(Resource).count()
+        total_risks = db.query(Risk).count()
+        high_risks = db.query(Risk).filter(Risk.risk_level.in_(["High", "Critical"])).count()
+        
+        project_completion_rate = float(avg_completion)
+        feature_completion_rate = (completed_features / total_features * 100) if total_features > 0 else 0.0
+        
+        return ExecutiveSummary(
+            total_projects=total_projects,
+            active_projects=active_projects,
+            completed_projects=completed_projects,
+            at_risk_projects=at_risk_projects,
+            total_features=total_features,
+            completed_features=completed_features,
+            total_backlogs=total_backlogs,
+            total_resources=total_resources,
+            total_risks=total_risks,
+            high_risks=high_risks,
+            project_completion_rate=project_completion_rate,
+            feature_completion_rate=feature_completion_rate
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ==================== PROJECT REPORTS ====================
 
 @router.get("/projects", response_model=List[ProjectReport])

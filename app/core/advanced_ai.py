@@ -6,15 +6,16 @@ Provides advanced AI capabilities including intelligent automation, predictive a
 import asyncio
 import json
 import logging
+import uuid
 from typing import Dict, List, Optional, Any, Tuple, Union
 from datetime import datetime, timedelta
 from enum import Enum
 import numpy as np
+import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
-import pandas as pd
 
 from pydantic import BaseModel, Field
 

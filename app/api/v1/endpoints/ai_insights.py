@@ -3,6 +3,10 @@ AI Insights API Endpoints
 Provides AI-powered insights, analytics, and intelligent recommendations
 """
 
+import asyncio
+import json
+import uuid
+import numpy as np
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
@@ -144,7 +148,6 @@ class KnowledgeQueryResponse(BaseModel):
 
 # Intelligent Dashboard Endpoints
 @router.post("/intelligent-dashboard", response_model=IntelligentDashboardResponse)
-@log_api_endpoint
 async def get_intelligent_dashboard(
     request: IntelligentDashboardRequest,
     background_tasks: BackgroundTasks,
@@ -216,7 +219,6 @@ async def get_intelligent_dashboard(
 
 
 @router.post("/smart-analysis", response_model=SmartAnalysisResponse)
-@log_api_endpoint
 async def perform_smart_analysis(
     request: SmartAnalysisRequest,
     background_tasks: BackgroundTasks,
@@ -296,7 +298,6 @@ async def perform_smart_analysis(
 
 
 @router.post("/predictive-analytics", response_model=PredictiveAnalyticsResponse)
-@log_api_endpoint
 async def generate_predictive_analytics(
     request: PredictiveAnalyticsRequest,
     background_tasks: BackgroundTasks,
@@ -348,7 +349,6 @@ async def generate_predictive_analytics(
 
 
 @router.post("/intelligent-recommendations", response_model=IntelligentRecommendationResponse)
-@log_api_endpoint
 async def generate_intelligent_recommendations(
     request: IntelligentRecommendationRequest,
     background_tasks: BackgroundTasks,
@@ -426,7 +426,6 @@ async def generate_intelligent_recommendations(
 
 
 @router.post("/knowledge-query", response_model=KnowledgeQueryResponse)
-@log_api_endpoint
 async def query_knowledge_base(request: KnowledgeQueryRequest):
     """Query the AI-powered knowledge base using RAG."""
     try:
@@ -467,7 +466,6 @@ async def query_knowledge_base(request: KnowledgeQueryRequest):
 
 
 @router.post("/automation/workflow", response_model=AutomationWorkflowResponse)
-@log_api_endpoint
 async def create_automation_workflow(request: AutomationWorkflowRequest):
     """Create an intelligent automation workflow."""
     try:

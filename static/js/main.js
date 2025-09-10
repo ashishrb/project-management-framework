@@ -554,5 +554,18 @@ window.GenAIDashboard = {
     getStatusBadgeClass,
     getPriorityBadgeClass,
     debounce,
-    throttle
+    throttle,
+    init: function() {
+        console.log('🚀 GenAIDashboard.init() called');
+        // Initialize any global dashboard functionality
+        if (typeof initializeDashboard === 'function') {
+            initializeDashboard();
+        }
+        if (typeof setupRealTimeUpdates === 'function') {
+            setupRealTimeUpdates();
+        }
+        if (typeof setupDashboardCustomization === 'function') {
+            setupDashboardCustomization();
+        }
+    }
 };

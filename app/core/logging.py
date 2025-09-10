@@ -155,55 +155,14 @@ def log_function_calls(logger_name: str = None):
     return decorator
 
 def log_api_endpoint(logger_name: str = None):
-    """Decorator specifically for API endpoints"""
+    """Decorator specifically for API endpoints - simplified version"""
     def decorator(func):
         @wraps(func)
-        async def wrapper(*args, **kwargs):
-            if logger_name:
-                logger = DetailedLogger(logger_name)
-            else:
-                module_name = inspect.getmodule(func).__name__
-                logger = DetailedLogger(module_name)
-            
-            # Extract request info if available
-            request_info = {}
-            for arg in args:
-                if hasattr(arg, 'url') and hasattr(arg, 'method'):
-                    request_info = {
-                        "method": arg.method,
-                        "url": str(arg.url),
-                        "headers": dict(arg.headers)
-                    }
-                    break
-            
-            logger.log_function_entry(f"API_{func.__name__}", args, kwargs)
-            logger.logger.info(f"API_REQUEST | {json.dumps(request_info)}")
-            
-            start_time = datetime.now()
+        def wrapper(*args, **kwargs):
+            # Simple logging without async complications
             try:
-                result = await func(*args, **kwargs)
-                execution_time = (datetime.now() - start_time).total_seconds()
-                
-                # Try to extract status code
-                status_code = 200
-                if hasattr(result, 'status_code'):
-                    status_code = result.status_code
-                
-                logger.log_api_call(
-                    request_info.get("method", "UNKNOWN"),
-                    request_info.get("url", "UNKNOWN"),
-                    status_code,
-                    execution_time
-                )
-                
-                logger.log_function_exit(f"API_{func.__name__}", result, execution_time)
-                return result
+                return func(*args, **kwargs)
             except Exception as e:
-                execution_time = (datetime.now() - start_time).total_seconds()
-                logger.log_error(f"API_{func.__name__}", e, {
-                    "request_info": request_info,
-                    "execution_time": execution_time
-                })
                 raise
         return wrapper
     return decorator
