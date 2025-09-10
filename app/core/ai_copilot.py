@@ -9,6 +9,7 @@ import logging
 from typing import Dict, List, Optional, Any, Union
 from datetime import datetime, timedelta
 from enum import Enum
+from pydantic import BaseModel, Field
 
 from app.core.ai_client import AIService, AIMessage
 from app.core.cache import cache_result, cache_invalidate
