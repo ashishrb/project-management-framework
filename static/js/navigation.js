@@ -369,8 +369,25 @@ class NavigationManager {
         // Initialize view-specific functionality
         switch (view) {
             case 'dashboard':
-                if (window.GenAIDashboard) {
+                console.log('🔍 Checking GenAIDashboard availability...');
+                console.log('window.GenAIDashboard:', window.GenAIDashboard);
+                if (window.GenAIDashboard && typeof window.GenAIDashboard.init === 'function') {
+                    console.log('✅ Calling GenAIDashboard.init()');
                     window.GenAIDashboard.init();
+                } else {
+                    console.error('❌ GenAIDashboard.init is not available');
+                    console.log('Available methods:', window.GenAIDashboard ? Object.keys(window.GenAIDashboard) : 'GenAIDashboard not defined');
+                    
+                    // Retry after a short delay
+                    setTimeout(() => {
+                        console.log('🔄 Retrying GenAIDashboard.init()...');
+                        if (window.GenAIDashboard && typeof window.GenAIDashboard.init === 'function') {
+                            console.log('✅ Retry successful - calling GenAIDashboard.init()');
+                            window.GenAIDashboard.init();
+                        } else {
+                            console.error('❌ Retry failed - GenAIDashboard.init still not available');
+                        }
+                    }, 100);
                 }
                 break;
                 

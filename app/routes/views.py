@@ -1,7 +1,7 @@
 """
 View routes for GenAI Metrics Dashboard
 """
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
