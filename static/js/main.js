@@ -36,11 +36,24 @@ window.setupDashboardCustomization = function() {
 // DOM Content Loaded - NO AUTO-LOADING
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOMContentLoaded - NO AUTO-LOADING');
+    console.log('🔍 DEBUG: Current URL:', window.location.href);
+    console.log('🔍 DEBUG: Navigation manager exists:', !!window.navigationManager);
     
     // Only initialize navigation manager manually
     if (window.navigationManager) {
+        console.log('🔍 DEBUG: Initializing navigation manager...');
         window.navigationManager.init();
+        console.log('🔍 DEBUG: Navigation manager initialized');
+    } else {
+        console.log('❌ DEBUG: Navigation manager not found!');
     }
+    
+    // Debug all navigation links
+    const navLinks = document.querySelectorAll('.nav-link');
+    console.log('🔍 DEBUG: Found', navLinks.length, 'navigation links on page load');
+    navLinks.forEach((link, index) => {
+        console.log(`🔍 DEBUG: Link ${index}: href="${link.getAttribute('href')}", text="${link.textContent.trim()}"`);
+    });
     
     console.log('✅ DOMContentLoaded - Manual loading only');
 });

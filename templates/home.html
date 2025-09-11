@@ -63,6 +63,30 @@
                 </div>
             </div>
         </div>
+        
+        <!-- DEBUG SECTION -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0">🔍 Debug Navigation</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Click these buttons to test navigation and check browser console for debug logs:</p>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-primary" onclick="testNavigation()">Test Navigation</button>
+                            <button class="btn btn-outline-success" onclick="window.location.href='/backlog'">Direct Backlog</button>
+                            <button class="btn btn-outline-info" onclick="window.location.href='/ai-copilot'">Direct AI Copilot</button>
+                            <button class="btn btn-outline-secondary" onclick="window.location.href='/gantt'">Direct Gantt Chart</button>
+                            <button class="btn btn-outline-warning" onclick="console.log('Current URL:', window.location.href)">Log Current URL</button>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Open browser console (F12) to see debug logs</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

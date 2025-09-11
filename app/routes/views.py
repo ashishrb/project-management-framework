@@ -131,11 +131,11 @@ async def reports(request: Request, db: Session = Depends(get_db), current_user:
 
 @router.get("/ai-copilot", response_class=HTMLResponse)
 async def ai_copilot(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    """AI Copilot view"""
-    return templates.TemplateResponse("generic.html", {
+    """AI Copilot Console view"""
+    return templates.TemplateResponse("ai_copilot.html", {
         "request": request,
         "user": current_user,
-        "page_title": "AI Copilot"
+        "page_title": "AI Copilot Console"
     })
 
 @router.get("/features", response_class=HTMLResponse)
@@ -150,8 +150,8 @@ async def features_list(request: Request, db: Session = Depends(get_db), current
 @router.get("/backlog", response_class=HTMLResponse)
 async def backlog_list(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """Backlog list view"""
-    return templates.TemplateResponse("generic.html", {
+    return templates.TemplateResponse("backlog.html", {
         "request": request,
         "user": current_user,
-        "page_title": "Backlog"
+        "page_title": "Backlog Management"
     })

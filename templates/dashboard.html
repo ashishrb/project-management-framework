@@ -17,97 +17,221 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Dashboard Content - NO AUTO-LOADING -->
-    <div class="row">
+    <!-- Dashboard Controls -->
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card">
                 <div class="card-body text-center">
-                    <h1 class="card-title">Dashboard</h1>
-                    <p class="card-text">Dashboard view loaded - NO AUTO-LOADING</p>
-                    <p class="card-text text-muted">Click "Load Data" button to manually load dashboard data.</p>
-                    <button class="btn btn-primary btn-lg" onclick="loadDashboardData()">
+                    <h1 class="card-title">GenAI Metrics Dashboard</h1>
+                    <p class="card-text text-muted">Comprehensive project management analytics and AI-powered insights</p>
+                    <button class="btn btn-primary btn-lg me-2" onclick="loadDashboardData()">
                         <i class="fas fa-sync-alt me-2"></i>Load Dashboard Data
+                    </button>
+                    <button class="btn btn-outline-secondary btn-lg me-2" onclick="refreshCharts()">
+                        <i class="fas fa-chart-line me-2"></i>Refresh Charts
+                    </button>
+                    <button class="btn btn-outline-info btn-lg" onclick="exportDashboard()">
+                        <i class="fas fa-download me-2"></i>Export Dashboard
                     </button>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Dashboard Metrics - Hidden by default -->
+    <!-- Key Metrics Cards -->
     <div id="dashboard-metrics" style="display: none;">
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-md-3">
-                <div class="card">
+                <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Total Projects</h5>
-                        <h3 class="text-primary" id="total-projects">-</h3>
+                        <h5 class="card-title text-primary">Total Projects</h5>
+                        <h2 class="text-primary" id="total-projects">-</h2>
+                        <small class="text-muted">Active: <span id="active-projects">-</span></small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card">
+                <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Active Resources</h5>
-                        <h3 class="text-success" id="active-resources">-</h3>
+                        <h5 class="card-title text-success">Completed Features</h5>
+                        <h2 class="text-success" id="completed-features">-</h2>
+                        <small class="text-muted">Total: <span id="total-features">-</span></small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card">
+                <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Open Risks</h5>
-                        <h3 class="text-warning" id="open-risks">-</h3>
+                        <h5 class="card-title text-warning">Open Risks</h5>
+                        <h2 class="text-warning" id="open-risks">-</h2>
+                        <small class="text-muted">At Risk: <span id="at-risk-projects">-</span></small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card">
+                <div class="card text-center">
                     <div class="card-body">
-                        <h5 class="card-title">Completion Rate</h5>
-                        <h3 class="text-info" id="completion-rate">-</h3>
+                        <h5 class="card-title text-info">Completion Rate</h5>
+                        <h2 class="text-info" id="completion-rate">-</h2>
+                        <small class="text-muted">Overall Progress</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Charts Row 1: Project Status & Trends -->
+    <div id="charts-row-1" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>Project Status Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="projectStatusChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Project Completion Trends
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="trendChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: GenAI Metrics -->
+    <div id="charts-row-2" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-robot me-2"></i>Active Features by Function
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="functionChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-server me-2"></i>Active Features by Platform
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="platformChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 3: Backlog & Predictive Analytics -->
+    <div id="charts-row-3" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Backlog Priority Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="backlogChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-crystal-ball me-2"></i>Predictive Analytics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="predictiveChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 4: Comparative Analysis & Real-time Metrics -->
+    <div id="charts-row-4" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-balance-scale me-2"></i>Comparative Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="comparativeChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-tachometer-alt me-2"></i>Real-time Metrics
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6 text-center">
+                                <h4 class="text-primary" id="active-users">-</h4>
+                                <small class="text-muted">Active Users</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <h4 class="text-success" id="features-today">-</h4>
+                                <small class="text-muted">Features Today</small>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-6 text-center">
+                                <h4 class="text-warning" id="resource-util">-</h4>
+                                <small class="text-muted">Resource Util %</small>
+                            </div>
+                            <div class="col-6 text-center">
+                                <h4 class="text-info" id="ai-insights">-</h4>
+                                <small class="text-muted">AI Insights</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading dashboard data...</p>
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', path='/js/dashboard.js') }}?v=4.0"></script>
+<script src="{{ url_for('static', path='/js/dashboard.js') }}?v=5.0"></script>
 <script>
-// Manual dashboard data loading function
-function loadDashboardData() {
-    console.log('Manual dashboard data loading triggered');
-    
-    // Show loading state
-    const loadBtn = document.querySelector('button[onclick="loadDashboardData()"]');
-    if (loadBtn) {
-        loadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
-        loadBtn.disabled = true;
-    }
-    
-    // Simulate data loading (replace with actual API calls)
-    setTimeout(() => {
-        // Update metrics
-        document.getElementById('total-projects').textContent = '12';
-        document.getElementById('active-resources').textContent = '8';
-        document.getElementById('open-risks').textContent = '3';
-        document.getElementById('completion-rate').textContent = '85%';
-        
-        // Show metrics
-        document.getElementById('dashboard-metrics').style.display = 'block';
-        
-        // Reset button
-        if (loadBtn) {
-            loadBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i>Load Dashboard Data';
-            loadBtn.disabled = false;
-        }
-        
-        console.log('Dashboard data loaded manually');
-    }, 2000);
-}
-
 // Customize dashboard function
 function customizeDashboard() {
     console.log('Dashboard customization triggered');

@@ -73,11 +73,11 @@ async def add_process_time_header(request: Request, call_next):
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
-# Include API router
-app.include_router(api_router, prefix=settings.API_V1_STR)
-
-# Include view router
+# Include view router FIRST (higher priority for exact matches)
 app.include_router(views_router)
+
+# Include API router with prefix
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Include WebSocket router
 app.include_router(websocket_router, prefix="/ws")

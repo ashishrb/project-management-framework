@@ -2,197 +2,511 @@
 
 {% block title %}Projects - GenAI Metrics{% endblock %}
 
+{% block page_title %}Project Management{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="showCreateProjectModal()">
+        <i class="fas fa-plus me-1"></i>New Project
+    </button>
+    <button type="button" class="btn btn-outline-primary" onclick="importProjects()">
+        <i class="fas fa-upload me-1"></i>Import
+    </button>
+    <button type="button" class="btn btn-outline-secondary" onclick="exportProjects()">
+        <i class="fas fa-download me-1"></i>Export
+    </button>
+    <button type="button" class="btn btn-outline-info" onclick="refreshProjects()">
+        <i class="fas fa-sync-alt me-1"></i>Refresh
+    </button>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="main-content">
-    <div class="content-header">
-        <h1>Projects</h1>
-        <div class="header-actions">
-            <button class="btn btn-primary" onclick="createProject()">
-                <i class="fas fa-plus"></i> New Project
-            </button>
+<div class="container-fluid">
+    <!-- Project Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Total Projects</h5>
+                    <h2 class="text-primary" id="total-projects">-</h2>
+                    <small class="text-muted">All Projects</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Active Projects</h5>
+                    <h2 class="text-success" id="active-projects">-</h2>
+                    <small class="text-muted">In Progress</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-warning">At Risk</h5>
+                    <h2 class="text-warning" id="at-risk-projects">-</h2>
+                    <small class="text-muted">Need Attention</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title text-info">Completed</h5>
+                    <h2 class="text-info" id="completed-projects">-</h2>
+                    <small class="text-muted">Finished</small>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="content-body">
-        <!-- Projects Table -->
-        <div class="card">
-            <div class="card-header">
-                <h3>All Projects</h3>
-                <div class="card-actions">
-                    <button class="btn btn-sm btn-outline" onclick="refreshProjects()">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">Search Projects</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by name, ID, or manager...">
+                                <button class="btn btn-outline-secondary" type="button" onclick="searchProjects()">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="statusFilter" onchange="filterProjects()">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Completed">Completed</option>
+                                <option value="At Risk">At Risk</option>
+                                <option value="Off Track">Off Track</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" id="priorityFilter" onchange="filterProjects()">
+                                <option value="">All Priority</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Portfolio</label>
+                            <select class="form-select" id="portfolioFilter" onchange="filterProjects()">
+                                <option value="">All Portfolios</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Sort By</label>
+                            <select class="form-select" id="sortBy" onchange="sortProjects()">
+                                <option value="name">Name</option>
+                                <option value="due_date">Due Date</option>
+                                <option value="percent_complete">Progress</option>
+                                <option value="priority">Priority</option>
+                                <option value="status">Status</option>
+                            </select>
+                        </div>
+                        <div class="col-md-1">
+                            <label class="form-label">&nbsp;</label>
+                            <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table" id="projectsTable">
-                        <thead>
-                            <tr>
-                                <th>Project ID</th>
-                                <th>Name</th>
-                                <th>Status</th>
-                                <th>Priority</th>
-                                <th>Progress</th>
-                                <th>Manager</th>
-                                <th>Due Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projectsTableBody">
-                            <tr>
-                                <td colspan="8" class="text-center">
-                                    <div class="loading-spinner">
-                                        <i class="fas fa-spinner fa-spin"></i>
-                                        Loading projects...
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Projects</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-secondary" onclick="toggleView('table')" id="tableViewBtn">
+                            <i class="fas fa-table"></i>
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="toggleView('cards')" id="cardsViewBtn">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Table View -->
+                    <div id="tableView" class="table-responsive">
+                        <table class="table table-hover" id="projectsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th onclick="sortProjects('name')" style="cursor: pointer;">
+                                        Project Name <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th onclick="sortProjects('status')" style="cursor: pointer;">
+                                        Status <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th onclick="sortProjects('priority')" style="cursor: pointer;">
+                                        Priority <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th onclick="sortProjects('percent_complete')" style="cursor: pointer;">
+                                        Progress <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th>Manager</th>
+                                    <th onclick="sortProjects('due_date')" style="cursor: pointer;">
+                                        Due Date <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="projectsTableBody">
+                                <tr>
+                                    <td colspan="8" class="text-center">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2">Loading projects...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Cards View -->
+                    <div id="cardsView" style="display: none;">
+                        <div class="row" id="projectsCardsContainer">
+                            <!-- Cards will be populated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-// Projects management JavaScript
-let projectsData = [];
-
-// Load projects data
-async function loadProjects() {
-    try {
-        const response = await fetch('/api/v1/projects/');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        projectsData = await response.json();
-        renderProjectsTable();
-    } catch (error) {
-        console.error('Error loading projects:', error);
-        showError('Failed to load projects: ' + error.message);
-    }
-}
-
-// Render projects table
-function renderProjectsTable() {
-    const tbody = document.getElementById('projectsTableBody');
-    
-    if (projectsData.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center text-muted">
-                    No projects found
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    tbody.innerHTML = projectsData.map(project => `
-        <tr>
-            <td><code>${project.project_id || 'N/A'}</code></td>
-            <td>
-                <div class="project-name">
-                    <strong>${project.name || 'Unnamed Project'}</strong>
-                    ${project.description ? `<br><small class="text-muted">${project.description.substring(0, 100)}${project.description.length > 100 ? '...' : ''}</small>` : ''}
-                </div>
-            </td>
-            <td>
-                <span class="badge badge-${getStatusClass(project.status?.name || 'Unknown')}">
-                    ${project.status?.name || 'Unknown'}
-                </span>
-            </td>
-            <td>
-                <span class="badge badge-${getPriorityClass(project.priority?.name || 'Unknown')}">
-                    ${project.priority?.name || 'Unknown'}
-                </span>
-            </td>
-            <td>
-                <div class="progress-container">
-                    <div class="progress">
-                        <div class="progress-bar" style="width: ${project.percent_complete || 0}%"></div>
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1" aria-labelledby="createProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createProjectModalLabel">Create New Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createProjectForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectName" class="form-label">Project Name *</label>
+                                <input type="text" class="form-control" id="projectName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectId" class="form-label">Project ID</label>
+                                <input type="text" class="form-control" id="projectId" placeholder="Auto-generated">
+                            </div>
+                        </div>
                     </div>
-                    <span class="progress-text">${project.percent_complete || 0}%</span>
-                </div>
-            </td>
-            <td>${project.project_manager || 'N/A'}</td>
-            <td>${project.due_date ? new Date(project.due_date).toLocaleDateString() : 'N/A'}</td>
-            <td>
-                <div class="btn-group">
-                    <button class="btn btn-sm btn-outline" onclick="viewProject(${project.id})">
-                        <i class="fas fa-eye"></i>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectStatus" class="form-label">Status</label>
+                                <select class="form-select" id="projectStatus">
+                                    <option value="1">Active</option>
+                                    <option value="2">Completed</option>
+                                    <option value="3">At Risk</option>
+                                    <option value="4">Off Track</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectPriority" class="form-label">Priority</label>
+                                <select class="form-select" id="projectPriority">
+                                    <option value="1">Low</option>
+                                    <option value="2">Medium</option>
+                                    <option value="3">High</option>
+                                    <option value="4">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectType" class="form-label">Project Type</label>
+                                <select class="form-select" id="projectType">
+                                    <option value="1">Development</option>
+                                    <option value="2">Research</option>
+                                    <option value="3">Maintenance</option>
+                                    <option value="4">Support</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectPortfolio" class="form-label">Portfolio</label>
+                                <select class="form-select" id="projectPortfolio">
+                                    <option value="1">Portfolio A</option>
+                                    <option value="2">Portfolio B</option>
+                                    <option value="3">Portfolio C</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="startDate">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="dueDate" class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="dueDate">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="projectManager" class="form-label">Project Manager</label>
+                                <input type="text" class="form-control" id="projectManager">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="esaId" class="form-label">ESA ID</label>
+                                <input type="text" class="form-control" id="esaId">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="projectDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="budget" class="form-label">Budget Amount</label>
+                                <input type="number" class="form-control" id="budget" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="percentComplete" class="form-label">Progress (%)</label>
+                                <input type="number" class="form-control" id="percentComplete" min="0" max="100" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="criticality" class="form-label">Criticality Level</label>
+                                <select class="form-select" id="criticality">
+                                    <option value="1">Low</option>
+                                    <option value="2">Medium</option>
+                                    <option value="3">High</option>
+                                    <option value="4">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="investmentType" class="form-label">Investment Type</label>
+                                <select class="form-select" id="investmentType">
+                                    <option value="1">Capital</option>
+                                    <option value="2">Operational</option>
+                                    <option value="3">Strategic</option>
+                                    <option value="4">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="modernizationDomain" class="form-label">Modernization Domain</label>
+                                <select class="form-select" id="modernizationDomain">
+                                    <option value="">Select Domain</option>
+                                    <option value="Integration">Integration</option>
+                                    <option value="Data Analytics">Data Analytics</option>
+                                    <option value="Cloud Migration">Cloud Migration</option>
+                                    <option value="AI/ML">AI/ML</option>
+                                    <option value="Security">Security</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="digitizationCategory" class="form-label">Digitization Category</label>
+                                <select class="form-select" id="digitizationCategory">
+                                    <option value="">Select Category</option>
+                                    <option value="Process Automation">Process Automation</option>
+                                    <option value="Data Analytics">Data Analytics</option>
+                                    <option value="Customer Experience">Customer Experience</option>
+                                    <option value="Operational Efficiency">Operational Efficiency</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fundingStatus" class="form-label">Funding Status</label>
+                                <select class="form-select" id="fundingStatus">
+                                    <option value="">Select Status</option>
+                                    <option value="Secured">Secured</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Not Secured">Not Secured</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="budgetStatus" class="form-label">Budget Status</label>
+                                <select class="form-select" id="budgetStatus">
+                                    <option value="">Select Status</option>
+                                    <option value="On Track">On Track</option>
+                                    <option value="Over Budget">Over Budget</option>
+                                    <option value="Under Budget">Under Budget</option>
+                                    <option value="At Risk">At Risk</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="subPortfolio" class="form-label">Sub Portfolio</label>
+                                <input type="text" class="form-control" id="subPortfolio" placeholder="Sub-Him">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="topLevelPortfolio" class="form-label">Top Level Portfolio</label>
+                                <input type="text" class="form-control" id="topLevelPortfolio" placeholder="Portfolio-Serve">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="technologyLeader" class="form-label">Technology Portfolio Leader</label>
+                                <input type="text" class="form-control" id="technologyLeader">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="businessOwner" class="form-label">Business Owner</label>
+                                <input type="text" class="form-control" id="businessOwner">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="owner" class="form-label">Owner</label>
+                                <input type="text" class="form-control" id="owner">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="actualStartDate" class="form-label">Actual Start Date</label>
+                                <input type="date" class="form-control" id="actualStartDate">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createProject()">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Project Modal -->
+<div class="modal fade" id="editProjectModal" tabindex="-1" aria-labelledby="editProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProjectModalLabel">Edit Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editProjectForm">
+                    <input type="hidden" id="editProjectId">
+                    <!-- Enhanced form fields matching create modal -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editProjectName" class="form-label">Project Name *</label>
+                                <input type="text" class="form-control" id="editProjectName" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="editProjectId" class="form-label">Project ID</label>
+                                <input type="text" class="form-control" id="editProjectId" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Additional fields would be here -->
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateProject()">Update Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Actions Modal -->
+<div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkActionsModalLabel">Bulk Actions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Selected <span id="selectedCount">0</span> projects</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" onclick="bulkUpdateStatus()">
+                        <i class="fas fa-edit me-2"></i>Update Status
                     </button>
-                    <button class="btn btn-sm btn-outline" onclick="editProject(${project.id})">
-                        <i class="fas fa-edit"></i>
+                    <button class="btn btn-outline-warning" onclick="bulkUpdatePriority()">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Update Priority
+                    </button>
+                    <button class="btn btn-outline-info" onclick="bulkAssignManager()">
+                        <i class="fas fa-user me-2"></i>Assign Manager
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="bulkDeleteProjects()">
+                        <i class="fas fa-trash me-2"></i>Delete Projects
                     </button>
                 </div>
-            </td>
-        </tr>
-    `).join('');
-}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
-// Get status CSS class
-function getStatusClass(status) {
-    const statusMap = {
-        'Active': 'success',
-        'Completed': 'info',
-        'At Risk': 'warning',
-        'Off Track': 'danger'
-    };
-    return statusMap[status] || 'secondary';
-}
-
-// Get priority CSS class
-function getPriorityClass(priority) {
-    const priorityMap = {
-        'Critical': 'danger',
-        'High': 'warning',
-        'Medium': 'info',
-        'Low': 'success'
-    };
-    return priorityMap[priority] || 'secondary';
-}
-
-// View project details
-function viewProject(projectId) {
-    window.location.href = `/projects/${projectId}`;
-}
-
-// Edit project
-function editProject(projectId) {
-    // TODO: Implement edit functionality
-    alert('Edit project functionality coming soon!');
-}
-
-// Create new project
-function createProject() {
-    // TODO: Implement create functionality
-    alert('Create project functionality coming soon!');
-}
-
-// Refresh projects
-function refreshProjects() {
-    loadProjects();
-}
-
-// Show error message
-function showError(message) {
-    const tbody = document.getElementById('projectsTableBody');
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="8" class="text-center text-danger">
-                <i class="fas fa-exclamation-triangle"></i>
-                ${message}
-            </td>
-        </tr>
-    `;
-}
-
-// Initialize page
-document.addEventListener('DOMContentLoaded', function() {
-    loadProjects();
-});
-</script>
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/projects.js') }}?v=5.0"></script>
 {% endblock %}

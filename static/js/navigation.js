@@ -26,19 +26,29 @@ class NavigationManager {
     }
     
     setupEventListeners() {
-        // Only setup basic navigation links - NO AUTO-LOADING
+        console.log('🔍 DEBUG: Setting up navigation event listeners...');
+        
+        // Find all navigation links
         const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
+        console.log('🔍 DEBUG: Found', navLinks.length, 'navigation links');
+        
+        navLinks.forEach((link, index) => {
+            const href = link.getAttribute('href');
+            console.log(`🔍 DEBUG: Link ${index}: href="${href}", text="${link.textContent.trim()}"`);
+            
+            // Add click listener for debugging only - don't interfere with navigation
             link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const href = link.getAttribute('href');
-                if (href && href !== '#') {
-                    this.navigateToRoute(href);
-                }
+                console.log('🔍 DEBUG: Navigation click detected!');
+                console.log('🔍 DEBUG: Link href:', href);
+                console.log('🔍 DEBUG: Link text:', link.textContent.trim());
+                
+                // Just log - don't prevent default or interfere
+                this.logger.log('INFO', `Navigation clicked: ${href}`);
             });
         });
         
-        this.logger.log('INFO', 'Navigation event listeners setup - NO AUTO-LOADING');
+        console.log('🔍 DEBUG: Navigation event listeners setup complete - NO INTERFERENCE');
+        this.logger.log('INFO', 'Navigation event listeners setup - NO INTERFERENCE MODE');
     }
     
     navigateToRoute(route) {
@@ -53,6 +63,16 @@ class NavigationManager {
             this.loadResourcesView();
         } else if (route === '/risks') {
             this.loadRisksView();
+        } else if (route === '/backlog') {
+            this.loadBacklogView();
+        } else if (route === '/ai-copilot') {
+            this.loadAICopilotView();
+        } else if (route === '/features') {
+            this.loadFeaturesView();
+        } else if (route === '/gantt') {
+            this.loadGanttView();
+        } else if (route === '/reports') {
+            this.loadReportsView();
         } else {
             this.loadHomeView();
         }
@@ -97,6 +117,46 @@ class NavigationManager {
         // Navigate to risks page
         window.location.href = '/risks';
     }
+    
+    loadBacklogView() {
+        this.logger.log('INFO', 'Loading backlog view - NO AUTO-LOADING');
+        this.currentView = 'backlog';
+        
+        // Navigate to backlog page
+        window.location.href = '/backlog';
+    }
+    
+    loadAICopilotView() {
+        this.logger.log('INFO', 'Loading AI Copilot view - NO AUTO-LOADING');
+        this.currentView = 'ai-copilot';
+        
+        // Navigate to AI Copilot page
+        window.location.href = '/ai-copilot';
+    }
+    
+    loadFeaturesView() {
+        this.logger.log('INFO', 'Loading features view - NO AUTO-LOADING');
+        this.currentView = 'features';
+        
+        // Navigate to features page
+        window.location.href = '/features';
+    }
+    
+    loadGanttView() {
+        this.logger.log('INFO', 'Loading Gantt chart view - NO AUTO-LOADING');
+        this.currentView = 'gantt';
+        
+        // Navigate to Gantt chart page
+        window.location.href = '/gantt';
+    }
+    
+    loadReportsView() {
+        this.logger.log('INFO', 'Loading reports view - NO AUTO-LOADING');
+        this.currentView = 'reports';
+        
+        // Navigate to reports page
+        window.location.href = '/reports';
+    }
 }
 
 // Global function for manual dashboard data loading
@@ -107,6 +167,26 @@ function loadDashboardData() {
 
 // Create global instance - NO AUTO-INITIALIZATION
 window.navigationManager = new NavigationManager();
+
+// Test function for debugging
+window.testNavigation = function() {
+    console.log('🧪 TEST: Testing navigation...');
+    console.log('🧪 TEST: Current URL:', window.location.href);
+    
+    const navLinks = document.querySelectorAll('.nav-link');
+    console.log('🧪 TEST: Found', navLinks.length, 'navigation links');
+    
+    navLinks.forEach((link, index) => {
+        const href = link.getAttribute('href');
+        console.log(`🧪 TEST: Link ${index}: href="${href}", text="${link.textContent.trim()}"`);
+        
+        // Test clicking the link
+        if (href === '/backlog') {
+            console.log('🧪 TEST: Testing backlog link click...');
+            link.click();
+        }
+    });
+};
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {

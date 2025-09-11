@@ -15,11 +15,17 @@
     <button type="button" class="btn btn-outline-info" onclick="addFeature({{ project.id }})">
         <i class="fas fa-cog me-1"></i>Add Feature
     </button>
+    <button type="button" class="btn btn-outline-warning" onclick="addRisk({{ project.id }})">
+        <i class="fas fa-exclamation-triangle me-1"></i>Add Risk
+    </button>
     <div class="btn-group" role="group">
         <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
             <i class="fas fa-ellipsis-v me-1"></i>More
         </button>
         <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="generateReport({{ project.id }})">
+                <i class="fas fa-chart-bar me-2"></i>Generate Report
+            </a></li>
             <li><a class="dropdown-item" href="#" onclick="exportProject({{ project.id }})">
                 <i class="fas fa-download me-2"></i>Export
             </a></li>
@@ -27,6 +33,9 @@
                 <i class="fas fa-copy me-2"></i>Duplicate
             </a></li>
             <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" onclick="archiveProject({{ project.id }})">
+                <i class="fas fa-archive me-2"></i>Archive
+            </a></li>
             <li><a class="dropdown-item text-danger" href="#" onclick="deleteProject({{ project.id }})">
                 <i class="fas fa-trash me-2"></i>Delete
             </a></li>
@@ -688,41 +697,418 @@ function addTask(projectId) {
     console.log('Add task to project:', projectId);
 }
 
+// Project Detail JavaScript Functions
+let projectData = null;
+
+// Initialize project detail page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing Project Detail Page...');
+    loadProjectData();
+    loadProjectTasks();
+    loadProjectFeatures();
+    loadProjectRisks();
+    loadProjectTimeline();
+});
+
+// Load project data
+async function loadProjectData() {
+    try {
+        const projectId = window.location.pathname.split('/').pop();
+        const response = await fetch(`/api/v1/projects/${projectId}`);
+        if (response.ok) {
+            projectData = await response.json();
+            updateProjectUI();
+        }
+    } catch (error) {
+        console.error('Error loading project data:', error);
+    }
+}
+
+// Update project UI with loaded data
+function updateProjectUI() {
+    if (!projectData) return;
+    
+    // Update progress bar
+    const progressBar = document.querySelector('.progress-bar');
+    if (progressBar) {
+        progressBar.style.width = `${projectData.percent_complete || 0}%`;
+        progressBar.setAttribute('aria-valuenow', projectData.percent_complete || 0);
+    }
+    
+    // Update status badge
+    const statusBadge = document.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = projectData.status?.name || 'Unknown';
+        statusBadge.className = `status-badge badge ${getStatusClass(projectData.status?.name)}`;
+    }
+    
+    // Update priority badge
+    const priorityBadge = document.querySelector('.priority-badge');
+    if (priorityBadge) {
+        priorityBadge.textContent = projectData.priority?.name || 'Unknown';
+        priorityBadge.className = `priority-badge badge ${getPriorityClass(projectData.priority?.name)}`;
+    }
+}
+
+// Load project tasks
+async function loadProjectTasks() {
+    try {
+        const projectId = window.location.pathname.split('/').pop();
+        const response = await fetch(`/api/v1/projects/${projectId}/tasks`);
+        if (response.ok) {
+            const tasks = await response.json();
+            renderTasks(tasks);
+        }
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+// Render tasks
+function renderTasks(tasks) {
+    const container = document.getElementById('tasks-list');
+    if (!container) return;
+    
+    if (tasks.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-tasks fa-2x mb-2"></i>
+                <p>No tasks found for this project</p>
+                <button class="btn btn-primary btn-sm" onclick="addTask({{ project.id }})">
+                    <i class="fas fa-plus me-1"></i>Add First Task
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = tasks.map(task => `
+        <div class="card mb-2">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="mb-1">${task.name || 'Unnamed Task'}</h6>
+                        <small class="text-muted">${task.description || 'No description'}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge ${getStatusClass(task.status?.name)}">
+                            ${task.status?.name || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" style="width: ${task.percent_complete || 0}%"></div>
+                        </div>
+                        <small class="text-muted">${task.percent_complete || 0}%</small>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editTask(${task.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteTask(${task.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load project features
+async function loadProjectFeatures() {
+    try {
+        const projectId = window.location.pathname.split('/').pop();
+        const response = await fetch(`/api/v1/projects/${projectId}/features`);
+        if (response.ok) {
+            const features = await response.json();
+            renderFeatures(features);
+        }
+    } catch (error) {
+        console.error('Error loading features:', error);
+    }
+}
+
+// Render features
+function renderFeatures(features) {
+    const container = document.getElementById('features-list');
+    if (!container) return;
+    
+    if (features.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-cogs fa-2x mb-2"></i>
+                <p>No features found for this project</p>
+                <button class="btn btn-primary btn-sm" onclick="addFeature({{ project.id }})">
+                    <i class="fas fa-plus me-1"></i>Add First Feature
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = features.map(feature => `
+        <div class="card mb-2">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="mb-1">${feature.name || 'Unnamed Feature'}</h6>
+                        <small class="text-muted">${feature.description || 'No description'}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge ${getStatusClass(feature.status?.name)}">
+                            ${feature.status?.name || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge ${getPriorityClass(feature.priority?.name)}">
+                            ${feature.priority?.name || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editFeature(${feature.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteFeature(${feature.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load project risks
+async function loadProjectRisks() {
+    try {
+        const projectId = window.location.pathname.split('/').pop();
+        const response = await fetch(`/api/v1/projects/${projectId}/risks`);
+        if (response.ok) {
+            const risks = await response.json();
+            renderRisks(risks);
+        }
+    } catch (error) {
+        console.error('Error loading risks:', error);
+    }
+}
+
+// Render risks
+function renderRisks(risks) {
+    const container = document.getElementById('risks-list');
+    if (!container) return;
+    
+    if (risks.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p>No risks identified for this project</p>
+                <button class="btn btn-warning btn-sm" onclick="addRisk({{ project.id }})">
+                    <i class="fas fa-plus me-1"></i>Add First Risk
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = risks.map(risk => `
+        <div class="card mb-2">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h6 class="mb-1">${risk.name || 'Unnamed Risk'}</h6>
+                        <small class="text-muted">${risk.description || 'No description'}</small>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge ${getRiskLevelClass(risk.risk_level)}">
+                            ${risk.risk_level || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="badge ${getStatusClass(risk.status?.name)}">
+                            ${risk.status?.name || 'Unknown'}
+                        </span>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-outline-primary" onclick="editRisk(${risk.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" onclick="deleteRisk(${risk.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load project timeline
+async function loadProjectTimeline() {
+    try {
+        const projectId = window.location.pathname.split('/').pop();
+        const response = await fetch(`/api/v1/projects/${projectId}/timeline`);
+        if (response.ok) {
+            const timeline = await response.json();
+            renderTimeline(timeline);
+        }
+    } catch (error) {
+        console.error('Error loading timeline:', error);
+    }
+}
+
+// Render timeline
+function renderTimeline(timeline) {
+    const container = document.getElementById('timeline-list');
+    if (!container) return;
+    
+    if (timeline.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                <p>No timeline events found for this project</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = timeline.map(event => `
+        <div class="timeline-item">
+            <div class="timeline-marker"></div>
+            <div class="timeline-content">
+                <h6>${event.title || 'Event'}</h6>
+                <p class="text-muted">${event.description || 'No description'}</p>
+                <small class="text-muted">${formatDate(event.date)}</small>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Action functions
+function addTask(projectId) {
+    console.log('Add task to project:', projectId);
+    // Implement add task modal
+    alert('Add Task functionality - Coming soon!');
+}
+
 function addFeature(projectId) {
-    // Implement add feature functionality
     console.log('Add feature to project:', projectId);
+    // Implement add feature modal
+    alert('Add Feature functionality - Coming soon!');
 }
 
 function addRisk(projectId) {
-    // Implement add risk functionality
     console.log('Add risk to project:', projectId);
+    // Implement add risk modal
+    alert('Add Risk functionality - Coming soon!');
 }
 
-function viewGanttChart() {
-    // Implement Gantt chart view
-    console.log('View Gantt chart');
+function editProject(projectId) {
+    console.log('Edit project:', projectId);
+    // Redirect to edit page or show modal
+    window.location.href = `/projects/${projectId}/edit`;
 }
 
-function viewTimeline() {
-    // Implement timeline view
-    console.log('View timeline');
+function generateReport(projectId) {
+    console.log('Generate report for project:', projectId);
+    // Implement report generation
+    alert('Generate Report functionality - Coming soon!');
 }
 
 function exportProject(projectId) {
-    // Implement export project functionality
     console.log('Export project:', projectId);
+    // Implement export functionality
+    if (projectData) {
+        const dataStr = JSON.stringify(projectData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `project_${projectData.project_id || projectData.id}.json`;
+        link.click();
+        
+        URL.revokeObjectURL(url);
+    }
 }
 
 function duplicateProject(projectId) {
-    // Implement duplicate project functionality
     console.log('Duplicate project:', projectId);
+    // Implement duplicate functionality
+    alert('Duplicate Project functionality - Coming soon!');
+}
+
+function archiveProject(projectId) {
+    console.log('Archive project:', projectId);
+    // Implement archive functionality
+    if (confirm('Are you sure you want to archive this project?')) {
+        alert('Archive Project functionality - Coming soon!');
+    }
 }
 
 function deleteProject(projectId) {
-    // Implement delete project functionality
-    if (confirm('Are you sure you want to delete this project?')) {
-        console.log('Delete project:', projectId);
+    console.log('Delete project:', projectId);
+    // Implement delete functionality
+    if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+        alert('Delete Project functionality - Coming soon!');
     }
+}
+
+function viewGanttChart() {
+    console.log('View Gantt chart');
+    // Redirect to Gantt chart page
+    window.location.href = '/gantt';
+}
+
+function viewTimeline() {
+    console.log('View timeline');
+    // Show timeline tab
+    const timelineTab = document.getElementById('timeline-tab');
+    if (timelineTab) {
+        timelineTab.click();
+    }
+}
+
+// Utility functions
+function getStatusClass(status) {
+    const statusMap = {
+        'Active': 'bg-success',
+        'Completed': 'bg-info',
+        'At Risk': 'bg-warning',
+        'Off Track': 'bg-danger'
+    };
+    return statusMap[status] || 'bg-secondary';
+}
+
+function getPriorityClass(priority) {
+    const priorityMap = {
+        'Low': 'bg-success',
+        'Medium': 'bg-info',
+        'High': 'bg-warning',
+        'Critical': 'bg-danger'
+    };
+    return priorityMap[priority] || 'bg-secondary';
+}
+
+function getRiskLevelClass(level) {
+    const riskMap = {
+        'Low': 'bg-success',
+        'Medium': 'bg-warning',
+        'High': 'bg-danger',
+        'Critical': 'bg-danger'
+    };
+    return riskMap[level] || 'bg-secondary';
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
 }
 </script>
 {% endblock %}

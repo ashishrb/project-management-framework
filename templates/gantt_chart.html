@@ -459,12 +459,20 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load projects for selection
 async function loadProjects() {
     try {
-        const data = await GenAIDashboard.apiCall('/projects/');
+        console.log('🔍 DEBUG: Loading projects for Gantt chart...');
+        const response = await fetch('/api/v1/projects/');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('🔍 DEBUG: Projects loaded:', data.length);
+        
         const select = document.getElementById('projectSelect');
         select.innerHTML = '<option value="">Select Project</option>' +
             data.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
     } catch (error) {
         console.error('Error loading projects:', error);
+        alert('Failed to load projects: ' + error.message);
     }
 }
 
@@ -474,17 +482,30 @@ async function loadProjectGantt() {
     if (!projectId) return;
     
     try {
-        const [tasks, features] = await Promise.all([
-            GenAIDashboard.apiCall(`/projects/${projectId}/tasks`),
-            GenAIDashboard.apiCall(`/projects/${projectId}/features`)
+        console.log('🔍 DEBUG: Loading Gantt data for project:', projectId);
+        
+        const [tasksResponse, featuresResponse] = await Promise.all([
+            fetch(`/api/v1/projects/${projectId}/tasks`),
+            fetch(`/api/v1/projects/${projectId}/features`)
         ]);
+        
+        if (!tasksResponse.ok || !featuresResponse.ok) {
+            throw new Error(`HTTP error! Tasks: ${tasksResponse.status}, Features: ${featuresResponse.status}`);
+        }
+        
+        const [tasks, features] = await Promise.all([
+            tasksResponse.json(),
+            featuresResponse.json()
+        ]);
+        
+        console.log('🔍 DEBUG: Tasks loaded:', tasks.length, 'Features loaded:', features.length);
         
         ganttData = [...tasks, ...features];
         currentProject = projectId;
         renderGanttChart();
     } catch (error) {
         console.error('Error loading project data:', error);
-        GenAIDashboard.showError('Failed to load project data');
+        alert('Failed to load project data: ' + error.message);
     }
 }
 
@@ -497,6 +518,61 @@ function initializeGanttChart() {
     
     document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
     document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+    
+    // Load sample data for demonstration
+    loadSampleGanttData();
+}
+
+// Load sample Gantt data for demonstration
+function loadSampleGanttData() {
+    console.log('🔍 DEBUG: Loading sample Gantt data...');
+    
+    // Sample data for demonstration
+    ganttData = [
+        {
+            id: 1,
+            task_name: 'Project Planning',
+            start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            percent_complete: 75,
+            priority: 'High',
+            status: 'In Progress',
+            effort_estimate: 8
+        },
+        {
+            id: 2,
+            task_name: 'Database Design',
+            start_date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            percent_complete: 50,
+            priority: 'Medium',
+            status: 'In Progress',
+            effort_estimate: 12
+        },
+        {
+            id: 3,
+            task_name: 'Frontend Development',
+            start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            due_date: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            percent_complete: 0,
+            priority: 'High',
+            status: 'Not Started',
+            effort_estimate: 20
+        },
+        {
+            id: 4,
+            task_name: 'Testing & QA',
+            start_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            due_date: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            percent_complete: 0,
+            priority: 'Medium',
+            status: 'Not Started',
+            effort_estimate: 15
+        }
+    ];
+    
+    console.log('🔍 DEBUG: Sample data loaded:', ganttData.length, 'items');
+    renderGanttChart();
 }
 
 // Render Gantt chart
@@ -567,6 +643,10 @@ function renderGanttRow(task, index, startDate, endDate) {
                     <div>
                         <div class="fw-medium">${task.task_name || task.feature_name}</div>
                         <small class="text-muted">${task.description || ''}</small>
+                        <div class="d-flex gap-1 mt-1">
+                            <span class="badge bg-info">${task.effort_estimate || 0} pts</span>
+                            <span class="badge ${getPriorityBadgeClass(task.priority)}">${task.priority || 'Medium'}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -583,24 +663,80 @@ function renderGanttRow(task, index, startDate, endDate) {
     
     html += '</div>';
     
-    // Add task bar
+    // Add task bar with progress
     html += `
         <div class="gantt-task ${statusClass} ${priorityClass}" 
-             style="position: absolute; left: ${startPosition}px; width: ${width}px; top: ${index * 40 + 8}px;"
+             style="left: ${startPosition}px; width: ${width}px;"
              data-task-id="${task.id}"
              data-progress="${progress}"
-             onclick="showTaskDetail(${task.id})">
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-truncate">${task.task_name || task.feature_name}</span>
-                <small>${progress}%</small>
-            </div>
-            <div class="progress mt-1" style="height: 2px;">
-                <div class="progress-bar bg-white" style="width: ${progress}%"></div>
-            </div>
+             onmouseover="showTaskTooltip(event, ${task.id})"
+             onmouseout="hideTaskTooltip()"
+             onclick="editTask(${task.id})">
+            <div class="gantt-task-progress" style="width: ${progress}%"></div>
+            <div class="gantt-task-text">${task.task_name || task.feature_name}</div>
         </div>
     `;
     
+    // Add dependencies if any
+    if (task.dependencies && task.dependencies.length > 0) {
+        task.dependencies.forEach(depId => {
+            const depTask = ganttData.find(t => t.id === depId);
+            if (depTask) {
+                const depEndDate = new Date(depTask.due_date || depTask.planned_end_date);
+                const depEndPosition = calculatePosition(depEndDate, startDate, endDate);
+                const depRowIndex = ganttData.findIndex(t => t.id === depId);
+                
+                html += `
+                    <div class="gantt-dependency" 
+                         style="left: ${depEndPosition}px; top: ${depRowIndex * 40 + 20}px; width: ${startPosition - depEndPosition}px;">
+                    </div>
+                `;
+            }
+        });
+    }
+    
     return html;
+}
+
+// Get priority badge class
+function getPriorityBadgeClass(priority) {
+    const priorityClasses = {
+        'Low': 'bg-secondary',
+        'Medium': 'bg-info',
+        'High': 'bg-warning',
+        'Critical': 'bg-danger'
+    };
+    return priorityClasses[priority] || 'bg-info';
+}
+
+// Show task tooltip
+function showTaskTooltip(event, taskId) {
+    const task = ganttData.find(t => t.id === taskId);
+    if (!task) return;
+    
+    const tooltip = document.createElement('div');
+    tooltip.className = 'gantt-tooltip show';
+    tooltip.innerHTML = `
+        <div><strong>${task.task_name || task.feature_name}</strong></div>
+        <div>Status: ${task.status || 'Not Started'}</div>
+        <div>Progress: ${task.percent_complete || 0}%</div>
+        <div>Effort: ${task.effort_estimate || 0} pts</div>
+        <div>Priority: ${task.priority || 'Medium'}</div>
+    `;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = event.target.getBoundingClientRect();
+    tooltip.style.left = rect.left + 'px';
+    tooltip.style.top = (rect.top - tooltip.offsetHeight - 10) + 'px';
+}
+
+// Hide task tooltip
+function hideTaskTooltip() {
+    const tooltip = document.querySelector('.gantt-tooltip');
+    if (tooltip) {
+        tooltip.remove();
+    }
 }
 
 // Generate date range
@@ -827,15 +963,25 @@ function saveTask() {
     data.percent_complete = parseInt(data.taskProgress);
     
     // Submit task
-    GenAIDashboard.apiCall('/tasks/', 'POST', data)
-        .then(() => {
-            GenAIDashboard.showSuccess('Task saved successfully');
-            bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
-            loadProjectGantt();
-        })
-        .catch(error => {
-            GenAIDashboard.showError('Failed to save task');
-        });
+    fetch('/api/v1/tasks/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        alert('Task saved successfully');
+        bootstrap.Modal.getInstance(document.getElementById('taskModal')).hide();
+        loadProjectGantt();
+    })
+    .catch(error => {
+        console.error('Error saving task:', error);
+        alert('Failed to save task: ' + error.message);
+    });
 }
 
 // Export Gantt
