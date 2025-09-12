@@ -2,14 +2,17 @@
 Project Management API endpoints
 """
 from typing import List, Optional
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from app.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_demo_project_ids
+from app.config import settings
 from app.models.main_tables import Project, Task, Feature, Backlog
 from app.models.lookup_tables import Status, Priority, ProjectType, Portfolio
+from app.websocket.connection_manager import connection_manager
 from app.schemas.project_schemas import (
     ProjectResponse, ProjectCreate, ProjectUpdate,
     TaskResponse, TaskCreate, TaskUpdate,
@@ -51,6 +54,16 @@ def get_projects(
             )
         )
     
+    # DEMO_MODE: limit to 10 most recently updated projects without DB mutation
+    if settings.DEMO_MODE:
+        demo_ids = get_demo_project_ids(db, limit=10)
+        if demo_ids:
+            query = query.filter(Project.id.in_(demo_ids))
+            # Preserve ordering by updated_at desc for curated feel
+            # Note: SQLAlchemy's in_ won't maintain order; order explicitly
+            projects = query.order_by(Project.updated_at.desc().nullslast()).offset(0).limit(10).all()
+            return projects
+
     projects = query.offset(skip).limit(limit).all()
     return projects
 
@@ -141,6 +154,13 @@ def create_project(
     db.add(db_project)
     db.commit()
     db.refresh(db_project)
+    # WebSocket notify
+    try:
+        message = {"type": "project_created", "project_id": db_project.id, "name": db_project.name}
+        connection_manager.queue_message(message, room="projects")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="projects"))
+    except Exception:
+        pass
     return db_project
 
 @router.put("/{project_id}", response_model=ProjectResponse)
@@ -160,6 +180,13 @@ def update_project(
     
     db.commit()
     db.refresh(db_project)
+    # WebSocket notify
+    try:
+        message = {"type": "project_updated", "project_id": db_project.id, "name": db_project.name}
+        connection_manager.queue_message(message, room="projects")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="projects"))
+    except Exception:
+        pass
     return db_project
 
 @router.delete("/{project_id}")
@@ -175,6 +202,13 @@ def delete_project(
     
     db_project.is_active = False
     db.commit()
+    # WebSocket notify
+    try:
+        message = {"type": "project_deleted", "project_id": db_project.id}
+        connection_manager.queue_message(message, room="projects")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="projects"))
+    except Exception:
+        pass
     return {"message": "Project deleted successfully"}
 
 # ==================== TASKS ====================
@@ -213,6 +247,13 @@ def create_task(
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
+    # WebSocket notify
+    try:
+        message = {"type": "task_created", "task_id": db_task.id, "project_id": project_id}
+        connection_manager.queue_message(message, room="projects")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="projects"))
+    except Exception:
+        pass
     return db_task
 
 # ==================== FEATURES ====================

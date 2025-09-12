@@ -16,7 +16,7 @@ from chromadb.config import Settings
 from chromadb.api.models.Collection import Collection
 from pydantic import BaseModel, Field
 
-from app.core.ai_client import get_ai_service
+from app.core.ai_client import get_ai_service, AIMessage
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -402,11 +402,15 @@ class VectorDatabase:
             # Get collection info
             count = collection.count()
             
+            config = self.collection_configs.get(collection_name, {
+                "description": "",
+                "metadata_fields": []
+            })
             return {
                 "collection_name": collection_name,
                 "document_count": count,
-                "description": self.collection_configs[collection_name]["description"],
-                "metadata_fields": self.collection_configs[collection_name]["metadata_fields"],
+                "description": config.get("description", ""),
+                "metadata_fields": config.get("metadata_fields", []),
                 "timestamp": datetime.now()
             }
             

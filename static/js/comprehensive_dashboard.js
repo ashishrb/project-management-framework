@@ -316,6 +316,30 @@ function createBusinessUnitChart() {
             cutout: '60%'
         }
     });
+
+    // Click-through routing: filter dashboard by clicked business unit
+    ctx.onclick = function(evt) {
+        const points = charts.businessUnit.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+        if (points && points.length > 0) {
+            const index = points[0].index;
+            const label = charts.businessUnit.data.labels[index];
+            try {
+                window.dashboardFilters = window.dashboardFilters || {};
+                window.dashboardFilters.businessUnit = label;
+                if (typeof window.showFilterStatus === 'function') {
+                    window.showFilterStatus();
+                }
+                if (typeof window.updateFilteredCharts === 'function') {
+                    window.updateFilteredCharts();
+                }
+                if (typeof window.updateKPICardsWithFilters === 'function') {
+                    window.updateKPICardsWithFilters();
+                }
+            } catch (e) {
+                console.warn('Business unit click handler failed:', e);
+            }
+        }
+    };
 }
 
 /**
@@ -461,6 +485,24 @@ function createPriorityChart() {
             }
         }
     });
+
+    // Click-through: navigate to projects with selected priority
+    ctx.onclick = function(evt) {
+        const points = charts.priority.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+        if (points && points.length > 0) {
+            const index = points[0].index;
+            const label = charts.priority.data.labels[index];
+            const priority = (label || '').toLowerCase().includes('critical') ? 'Critical'
+                : (label || '').toLowerCase().includes('high') ? 'High'
+                : (label || '').toLowerCase().includes('moderate') ? 'Medium'
+                : 'Low';
+            try {
+                window.location.href = '/projects?priority=' + encodeURIComponent(priority);
+            } catch (e) {
+                console.warn('Priority click navigation failed:', e);
+            }
+        }
+    };
 }
 
 /**
@@ -523,7 +565,8 @@ async function loadAIAnalysis() {
             loadHealthAnalysis(),
             loadFinancialAnalysis(),
             loadResourceAnalysis(),
-            loadPredictiveAnalysis()
+            loadPredictiveAnalysis(),
+            loadDashboardInsights()
         ]);
         
         console.log('✅ AI analysis loaded successfully');
@@ -639,21 +682,30 @@ function updateComprehensiveAnalysisUI() {
         </div>
     `;
     
-    // Update insights sidebar
-    insightsDiv.innerHTML = `
-        <div class="insight-item success">
-            <strong>Total Projects:</strong> ${dataSummary.total_projects}
-        </div>
-        <div class="insight-item success">
-            <strong>Active Projects:</strong> ${dataSummary.active_projects}
-        </div>
-        <div class="insight-item success">
-            <strong>Total Budget:</strong> ${formatCurrency(dataSummary.total_budget)}
-        </div>
-        <div class="insight-item success">
-            <strong>Completion Rate:</strong> ${dataSummary.completion_rate}%
-        </div>
-    `;
+    // Update insights sidebar (prefer structured insights if available)
+    const structured = aiAnalysisData.comprehensive.insights;
+    if (Array.isArray(structured) && structured.length) {
+        insightsDiv.innerHTML = structured.map(it => `
+            <div class="insight-item ${it.type || 'info'}">
+                <strong>${it.title || ''}:</strong> ${it.message || ''}
+            </div>
+        `).join('');
+    } else {
+        insightsDiv.innerHTML = `
+            <div class="insight-item success">
+                <strong>Total Projects:</strong> ${dataSummary.total_projects}
+            </div>
+            <div class="insight-item success">
+                <strong>Active Projects:</strong> ${dataSummary.active_projects}
+            </div>
+            <div class="insight-item success">
+                <strong>Total Budget:</strong> ${formatCurrency(dataSummary.total_budget)}
+            </div>
+            <div class="insight-item success">
+                <strong>Completion Rate:</strong> ${dataSummary.completion_rate}%
+            </div>
+        `;
+    }
 }
 
 /**
@@ -675,13 +727,22 @@ function updateHealthAnalysisUI() {
         </div>
     `;
     
-    // Extract risk alerts from analysis
-    const riskAlerts = extractRiskAlerts(analysis);
-    insightsDiv.innerHTML = riskAlerts.map(alert => `
-        <div class="insight-item ${alert.type}">
-            <strong>${alert.title}:</strong> ${alert.message}
-        </div>
-    `).join('');
+    // Prefer structured insights if available
+    const structured = aiAnalysisData.health.insights;
+    if (Array.isArray(structured) && structured.length) {
+        insightsDiv.innerHTML = structured.map(alert => `
+            <div class="insight-item ${alert.type || 'info'}">
+                <strong>${alert.title || ''}:</strong> ${alert.message || ''}
+            </div>
+        `).join('');
+    } else {
+        const riskAlerts = extractRiskAlerts(analysis);
+        insightsDiv.innerHTML = riskAlerts.map(alert => `
+            <div class="insight-item ${alert.type}">
+                <strong>${alert.title}:</strong> ${alert.message}
+            </div>
+        `).join('');
+    }
 }
 
 /**
@@ -703,13 +764,22 @@ function updateFinancialAnalysisUI() {
         </div>
     `;
     
-    // Extract ROI insights
-    const roiInsights = extractROIInsights(analysis);
-    insightsDiv.innerHTML = roiInsights.map(insight => `
-        <div class="insight-item ${insight.type}">
-            <strong>${insight.title}:</strong> ${insight.message}
-        </div>
-    `).join('');
+    // Prefer structured insights if available
+    const structured = aiAnalysisData.financial.insights;
+    if (Array.isArray(structured) && structured.length) {
+        insightsDiv.innerHTML = structured.map(insight => `
+            <div class="insight-item ${insight.type || 'info'}">
+                <strong>${insight.title || ''}:</strong> ${insight.message || ''}
+            </div>
+        `).join('');
+    } else {
+        const roiInsights = extractROIInsights(analysis);
+        insightsDiv.innerHTML = roiInsights.map(insight => `
+            <div class="insight-item ${insight.type}">
+                <strong>${insight.title}:</strong> ${insight.message}
+            </div>
+        `).join('');
+    }
 }
 
 /**
@@ -730,13 +800,22 @@ function updateResourceAnalysisUI() {
         </div>
     `;
     
-    // Extract optimization tips
-    const optimizationTips = extractOptimizationTips(analysis);
-    insightsDiv.innerHTML = optimizationTips.map(tip => `
-        <div class="insight-item ${tip.type}">
-            <strong>${tip.title}:</strong> ${tip.message}
-        </div>
-    `).join('');
+    // Prefer structured insights if available
+    const structured = aiAnalysisData.resource.insights;
+    if (Array.isArray(structured) && structured.length) {
+        insightsDiv.innerHTML = structured.map(tip => `
+            <div class="insight-item ${tip.type || 'info'}">
+                <strong>${tip.title || ''}:</strong> ${tip.message || ''}
+            </div>
+        `).join('');
+    } else {
+        const optimizationTips = extractOptimizationTips(analysis);
+        insightsDiv.innerHTML = optimizationTips.map(tip => `
+            <div class="insight-item ${tip.type}">
+                <strong>${tip.title}:</strong> ${tip.message}
+            </div>
+        `).join('');
+    }
 }
 
 /**
@@ -758,13 +837,22 @@ function updatePredictiveAnalysisUI() {
         </div>
     `;
     
-    // Extract forecasts
-    const forecasts = extractForecasts(predictions);
-    insightsDiv.innerHTML = forecasts.map(forecast => `
-        <div class="insight-item ${forecast.type}">
-            <strong>${forecast.title}:</strong> ${forecast.message}
-        </div>
-    `).join('');
+    // Prefer structured insights if available
+    const structured = aiAnalysisData.predictive.insights;
+    if (Array.isArray(structured) && structured.length) {
+        insightsDiv.innerHTML = structured.map(forecast => `
+            <div class="insight-item ${forecast.type || 'info'}">
+                <strong>${forecast.title || ''}:</strong> ${forecast.message || ''}
+            </div>
+        `).join('');
+    } else {
+        const forecasts = extractForecasts(predictions);
+        insightsDiv.innerHTML = forecasts.map(forecast => `
+            <div class="insight-item ${forecast.type}">
+                <strong>${forecast.title}:</strong> ${forecast.message}
+            </div>
+        `).join('');
+    }
 }
 
 /**
@@ -822,6 +910,28 @@ function resetAIAnalysisUI() {
             div.innerHTML = '<div class="text-center text-muted py-2"><small>Loading insights...</small></div>';
         }
     });
+}
+
+/**
+ * Load and render global AI insights chips
+ */
+async function loadDashboardInsights() {
+    try {
+        const chipsEl = document.getElementById('global-insights-chips');
+        if (!chipsEl) return;
+        const res = await fetch('/api/v1/ai-insights/insights');
+        if (!res.ok) return;
+        const data = await res.json();
+        const insights = Array.isArray(data.insights) ? data.insights : [];
+        const cls = (severity) => severity === 'high' ? 'danger' : severity === 'medium' ? 'warning' : 'info';
+        chipsEl.innerHTML = insights.map(i => `
+            <span class="badge bg-${cls(i.severity || 'info')} me-2 mb-2" title="${(i.description || '').replace(/\"/g, '&quot;')}">
+                ${i.title || 'Insight'}
+            </span>
+        `).join('');
+    } catch (e) {
+        // best-effort; ignore
+    }
 }
 
 /**

@@ -45,6 +45,22 @@ class DetailedLogger:
             self.logger.addHandler(file_handler)
             self.logger.addHandler(console_handler)
     
+    # Passthrough standard logging methods for compatibility
+    def debug(self, msg: str, *args, **kwargs):
+        self.logger.debug(msg, *args, **kwargs)
+    
+    def info(self, msg: str, *args, **kwargs):
+        self.logger.info(msg, *args, **kwargs)
+    
+    def warning(self, msg: str, *args, **kwargs):
+        self.logger.warning(msg, *args, **kwargs)
+    
+    def error(self, msg: str, *args, **kwargs):
+        self.logger.error(msg, *args, **kwargs)
+    
+    def exception(self, msg: str, *args, **kwargs):
+        self.logger.exception(msg, *args, **kwargs)
+    
     def log_function_entry(self, func_name: str, args: tuple = (), kwargs: dict = None):
         """Log function entry with parameters"""
         kwargs = kwargs or {}

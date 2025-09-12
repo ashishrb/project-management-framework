@@ -7,6 +7,7 @@ from app.api.v1.endpoints import (
     projects, 
     dashboards, 
     comprehensive_dashboard,
+    auth,
     ai_analysis,
     lookup, 
     resources, 
@@ -28,7 +29,8 @@ from app.api.v1.endpoints import (
     ai_copilot,
     project_detail,
     file_upload,
-    approval_workflow
+    approval_workflow,
+    admin
 )
 
 api_router = APIRouter()
@@ -37,6 +39,7 @@ api_router = APIRouter()
 api_router.include_router(projects.router, prefix="/projects", tags=["projects"])
 api_router.include_router(dashboards.router, prefix="/dashboards", tags=["dashboards"])
 api_router.include_router(comprehensive_dashboard.router, prefix="/comprehensive-dashboard", tags=["comprehensive-dashboard"])
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(ai_analysis.router, prefix="/ai-analysis", tags=["ai-analysis"])
 api_router.include_router(lookup.router, prefix="/lookup", tags=["lookup"])
 api_router.include_router(resources.router, prefix="/resources", tags=["resources"])
@@ -59,3 +62,4 @@ api_router.include_router(ai_copilot.router, prefix="/ai/copilot", tags=["ai-cop
 api_router.include_router(project_detail.router, prefix="/project-detail", tags=["project-detail"])
 api_router.include_router(file_upload.router, prefix="/file-upload", tags=["file-upload"])
 api_router.include_router(approval_workflow.router, prefix="/approval-workflow", tags=["approval-workflow"])
+api_router.include_router(admin.router, prefix="/admin", tags=["admin"])

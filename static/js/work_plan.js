@@ -112,11 +112,38 @@ const sampleTasks = [
 /**
  * Initialize Work Plan
  */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 Initializing Work Plan...');
     
     // Initialize work plan state
-    workPlanState.tasks = [...sampleTasks];
+    try {
+        const projectIdEl = document.getElementById('workPlanProjectId');
+        const projectId = projectIdEl ? projectIdEl.value : null;
+        if (projectId) {
+            const res = await fetch(`/api/v1/projects/${projectId}/tasks`, { credentials: 'include' });
+            if (res.ok) {
+                const tasks = await res.json();
+                workPlanState.tasks = tasks.map(t => ({
+                    id: String(t.id),
+                    name: t.task_name,
+                    status: (t.status && t.status.name) ? t.status.name.toLowerCase().replace(' ', '-') : (t.percent_complete >= 100 ? 'completed' : 'in-progress'),
+                    deliverable: false,
+                    startDate: t.start_date ? new Date(t.start_date) : new Date('2022-01-01'),
+                    endDate: t.due_date ? new Date(t.due_date) : new Date('2022-03-31'),
+                    progress: Number(t.percent_complete || 0),
+                    type: 'task'
+                }));
+            } else {
+                console.warn('Falling back to sample tasks; API returned', res.status);
+                workPlanState.tasks = [...sampleTasks];
+            }
+        } else {
+            workPlanState.tasks = [...sampleTasks];
+        }
+    } catch (e) {
+        console.error('Failed loading tasks, using samples', e);
+        workPlanState.tasks = [...sampleTasks];
+    }
     
     // Load work plan data
     loadWorkPlanData();

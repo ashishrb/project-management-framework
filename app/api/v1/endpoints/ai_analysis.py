@@ -61,6 +61,11 @@ async def get_comprehensive_ai_analysis(
                 "active_projects": dashboard_data.get("active_projects", 0),
                 "completion_rate": dashboard_data.get("completion_rate", 0)
             },
+            "insights": [
+                {"type": "success", "title": "Portfolio Status", "message": "Execution capability is strong across the portfolio."},
+                {"type": "info", "title": "Active Projects", "message": f"{dashboard_data.get('active_projects', 0)} projects actively tracked."},
+                {"type": "warning", "title": "Completion", "message": f"Completion rate {dashboard_data.get('completion_rate', 0)}%. Focus on below-target areas."}
+            ],
             "timestamp": "2025-09-12T11:00:00Z"
         }
         
@@ -109,6 +114,11 @@ async def get_project_health_analysis(
         return {
             "analysis": analysis,
             "health_metrics": health_data,
+            "insights": [
+                {"type": "info", "title": "Total Projects", "message": str(health_data.get("total_projects", 0))},
+                {"type": "warning", "title": "At Risk", "message": str(health_data.get("at_risk_projects", 0))},
+                {"type": "success", "title": "Health Score", "message": f"{health_data.get('health_score', 0)}%"}
+            ],
             "timestamp": "2025-09-12T11:00:00Z"
         }
         
@@ -156,6 +166,12 @@ async def get_financial_analysis(
         return {
             "analysis": analysis,
             "financial_metrics": financial_metrics,
+            "insights": [
+                {"type": "info", "title": "Planned Cost", "message": f"${planned_cost:,.0f}"},
+                {"type": "info", "title": "Actual Cost", "message": f"${actual_cost:,.0f}"},
+                {"type": "warning", "title": "Cost Variance", "message": f"{financial_metrics['cost_variance']}%"},
+                {"type": "success", "title": "ROI", "message": f"{financial_metrics['roi']}%"}
+            ],
             "timestamp": "2025-09-12T11:00:00Z"
         }
         
@@ -200,6 +216,11 @@ async def get_resource_analysis(
         return {
             "analysis": analysis,
             "resource_metrics": resource_metrics,
+            "insights": [
+                {"type": "info", "title": "Average Completion", "message": f"{resource_metrics['average_completion']}%"},
+                {"type": "info", "title": "Business Units", "message": str(resource_metrics['business_units'])},
+                {"type": "success", "title": "Efficiency", "message": f"{resource_metrics['resource_efficiency']}%"}
+            ],
             "timestamp": "2025-09-12T11:00:00Z"
         }
         
@@ -246,6 +267,11 @@ async def get_predictive_insights(
         return {
             "predictions": predictions,
             "predictive_metrics": predictive_metrics,
+            "insights": [
+                {"type": "info", "title": "Success Rate", "message": f"{predictive_metrics['success_rate']}%"},
+                {"type": "info", "title": "Completion Forecast", "message": f"{predictive_metrics['completion_forecast']}%"},
+                {"type": "warning", "title": "Completed Projects", "message": str(predictive_metrics['completed_projects'])}
+            ],
             "timestamp": "2025-09-12T11:00:00Z"
         }
         

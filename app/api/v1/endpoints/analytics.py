@@ -7,7 +7,9 @@ from typing import List, Optional
 import random
 from datetime import datetime, timedelta
 
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_db, get_current_user, get_demo_project_ids
+from app.config import settings
+from app.models.main_tables import Project
 from app.schemas.analytics_schemas import (
     TrendAnalysisResponse,
     PredictiveAnalyticsResponse,
@@ -27,6 +29,10 @@ async def get_trend_analysis(
 ):
     """Get trend analysis data for the specified period and metrics"""
     try:
+        # Optionally scope to curated projects for demo
+        demo_project_ids = []
+        if settings.DEMO_MODE:
+            demo_project_ids = get_demo_project_ids(db, limit=10)
         # Generate sample trend data based on period
         days = min(period, 365)  # Cap at 1 year
         labels = []
@@ -85,6 +91,9 @@ async def get_predictive_analytics(
 ):
     """Get predictive analytics data"""
     try:
+        demo_project_ids = []
+        if settings.DEMO_MODE:
+            demo_project_ids = get_demo_project_ids(db, limit=10)
         # Generate sample predictive data
         completion_rate = random.randint(75, 95)
         predicted_risks = random.randint(5, 20)
@@ -143,6 +152,9 @@ async def get_comparative_analysis(
 ):
     """Get comparative analysis data"""
     try:
+        demo_project_ids = []
+        if settings.DEMO_MODE:
+            demo_project_ids = get_demo_project_ids(db, limit=10)
         # Generate sample comparative data based on comparison type
         if compare_by == "function":
             labels = ["Engineering", "Marketing", "Sales", "Support", "Operations"]

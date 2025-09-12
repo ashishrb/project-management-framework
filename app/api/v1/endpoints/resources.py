@@ -5,6 +5,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
+import asyncio
 
 from app.database import get_db
 from app.api.deps import get_current_user
@@ -14,6 +15,7 @@ from app.schemas.resource_schemas import (
     ResourceResponse, ResourceCreate, ResourceUpdate,
     ResourceAllocation, ProjectAllocation, TaskAllocation
 )
+from app.websocket.connection_manager import connection_manager
 
 router = APIRouter()
 
@@ -63,6 +65,13 @@ def create_resource(
     db.add(db_resource)
     db.commit()
     db.refresh(db_resource)
+    # WebSocket notify
+    try:
+        message = {"type": "resource_created", "resource_id": db_resource.id, "name": db_resource.name}
+        connection_manager.queue_message(message, room="resources")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="resources"))
+    except Exception:
+        pass
     return db_resource
 
 @router.put("/{resource_id}", response_model=ResourceResponse)
@@ -82,6 +91,13 @@ def update_resource(
     
     db.commit()
     db.refresh(db_resource)
+    # WebSocket notify
+    try:
+        message = {"type": "resource_updated", "resource_id": db_resource.id, "name": db_resource.name}
+        connection_manager.queue_message(message, room="resources")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="resources"))
+    except Exception:
+        pass
     return db_resource
 
 @router.delete("/{resource_id}")
@@ -97,6 +113,13 @@ def delete_resource(
     
     db_resource.is_active = False
     db.commit()
+    # WebSocket notify
+    try:
+        message = {"type": "resource_deleted", "resource_id": db_resource.id}
+        connection_manager.queue_message(message, room="resources")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="resources"))
+    except Exception:
+        pass
     return {"message": "Resource deleted successfully"}
 
 # ==================== RESOURCE ALLOCATIONS ====================

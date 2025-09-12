@@ -1,3 +1,121 @@
+## GenAI Metrics Dashboard — Implementation Overview
+
+This document summarizes the current state of the application: functional scope, technical architecture, and UI flows. It reflects the latest codebase as running locally on port 8000.
+
+### Functional Features
+
+- Core pages (SSR via Jinja):
+  - Home: Landing with quick access actions and summaries.
+  - Dashboard: Standard KPIs and charts (via `/api/v1/dashboards`, `/api/v1/analytics`).
+  - Comprehensive Dashboard: Advanced KPIs, multiple charts, and AI insights panels.
+  - Projects: CRUD interactions against `/api/v1/projects` and lookups from `/api/v1/lookup`.
+  - Resources: Resource lists/analytics (endpoints in `resources.py`).
+  - Backlog: Items grid and kanban-like rendering (via `/api/v1/projects/backlog/items`).
+  - Work Plan: Gantt-style visualization (static sample data) with zoom, search, and export.
+  - Risks, Gantt (demo), Reports (scaffolded generic page).
+  - AI Copilot Console: Interacts with AI endpoints for tasks/insights (scaffold).
+
+- APIs (FastAPI routers under `/api/v1`):
+  - Projects: CRUD, tasks, features, backlog items.
+  - Dashboards: Summary metrics and GenAI metrics.
+  - Analytics: Trend analysis, predictive analytics, comparative analysis, real-time metrics, export stub.
+  - Comprehensive Dashboard: KPI + chart data for advanced dashboard.
+  - AI Analysis: Comprehensive/health/financial/resource/predictive endpoints (mock analysis HTML).
+  - RAG/Vector DB: Vector database management, RAG service APIs (Chroma-backed).
+  - Resources, Features, Risks, Logs (frontend logging sink), Health, Monitoring, Performance, User, Lookup, Reports, AI Services/Dashboard/Insights/Copilot, Approval Workflow, File Upload, RAG.
+
+- WebSocket:
+  - Rooms for `dashboard`, `projects`, `resources`, `risks`, and `general` under `/ws/*` with broadcast helpers and stats endpoints.
+
+- Security and middleware:
+  - CORS, Trusted Host, custom HTTP middlewares for input validation, CSRF, rate limiting, security headers, compression, request timing.
+  - Enhanced error handling with structured responses and centralized error stats.
+
+- Logging:
+  - Detailed module loggers writing to `logs/` with error analysis utilities and a frontend logging ingestion endpoint (`/api/v1/logs/frontend`).
+
+- Database & Migrations:
+  - SQLAlchemy models (projects, features, tasks, backlogs, resources, lookups, comprehensive tables).
+  - Alembic migrations chaining initial schema → performance indexes → comprehensive dashboard additions.
+
+### Technical Architecture
+
+- Runtime:
+  - FastAPI app (`app/main.py`), mounted static files at `/static`, routers included at `/api/v1`, WebSockets under `/ws`.
+
+- Modules:
+  - `app/api/v1/endpoints/*`: REST endpoints grouped by domain (projects, dashboards, analytics, comprehensive_dashboard, ai_analysis, etc.).
+  - `app/routes/views.py`: SSR routes returning templates for each main page.
+  - `app/core/*`: AI client/service integration, vector DB/RAG, logging, memory/cache abstractions.
+  - `app/middleware/*`: validation, CSRF, rate limiting (redis-backed), security headers, compression.
+  - `app/websocket/*`: connection manager and socket endpoints.
+  - `templates/*`: Jinja templates for pages; `static/js/*` and `static/css/*` for client logic and styles.
+
+- Data & AI:
+  - Vector DB using Chroma with persistent storage and collections for domain entities; RAG endpoints compose prompts using `AIMessage` and generated context.
+  - AI analysis endpoints return structured HTML sections (mock) enabling rich rendering without client templating.
+
+- Exports & Reports:
+  - Analytics export stub returns JSON with `file_url` for PDF/CSV/Excel/image; file streaming not yet implemented.
+
+### UI Flows
+
+- Navigation (from `base.html`):
+  - Main nav links route to SSR pages; each page loads its JS bundle via `url_for('static', ...)`.
+
+- Dashboard:
+  - On load, `static/js/dashboard.js` fetches:
+    - `/api/v1/dashboards/summary-metrics` → KPI cards.
+    - `/api/v1/dashboards/genai-metrics` → function/platform charts.
+    - `/api/v1/analytics/trend-analysis`, `/predictive-analytics`, `/comparative-analysis`, `/real-time-metrics` → charts/cards.
+    - Export triggers `/api/v1/analytics/export/pdf` returning a JSON payload.
+
+- Comprehensive Dashboard:
+  - `static/js/comprehensive_dashboard.js` loads `/api/v1/comprehensive-dashboard/comprehensive-dashboard` for KPIs/charts.
+  - AI panels fetch from `/api/v1/ai-analysis/*` and render HTML directly into panels (strategic overview, health, financial, resource, predictive).
+  - Tabs (summary/pipeline/health/quality/actuals/calendar) populate charts/tables with either loaded or generated data.
+
+- Projects:
+  - `static/js/projects.js` loads `/api/v1/projects/`, renders table/cards; lookup filter from `/api/v1/lookup/portfolios`.
+  - Create/Update/Delete calls relevant `/api/v1/projects` endpoints; client UX includes modals and toasts.
+
+- Backlog:
+  - `static/js/backlog.js` fetches `/api/v1/projects/backlog/items` and renders list/kanban.
+
+- Work Plan:
+  - `static/js/work_plan.js` (now included) renders Gantt and task list using sample tasks, implements zoom/search/export.
+
+- Project Detail:
+  - SSR view `/projects/{project_id}` loads comprehensive detail template and uses `project_detail.js` for client enhancements.
+
+- AI Copilot:
+  - `static/js/ai_copilot.js` integrates with `/api/v1/ai/copilot/*` endpoints (scaffold) for task/analysis actions.
+
+- WebSockets:
+  - Client pages can connect to `/ws/*` rooms for live updates (demo-ready); server supports broadcast and room messaging.
+
+### Recent Fixes/Adjustments
+
+- Fixed integration test syntax error in AI tests; resolved duplicate test file naming.
+- Added `static/favicon.ico` placeholder to satisfy template reference.
+- `DetailedLogger` now exposes `.debug/.info/.warning/.error/.exception` for compatibility.
+- `vector_db.py` now imports `AIMessage` and handles missing collection config in stats.
+- Included `static/js/work_plan.js` in `work_plan.html` so Work Plan renders.
+- Minor tab ID consistency improvements in `comprehensive_dashboard.html`.
+
+### Known Considerations / Next Steps
+
+- Some tests assume external services or live server; not required for UI usage but can be stabilized.
+- Export endpoints return JSON with `file_url`; streaming/download endpoints can be added for direct file downloads.
+- Replace deprecations (FastAPI lifespan, SQLAlchemy `declarative_base`, Pydantic v2 config updates) during a maintenance pass.
+- Optionally wire Work Plan to live data (e.g., `/api/v1/projects/{id}/tasks`) and persist edits.
+
+### How to Run
+
+- Start server: `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload`
+- Browse: `http://localhost:8000/`
+- Key pages: `/dashboard`, `/comprehensive-dashboard`, `/projects`, `/backlog`, `/work-plan`, `/resources`, `/ai-copilot`.
+
 # Implementation Summary - Critical Features Completed
 
 ## 🎉 ALL CRITICAL IMPLEMENTATIONS COMPLETED!

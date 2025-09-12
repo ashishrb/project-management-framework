@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const tbody = document.getElementById('projectsTableBody');
     console.log('Table body found:', !!tbody);
     
+    applyInitialFiltersFromURL();
     loadProjects();
     loadLookupData();
     setupEventListeners();
@@ -67,6 +68,7 @@ if (document.readyState === 'loading') {
     console.log('📋 Document still loading, waiting for DOMContentLoaded');
 } else {
     console.log('📋 Document already loaded, initializing immediately');
+    applyInitialFiltersFromURL();
     loadProjects();
     loadLookupData();
     setupEventListeners();
@@ -379,9 +381,9 @@ function searchProjects() {
  * Filter projects
  */
 function filterProjects() {
-    const statusFilter = document.getElementById('statusFilter').value;
-    const priorityFilter = document.getElementById('priorityFilter').value;
-    const portfolioFilter = document.getElementById('portfolioFilter').value;
+    const statusFilter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+    const priorityFilter = document.getElementById('priorityFilter') ? document.getElementById('priorityFilter').value : '';
+    const portfolioFilter = document.getElementById('portfolioFilter') ? document.getElementById('portfolioFilter').value : '';
     
     filteredProjects = projectsData.filter(project => {
         const statusMatch = !statusFilter || STATUS_MAP[project.status_id] === statusFilter;
@@ -392,6 +394,29 @@ function filterProjects() {
     });
     
     applyFilters();
+}
+
+/**
+ * Apply initial filters from URL query params
+ */
+function applyInitialFiltersFromURL() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const priority = params.get('priority');
+        const status = params.get('status');
+        const portfolio = params.get('portfolio');
+        if (priority && document.getElementById('priorityFilter')) {
+            document.getElementById('priorityFilter').value = priority;
+        }
+        if (status && document.getElementById('statusFilter')) {
+            document.getElementById('statusFilter').value = status;
+        }
+        if (portfolio && document.getElementById('portfolioFilter')) {
+            document.getElementById('portfolioFilter').value = portfolio;
+        }
+    } catch (e) {
+        console.warn('Failed to parse initial filters from URL:', e);
+    }
 }
 
 /**

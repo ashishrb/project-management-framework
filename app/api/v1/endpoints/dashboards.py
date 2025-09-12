@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, or_
 
 from app.database import get_db
+from app.config import settings
+from app.api.deps import get_demo_project_ids
 from app.api.deps import get_current_user
 from app.models.main_tables import Project, Feature, Backlog
 from app.models.lookup_tables import Function, Platform, Status, Priority
@@ -120,6 +122,10 @@ def get_genai_metrics(db: Session, portfolio_id: int = None) -> GenAIMetrics:
     
     # Base query for projects
     base_query = db.query(Project).filter(Project.is_active == True)
+    if settings.DEMO_MODE:
+        demo_ids = get_demo_project_ids(db, limit=10)
+        if demo_ids:
+            base_query = base_query.filter(Project.id.in_(demo_ids))
     if portfolio_id:
         base_query = base_query.filter(Project.portfolio_id == portfolio_id)
     
@@ -238,31 +244,34 @@ def get_dashboard_metrics(
 ):
     """Get overall dashboard metrics summary"""
     
+    # Base project query with DEMO_MODE scoping
+    project_q = db.query(Project).filter(Project.is_active == True)
+    if settings.DEMO_MODE:
+        demo_ids = get_demo_project_ids(db, limit=10)
+        if demo_ids:
+            project_q = project_q.filter(Project.id.in_(demo_ids))
+
     # Get project counts by status
-    active_projects = db.query(Project).filter(
+    active_projects = project_q.filter(
         and_(
-            Project.is_active == True,
             Project.status_id == 1  # Active
         )
     ).count()
     
-    completed_projects = db.query(Project).filter(
+    completed_projects = project_q.filter(
         and_(
-            Project.is_active == True,
             Project.status_id == 2  # Completed
         )
     ).count()
     
-    at_risk_projects = db.query(Project).filter(
+    at_risk_projects = project_q.filter(
         and_(
-            Project.is_active == True,
             Project.status_id == 3  # At Risk
         )
     ).count()
     
-    off_track_projects = db.query(Project).filter(
+    off_track_projects = project_q.filter(
         and_(
-            Project.is_active == True,
             Project.status_id == 4  # Off Track
         )
     ).count()

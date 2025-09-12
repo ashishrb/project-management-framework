@@ -42,5 +42,8 @@ class Settings:
     CACHE_TTL: int = 300  # 5 minutes
     MAX_CONCURRENT_REQUESTS: int = 100
 
+    # Demo mode settings
+    DEMO_MODE: bool = os.getenv("DEMO_MODE", "false").lower() in ("1", "true", "yes")
+
 # Global settings instance
 settings = Settings()

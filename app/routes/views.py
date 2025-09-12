@@ -9,6 +9,7 @@ import os
 
 from app.database import get_db
 from app.api.deps import get_current_user
+from app.middleware.csrf import csrf_protection
 
 # Initialize templates
 templates = Jinja2Templates(directory="templates")
@@ -174,6 +175,26 @@ async def gantt_chart(request: Request, db: Session = Depends(get_db), current_u
         "user": current_user
     })
 
+@router.get("/dashboard/manager", response_class=HTMLResponse)
+async def manager_dashboard(request: Request, current_user: dict = Depends(get_current_user)):
+    if (current_user.get("role") or "").lower() not in ["admin", "owner", "manager"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return templates.TemplateResponse("generic.html", {
+        "request": request,
+        "user": current_user,
+        "page_title": "Manager Dashboard"
+    })
+
+@router.get("/dashboard/portfolio", response_class=HTMLResponse)
+async def portfolio_dashboard(request: Request, current_user: dict = Depends(get_current_user)):
+    if (current_user.get("role") or "").lower() not in ["admin", "portfolio"]:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return templates.TemplateResponse("generic.html", {
+        "request": request,
+        "user": current_user,
+        "page_title": "Portfolio Dashboard"
+    })
+
 @router.get("/risks", response_class=HTMLResponse)
 async def risk_management(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """Risk management view"""
@@ -216,4 +237,24 @@ async def backlog_list(request: Request, db: Session = Depends(get_db), current_
         "request": request,
         "user": current_user,
         "page_title": "Backlog Management"
+    })
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    token = csrf_protection.generate_token(csrf_protection.get_session_id(request))
+    return templates.TemplateResponse("login.html", {
+        "request": request,
+        "csrf_token": token
+    })
+
+@router.get("/admin", response_class=HTMLResponse)
+async def admin_page(request: Request, current_user: dict = Depends(get_current_user)):
+    if (current_user.get("role") or "").lower() != "admin":
+        raise HTTPException(status_code=403, detail="Forbidden")
+    token = csrf_protection.generate_token(csrf_protection.get_session_id(request))
+    return templates.TemplateResponse("admin.html", {
+        "request": request,
+        "user": current_user,
+        "page_title": "Admin",
+        "csrf_token": token
     })

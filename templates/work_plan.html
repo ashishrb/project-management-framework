@@ -335,6 +335,7 @@
     </div>
 
     <div class="container-fluid">
+        <input type="hidden" id="workPlanProjectId" value="{{ request.query_params.get('project_id') or '' }}" />
         <!-- Toolbar -->
         <div class="work-plan-toolbar">
             <div class="row">
@@ -578,4 +579,8 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/work_plan.js') }}?v=1.0"></script>
 {% endblock %}

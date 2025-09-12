@@ -5,11 +5,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+import asyncio
 
 from app.database import get_db
 from app.api.deps import get_current_user
 from app.models.main_tables import Risk, Project
 from app.schemas.project_schemas import RiskResponse, RiskCreate, RiskUpdate
+from app.websocket.connection_manager import connection_manager
 
 router = APIRouter()
 
@@ -64,6 +66,13 @@ async def create_risk(
     db.add(db_risk)
     db.commit()
     db.refresh(db_risk)
+    # WebSocket notify
+    try:
+        message = {"type": "risk_created", "risk_id": db_risk.id, "project_id": db_risk.project_id}
+        connection_manager.queue_message(message, room="risks")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="risks"))
+    except Exception:
+        pass
     return db_risk
 
 @router.put("/{risk_id}", response_model=RiskResponse)
@@ -84,6 +93,13 @@ async def update_risk(
     
     db.commit()
     db.refresh(db_risk)
+    # WebSocket notify
+    try:
+        message = {"type": "risk_updated", "risk_id": db_risk.id, "project_id": db_risk.project_id}
+        connection_manager.queue_message(message, room="risks")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="risks"))
+    except Exception:
+        pass
     return db_risk
 
 @router.delete("/{risk_id}")
@@ -99,6 +115,13 @@ async def delete_risk(
     
     db_risk.is_active = False
     db.commit()
+    # WebSocket notify
+    try:
+        message = {"type": "risk_deleted", "risk_id": db_risk.id}
+        connection_manager.queue_message(message, room="risks")
+        asyncio.get_event_loop().create_task(connection_manager.broadcast_to_room(message, room="risks"))
+    except Exception:
+        pass
     return {"message": "Risk deleted successfully"}
 
 @router.get("/project/{project_id}", response_model=List[RiskResponse])
