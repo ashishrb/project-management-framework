@@ -1,248 +1,217 @@
-{% extends "base.html" %}
-
-{% block title %}Project Detail - {{ project.name }}{% endblock %}
-
-{% block page_title %}{{ project.name }}{% endblock %}
-
-{% block page_actions %}
-<div class="btn-group" role="group">
-    <button type="button" class="btn btn-outline-primary" onclick="editProject({{ project.id }})">
-        <i class="fas fa-edit me-1"></i>Edit
-    </button>
-    <button type="button" class="btn btn-outline-success" onclick="addTask({{ project.id }})">
-        <i class="fas fa-plus me-1"></i>Add Task
-    </button>
-    <button type="button" class="btn btn-outline-info" onclick="addFeature({{ project.id }})">
-        <i class="fas fa-cog me-1"></i>Add Feature
-    </button>
-    <button type="button" class="btn btn-outline-warning" onclick="addRisk({{ project.id }})">
-        <i class="fas fa-exclamation-triangle me-1"></i>Add Risk
-    </button>
-    <div class="btn-group" role="group">
-        <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="fas fa-ellipsis-v me-1"></i>More
-        </button>
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#" onclick="generateReport({{ project.id }})">
-                <i class="fas fa-chart-bar me-2"></i>Generate Report
-            </a></li>
-            <li><a class="dropdown-item" href="#" onclick="exportProject({{ project.id }})">
-                <i class="fas fa-download me-2"></i>Export
-            </a></li>
-            <li><a class="dropdown-item" href="#" onclick="duplicateProject({{ project.id }})">
-                <i class="fas fa-copy me-2"></i>Duplicate
-            </a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#" onclick="archiveProject({{ project.id }})">
-                <i class="fas fa-archive me-2"></i>Archive
-            </a></li>
-            <li><a class="dropdown-item text-danger" href="#" onclick="deleteProject({{ project.id }})">
-                <i class="fas fa-trash me-2"></i>Delete
-            </a></li>
-        </ul>
-    </div>
-</div>
-{% endblock %}
-
-{% block content %}
-<div class="row">
-    <!-- Project Overview -->
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Project Overview</h5>
-                <span class="status-badge {{ getStatusBadgeClass(project_status) }}">
-                    {{ project_status }}
-                </span>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Project Information</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <td><strong>Project ID:</strong></td>
-                                <td>{{ project.project_id }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>ESA ID:</strong></td>
-                                <td>{{ project.esa_id or 'N/A' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Type:</strong></td>
-                                <td>{{ project_type_name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Priority:</strong></td>
-                                <td>
-                                    <span class="priority-badge {{ getPriorityBadgeClass(project_priority) }}">
-                                        {{ project_priority }}
-                                    </span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Portfolio:</strong></td>
-                                <td>{{ portfolio_name }}</td>
-                            </tr>
-                        </table>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Details - GenAI Metrics Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="mb-0">PROJECT DETAILS, PROJECT STATUS DETAILS</h1>
+                        <p class="mb-0">Comprehensive project management and tracking</p>
                     </div>
-                    <div class="col-md-6">
-                        <h6>Timeline</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <td><strong>Start Date:</strong></td>
-                                <td>{{ project.start_date or 'N/A' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Due Date:</strong></td>
-                                <td>{{ project.due_date or 'N/A' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Progress:</strong></td>
-                                <td>
-                                    <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar" role="progressbar" 
-                                             style="width: {{ project.percent_complete or 0 }}%"
-                                             aria-valuenow="{{ project.percent_complete or 0 }}" 
-                                             aria-valuemin="0" aria-valuemax="100">
-                                        </div>
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Initiation</h5>
                                     </div>
-                                    <small class="text-muted">{{ project.percent_complete or 0 }}% Complete</small>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                
-                {% if project.description %}
-                <div class="mt-3">
-                    <h6>Description</h6>
-                    <p class="text-muted">{{ project.description }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Project Team -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Project Team</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>Key Roles</h6>
-                        <table class="table table-sm">
-                            <tr>
-                                <td><strong>Project Manager:</strong></td>
-                                <td>{{ project.project_manager or 'Not Assigned' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Business Owner:</strong></td>
-                                <td>{{ project.business_owner or 'Not Assigned' }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Tech Portfolio Leader:</strong></td>
-                                <td>{{ project.technology_portfolio_leader or 'Not Assigned' }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>Team Members</h6>
-                        <div id="team-members">
-                            <!-- Team members will be loaded here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Project Tabs -->
-        <div class="card">
-            <div class="card-header">
-                <ul class="nav nav-tabs card-header-tabs" id="projectTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="tasks-tab" data-bs-toggle="tab" 
-                                data-bs-target="#tasks" type="button" role="tab">
-                            <i class="fas fa-tasks me-1"></i>Tasks
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="features-tab" data-bs-toggle="tab" 
-                                data-bs-target="#features" type="button" role="tab">
-                            <i class="fas fa-cogs me-1"></i>Features
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="risks-tab" data-bs-toggle="tab" 
-                                data-bs-target="#risks" type="button" role="tab">
-                            <i class="fas fa-exclamation-triangle me-1"></i>Risks
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="timeline-tab" data-bs-toggle="tab" 
-                                data-bs-target="#timeline" type="button" role="tab">
-                            <i class="fas fa-calendar-alt me-1"></i>Timeline
-                        </button>
-                    </li>
-                </ul>
-            </div>
-            <div class="card-body">
-                <div class="tab-content" id="projectTabsContent">
-                    <!-- Tasks Tab -->
-                    <div class="tab-pane fade show active" id="tasks" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Project Tasks</h6>
-                            <button class="btn btn-sm btn-primary" onclick="addTask({{ project.id }})">
-                                <i class="fas fa-plus me-1"></i>Add Task
-                            </button>
-                        </div>
-                        <div id="tasks-list">
-                            <!-- Tasks will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Features Tab -->
-                    <div class="tab-pane fade" id="features" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Project Features</h6>
-                            <button class="btn btn-sm btn-primary" onclick="addFeature({{ project.id }})">
-                                <i class="fas fa-plus me-1"></i>Add Feature
-                            </button>
-                        </div>
-                        <div id="features-list">
-                            <!-- Features will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Risks Tab -->
-                    <div class="tab-pane fade" id="risks" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Project Risks</h6>
-                            <button class="btn btn-sm btn-primary" onclick="addRisk({{ project.id }})">
-                                <i class="fas fa-plus me-1"></i>Add Risk
-                            </button>
-                        </div>
-                        <div id="risks-list">
-                            <!-- Risks will be loaded here -->
-                        </div>
-                    </div>
-
-                    <!-- Timeline Tab -->
-                    <div class="tab-pane fade" id="timeline" role="tabpanel">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6>Project Timeline</h6>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary" onclick="viewGanttChart()">
-                                    <i class="fas fa-chart-gantt me-1"></i>Gantt Chart
-                                </button>
-                                <button class="btn btn-outline-primary" onclick="viewTimeline()">
-                                    <i class="fas fa-calendar me-1"></i>Calendar
-                                </button>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Planning</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Execution</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-3">
+                                <div class="card bg-secondary text-white">
+                                    <div class="card-body text-center">
+                                        <h5>Closure</h5>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div id="timeline-content">
-                            <!-- Timeline will be loaded here -->
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>PROJECT DETAILS</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">ID:</label>
+                                            <input type="text" class="form-control" value="{{ project.project_id }}" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">ESA ID:</label>
+                                            <input type="text" class="form-control" value="{{ project.esa_id or '' }}" placeholder="Enter ESA ID">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Description:</label>
+                                    <textarea class="form-control" rows="4" readonly>{{ project.description or 'Implement the Orbus iServer365 (SaaS) across S&T as a repository for all Architecture artifacts.' }}</textarea>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Top Level Portfolio:</label>
+                                            <select class="form-select">
+                                                <option value="Technology" selected>Technology</option>
+                                                <option value="Business">Business</option>
+                                                <option value="Operations">Operations</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Sub-Portfolio:</label>
+                                            <select class="form-select">
+                                                <option value="IT EA" selected>IT EA</option>
+                                                <option value="Application Development">Application Development</option>
+                                                <option value="Infrastructure">Infrastructure</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Demand Category:</label>
+                                            <select class="form-select">
+                                                <option value="Transform" selected>Transform</option>
+                                                <option value="Enhance">Enhance</option>
+                                                <option value="Maintain">Maintain</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Project Manager:</label>
+                                            <input type="text" class="form-control" value="{{ project.project_manager or 'Kesavan Arunachalam' }}" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3>PROJECT STATUS DETAILS</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">State:</label>
+                                            <select class="form-select">
+                                                <option value="Active" selected>Active</option>
+                                                <option value="Inactive">Inactive</option>
+                                                <option value="Suspended">Suspended</option>
+                                                <option value="Cancelled">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Phase:</label>
+                                            <select class="form-select">
+                                                <option value="Execution" selected>Execution</option>
+                                                <option value="Initiation">Initiation</option>
+                                                <option value="Planning">Planning</option>
+                                                <option value="Closure">Closure</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Start Date:</label>
+                                            <input type="date" class="form-control" value="{{ project.start_date or '2022-04-01' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Due Date:</label>
+                                            <input type="date" class="form-control" value="{{ project.due_date or '2023-12-29' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3>STAKEHOLDERS, OTHER DETAILS, NIST DETAILS</h3>
+                            </div>
+                            <div class="card-body">
+                                <h5>Stakeholders</h5>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Business Owner: <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" value="{{ project.business_owner or 'Neal Ramasamy' }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Business Sponsor: <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" placeholder="Enter Business Sponsor">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label class="form-label">Technology Portfolio Leader: <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" value="{{ project.technology_portfolio_leader or 'Hariprasad Vijayaraghavan' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <h5 class="mt-4">NIST CSF Alignment (IT & Security Projects Only)</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">NIST Finding High Priority Improvements: <span class="text-danger">*</span></label>
+                                            <textarea class="form-control" rows="3" placeholder="Enter NIST findings"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">NIST Self-Assessment Score (0-5): <span class="text-danger">*</span></label>
+                                            <input type="number" class="form-control" min="0" max="5" step="0.1" placeholder="Enter score 0-5">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-end">
+                            <button type="button" class="btn btn-secondary me-2">Save Draft</button>
+                            <button type="button" class="btn btn-primary">Save & Submit</button>
                         </div>
                     </div>
                 </div>
@@ -250,865 +219,7 @@
         </div>
     </div>
 
-    <!-- Project Sidebar -->
-    <div class="col-lg-4">
-        <!-- Project Metrics -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Project Metrics</h6>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="metric-value text-primary">{{ project.feature_count or 0 }}</div>
-                        <div class="metric-label">Features</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="metric-value text-success">{{ project.task_count or 0 }}</div>
-                        <div class="metric-label">Tasks</div>
-                    </div>
-                </div>
-                <hr>
-                <div class="row text-center">
-                    <div class="col-6">
-                        <div class="metric-value text-warning">{{ project.risk_count or 0 }}</div>
-                        <div class="metric-label">Risks</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="metric-value text-info">{{ project.resource_count or 0 }}</div>
-                        <div class="metric-label">Resources</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Budget Information -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Budget Information</h6>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Budget Amount:</span>
-                        <strong>{{ project.budget_amount or 'N/A' }}</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Funding Status:</span>
-                        <span class="badge bg-secondary">{{ project.funding_status or 'N/A' }}</span>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span>Budget Status:</span>
-                        <span class="badge bg-secondary">{{ project.budget_status or 'N/A' }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h6 class="mb-0">Recent Activity</h6>
-            </div>
-            <div class="card-body">
-                <div id="recent-activity">
-                    <!-- Recent activity will be loaded here -->
-                </div>
-            </div>
-        </div>
-
-        <!-- AI Insights -->
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">
-                    <i class="fas fa-robot me-1"></i>AI Insights
-                </h6>
-            </div>
-            <div class="card-body">
-                <div id="ai-insights">
-                    <!-- AI insights will be loaded here -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modals -->
-<!-- Edit Project Modal -->
-<div class="modal fade" id="editProjectModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Project</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Edit form will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Task Modal -->
-<div class="modal fade" id="addTaskModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Add task form will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Feature Modal -->
-<div class="modal fade" id="addFeatureModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Feature</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Add feature form will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Add Risk Modal -->
-<div class="modal fade" id="addRiskModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Add Risk</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Add risk form will be loaded here -->
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Project detail page JavaScript
-document.addEventListener('DOMContentLoaded', function() {
-    loadProjectData();
-    loadProjectTasks();
-    loadProjectFeatures();
-    loadProjectRisks();
-    loadProjectTimeline();
-    loadTeamMembers();
-    loadRecentActivity();
-    loadAIInsights();
-});
-
-// Load project data
-async function loadProjectData() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}`);
-        updateProjectInfo(data);
-    } catch (error) {
-        console.error('Error loading project data:', error);
-    }
-}
-
-// Update project information
-function updateProjectInfo(project) {
-    // Update progress bar
-    const progressBar = document.querySelector('.progress-bar');
-    if (progressBar) {
-        progressBar.style.width = `${project.percent_complete || 0}%`;
-        progressBar.setAttribute('aria-valuenow', project.percent_complete || 0);
-    }
-    
-    // Update other project details as needed
-}
-
-// Load project tasks
-async function loadProjectTasks() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}/tasks`);
-        renderTasks(data);
-    } catch (error) {
-        console.error('Error loading tasks:', error);
-    }
-}
-
-// Render tasks
-function renderTasks(tasks) {
-    const container = document.getElementById('tasks-list');
-    if (!container) return;
-    
-    if (tasks.length === 0) {
-        container.innerHTML = '<p class="text-muted">No tasks found.</p>';
-        return;
-    }
-    
-    const html = tasks.map(task => `
-        <div class="card mb-2">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">${task.task_name}</h6>
-                        <small class="text-muted">${task.description || 'No description'}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="status-badge ${GenAIDashboard.getStatusBadgeClass(task.status)}">
-                            ${task.status}
-                        </span>
-                        <div class="progress mt-1" style="width: 100px; height: 4px;">
-                            <div class="progress-bar" style="width: ${task.percent_complete || 0}%"></div>
-                        </div>
-                        <small class="text-muted">${task.percent_complete || 0}%</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Load project features
-async function loadProjectFeatures() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}/features`);
-        renderFeatures(data);
-    } catch (error) {
-        console.error('Error loading features:', error);
-    }
-}
-
-// Render features
-function renderFeatures(features) {
-    const container = document.getElementById('features-list');
-    if (!container) return;
-    
-    if (features.length === 0) {
-        container.innerHTML = '<p class="text-muted">No features found.</p>';
-        return;
-    }
-    
-    const html = features.map(feature => `
-        <div class="card mb-2">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">${feature.feature_name}</h6>
-                        <small class="text-muted">${feature.description || 'No description'}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="status-badge ${GenAIDashboard.getStatusBadgeClass(feature.status)}">
-                            ${feature.status}
-                        </span>
-                        <div class="progress mt-1" style="width: 100px; height: 4px;">
-                            <div class="progress-bar" style="width: ${feature.percent_complete || 0}%"></div>
-                        </div>
-                        <small class="text-muted">${feature.percent_complete || 0}%</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Load project risks
-async function loadProjectRisks() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/reports/risks?project_id={{ project.id }}`);
-        renderRisks(data);
-    } catch (error) {
-        console.error('Error loading risks:', error);
-    }
-}
-
-// Render risks
-function renderRisks(risks) {
-    const container = document.getElementById('risks-list');
-    if (!container) return;
-    
-    if (risks.length === 0) {
-        container.innerHTML = '<p class="text-muted">No risks found.</p>';
-        return;
-    }
-    
-    const html = risks.map(risk => `
-        <div class="card mb-2">
-            <div class="card-body py-2">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">${risk.risk_name}</h6>
-                        <small class="text-muted">${risk.description || 'No description'}</small>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge bg-${risk.risk_level === 'High' ? 'danger' : risk.risk_level === 'Medium' ? 'warning' : 'success'}">
-                            ${risk.risk_level}
-                        </span>
-                        <div class="mt-1">
-                            <small class="text-muted">Score: ${risk.risk_score}</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Load project timeline
-async function loadProjectTimeline() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}/timeline`);
-        renderTimeline(data);
-    } catch (error) {
-        console.error('Error loading timeline:', error);
-    }
-}
-
-// Render timeline
-function renderTimeline(timeline) {
-    const container = document.getElementById('timeline-content');
-    if (!container) return;
-    
-    // Simple timeline implementation
-    container.innerHTML = '<p class="text-muted">Timeline view will be implemented here.</p>';
-}
-
-// Load team members
-async function loadTeamMembers() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}/team`);
-        renderTeamMembers(data);
-    } catch (error) {
-        console.error('Error loading team members:', error);
-    }
-}
-
-// Render team members
-function renderTeamMembers(members) {
-    const container = document.getElementById('team-members');
-    if (!container) return;
-    
-    if (members.length === 0) {
-        container.innerHTML = '<p class="text-muted">No team members assigned.</p>';
-        return;
-    }
-    
-    const html = members.map(member => `
-        <div class="d-flex align-items-center mb-2">
-            <div class="resource-avatar">${member.name.charAt(0).toUpperCase()}</div>
-            <div class="resource-info">
-                <h6 class="mb-0">${member.name}</h6>
-                <small class="text-muted">${member.role}</small>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Load recent activity
-async function loadRecentActivity() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/projects/{{ project.id }}/activity`);
-        renderRecentActivity(data);
-    } catch (error) {
-        console.error('Error loading recent activity:', error);
-    }
-}
-
-// Render recent activity
-function renderRecentActivity(activities) {
-    const container = document.getElementById('recent-activity');
-    if (!container) return;
-    
-    if (activities.length === 0) {
-        container.innerHTML = '<p class="text-muted">No recent activity.</p>';
-        return;
-    }
-    
-    const html = activities.map(activity => `
-        <div class="d-flex align-items-start mb-2">
-            <div class="flex-shrink-0">
-                <i class="fas fa-circle text-primary" style="font-size: 8px;"></i>
-            </div>
-            <div class="flex-grow-1 ms-2">
-                <small class="text-muted">${activity.timestamp}</small>
-                <p class="mb-0 small">${activity.description}</p>
-            </div>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Load AI insights
-async function loadAIInsights() {
-    try {
-        const data = await GenAIDashboard.apiCall(`/ai/insights?project_id={{ project.id }}`);
-        renderAIInsights(data);
-    } catch (error) {
-        console.error('Error loading AI insights:', error);
-    }
-}
-
-// Render AI insights
-function renderAIInsights(insights) {
-    const container = document.getElementById('ai-insights');
-    if (!container) return;
-    
-    if (insights.length === 0) {
-        container.innerHTML = '<p class="text-muted">No AI insights available.</p>';
-        return;
-    }
-    
-    const html = insights.map(insight => `
-        <div class="alert alert-info alert-sm">
-            <h6 class="alert-heading">${insight.title}</h6>
-            <p class="mb-0 small">${insight.description}</p>
-        </div>
-    `).join('');
-    
-    container.innerHTML = html;
-}
-
-// Action functions
-function editProject(projectId) {
-    // Implement edit project functionality
-    console.log('Edit project:', projectId);
-}
-
-function addTask(projectId) {
-    // Implement add task functionality
-    console.log('Add task to project:', projectId);
-}
-
-// Project Detail JavaScript Functions
-let projectData = null;
-
-// Initialize project detail page
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Initializing Project Detail Page...');
-    loadProjectData();
-    loadProjectTasks();
-    loadProjectFeatures();
-    loadProjectRisks();
-    loadProjectTimeline();
-});
-
-// Load project data
-async function loadProjectData() {
-    try {
-        const projectId = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/v1/projects/${projectId}`);
-        if (response.ok) {
-            projectData = await response.json();
-            updateProjectUI();
-        }
-    } catch (error) {
-        console.error('Error loading project data:', error);
-    }
-}
-
-// Update project UI with loaded data
-function updateProjectUI() {
-    if (!projectData) return;
-    
-    // Update progress bar
-    const progressBar = document.querySelector('.progress-bar');
-    if (progressBar) {
-        progressBar.style.width = `${projectData.percent_complete || 0}%`;
-        progressBar.setAttribute('aria-valuenow', projectData.percent_complete || 0);
-    }
-    
-    // Update status badge
-    const statusBadge = document.querySelector('.status-badge');
-    if (statusBadge) {
-        statusBadge.textContent = projectData.status?.name || 'Unknown';
-        statusBadge.className = `status-badge badge ${getStatusClass(projectData.status?.name)}`;
-    }
-    
-    // Update priority badge
-    const priorityBadge = document.querySelector('.priority-badge');
-    if (priorityBadge) {
-        priorityBadge.textContent = projectData.priority?.name || 'Unknown';
-        priorityBadge.className = `priority-badge badge ${getPriorityClass(projectData.priority?.name)}`;
-    }
-}
-
-// Load project tasks
-async function loadProjectTasks() {
-    try {
-        const projectId = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/v1/projects/${projectId}/tasks`);
-        if (response.ok) {
-            const tasks = await response.json();
-            renderTasks(tasks);
-        }
-    } catch (error) {
-        console.error('Error loading tasks:', error);
-    }
-}
-
-// Render tasks
-function renderTasks(tasks) {
-    const container = document.getElementById('tasks-list');
-    if (!container) return;
-    
-    if (tasks.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-tasks fa-2x mb-2"></i>
-                <p>No tasks found for this project</p>
-                <button class="btn btn-primary btn-sm" onclick="addTask({{ project.id }})">
-                    <i class="fas fa-plus me-1"></i>Add First Task
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = tasks.map(task => `
-        <div class="card mb-2">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h6 class="mb-1">${task.name || 'Unnamed Task'}</h6>
-                        <small class="text-muted">${task.description || 'No description'}</small>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge ${getStatusClass(task.status?.name)}">
-                            ${task.status?.name || 'Unknown'}
-                        </span>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar" style="width: ${task.percent_complete || 0}%"></div>
-                        </div>
-                        <small class="text-muted">${task.percent_complete || 0}%</small>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="editTask(${task.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="deleteTask(${task.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Load project features
-async function loadProjectFeatures() {
-    try {
-        const projectId = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/v1/projects/${projectId}/features`);
-        if (response.ok) {
-            const features = await response.json();
-            renderFeatures(features);
-        }
-    } catch (error) {
-        console.error('Error loading features:', error);
-    }
-}
-
-// Render features
-function renderFeatures(features) {
-    const container = document.getElementById('features-list');
-    if (!container) return;
-    
-    if (features.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-cogs fa-2x mb-2"></i>
-                <p>No features found for this project</p>
-                <button class="btn btn-primary btn-sm" onclick="addFeature({{ project.id }})">
-                    <i class="fas fa-plus me-1"></i>Add First Feature
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = features.map(feature => `
-        <div class="card mb-2">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h6 class="mb-1">${feature.name || 'Unnamed Feature'}</h6>
-                        <small class="text-muted">${feature.description || 'No description'}</small>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge ${getStatusClass(feature.status?.name)}">
-                            ${feature.status?.name || 'Unknown'}
-                        </span>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge ${getPriorityClass(feature.priority?.name)}">
-                            ${feature.priority?.name || 'Unknown'}
-                        </span>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="editFeature(${feature.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="deleteFeature(${feature.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Load project risks
-async function loadProjectRisks() {
-    try {
-        const projectId = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/v1/projects/${projectId}/risks`);
-        if (response.ok) {
-            const risks = await response.json();
-            renderRisks(risks);
-        }
-    } catch (error) {
-        console.error('Error loading risks:', error);
-    }
-}
-
-// Render risks
-function renderRisks(risks) {
-    const container = document.getElementById('risks-list');
-    if (!container) return;
-    
-    if (risks.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                <p>No risks identified for this project</p>
-                <button class="btn btn-warning btn-sm" onclick="addRisk({{ project.id }})">
-                    <i class="fas fa-plus me-1"></i>Add First Risk
-                </button>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = risks.map(risk => `
-        <div class="card mb-2">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <h6 class="mb-1">${risk.name || 'Unnamed Risk'}</h6>
-                        <small class="text-muted">${risk.description || 'No description'}</small>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge ${getRiskLevelClass(risk.risk_level)}">
-                            ${risk.risk_level || 'Unknown'}
-                        </span>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge ${getStatusClass(risk.status?.name)}">
-                            ${risk.status?.name || 'Unknown'}
-                        </span>
-                    </div>
-                    <div class="col-md-2">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary" onclick="editRisk(${risk.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="deleteRisk(${risk.id})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Load project timeline
-async function loadProjectTimeline() {
-    try {
-        const projectId = window.location.pathname.split('/').pop();
-        const response = await fetch(`/api/v1/projects/${projectId}/timeline`);
-        if (response.ok) {
-            const timeline = await response.json();
-            renderTimeline(timeline);
-        }
-    } catch (error) {
-        console.error('Error loading timeline:', error);
-    }
-}
-
-// Render timeline
-function renderTimeline(timeline) {
-    const container = document.getElementById('timeline-list');
-    if (!container) return;
-    
-    if (timeline.length === 0) {
-        container.innerHTML = `
-            <div class="text-center text-muted py-4">
-                <i class="fas fa-calendar-alt fa-2x mb-2"></i>
-                <p>No timeline events found for this project</p>
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = timeline.map(event => `
-        <div class="timeline-item">
-            <div class="timeline-marker"></div>
-            <div class="timeline-content">
-                <h6>${event.title || 'Event'}</h6>
-                <p class="text-muted">${event.description || 'No description'}</p>
-                <small class="text-muted">${formatDate(event.date)}</small>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Action functions
-function addTask(projectId) {
-    console.log('Add task to project:', projectId);
-    // Implement add task modal
-    alert('Add Task functionality - Coming soon!');
-}
-
-function addFeature(projectId) {
-    console.log('Add feature to project:', projectId);
-    // Implement add feature modal
-    alert('Add Feature functionality - Coming soon!');
-}
-
-function addRisk(projectId) {
-    console.log('Add risk to project:', projectId);
-    // Implement add risk modal
-    alert('Add Risk functionality - Coming soon!');
-}
-
-function editProject(projectId) {
-    console.log('Edit project:', projectId);
-    // Redirect to edit page or show modal
-    window.location.href = `/projects/${projectId}/edit`;
-}
-
-function generateReport(projectId) {
-    console.log('Generate report for project:', projectId);
-    // Implement report generation
-    alert('Generate Report functionality - Coming soon!');
-}
-
-function exportProject(projectId) {
-    console.log('Export project:', projectId);
-    // Implement export functionality
-    if (projectData) {
-        const dataStr = JSON.stringify(projectData, null, 2);
-        const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        const url = URL.createObjectURL(dataBlob);
-        
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `project_${projectData.project_id || projectData.id}.json`;
-        link.click();
-        
-        URL.revokeObjectURL(url);
-    }
-}
-
-function duplicateProject(projectId) {
-    console.log('Duplicate project:', projectId);
-    // Implement duplicate functionality
-    alert('Duplicate Project functionality - Coming soon!');
-}
-
-function archiveProject(projectId) {
-    console.log('Archive project:', projectId);
-    // Implement archive functionality
-    if (confirm('Are you sure you want to archive this project?')) {
-        alert('Archive Project functionality - Coming soon!');
-    }
-}
-
-function deleteProject(projectId) {
-    console.log('Delete project:', projectId);
-    // Implement delete functionality
-    if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-        alert('Delete Project functionality - Coming soon!');
-    }
-}
-
-function viewGanttChart() {
-    console.log('View Gantt chart');
-    // Redirect to Gantt chart page
-    window.location.href = '/gantt';
-}
-
-function viewTimeline() {
-    console.log('View timeline');
-    // Show timeline tab
-    const timelineTab = document.getElementById('timeline-tab');
-    if (timelineTab) {
-        timelineTab.click();
-    }
-}
-
-// Utility functions
-function getStatusClass(status) {
-    const statusMap = {
-        'Active': 'bg-success',
-        'Completed': 'bg-info',
-        'At Risk': 'bg-warning',
-        'Off Track': 'bg-danger'
-    };
-    return statusMap[status] || 'bg-secondary';
-}
-
-function getPriorityClass(priority) {
-    const priorityMap = {
-        'Low': 'bg-success',
-        'Medium': 'bg-info',
-        'High': 'bg-warning',
-        'Critical': 'bg-danger'
-    };
-    return priorityMap[priority] || 'bg-secondary';
-}
-
-function getRiskLevelClass(level) {
-    const riskMap = {
-        'Low': 'bg-success',
-        'Medium': 'bg-warning',
-        'High': 'bg-danger',
-        'Critical': 'bg-danger'
-    };
-    return riskMap[level] || 'bg-secondary';
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString();
-}
-</script>
-{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/project_detail.js"></script>
+</body>
+</html>

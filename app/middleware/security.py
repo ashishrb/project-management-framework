@@ -43,8 +43,6 @@ class SecurityHeadersMiddleware:
                 "usb=(), "
                 "magnetometer=(), "
                 "gyroscope=(), "
-                "speaker=(), "
-                "vibrate=(), "
                 "fullscreen=(self), "
                 "sync-xhr=()"
             ),

@@ -148,3 +148,36 @@ class ProjectCriticalityLevel(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+
+class BusinessUnit(Base):
+    """Business Units lookup table - IT, Legal, Finance, HR, etc."""
+    __tablename__ = "business_units"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+class InvestmentClass(Base):
+    """Investment Classes lookup table - Change, etc."""
+    __tablename__ = "investment_classes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(50), unique=True, nullable=False, index=True)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+class BenefitCategory(Base):
+    """Benefit Categories lookup table - Cost savings, Revenue, Process Improvement, etc."""
+    __tablename__ = "benefit_categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)

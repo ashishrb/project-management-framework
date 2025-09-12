@@ -205,7 +205,7 @@ function renderTableView() {
         <tr>
             <td>
                 <input type="checkbox" class="form-check-input project-checkbox" 
-                       value="${project.id}" onchange="toggleProjectSelection(${project.id})">
+                       value="${project.project_id}" onchange="toggleProjectSelection('${project.project_id}')">
             </td>
             <td>
                 <div class="project-name">
@@ -241,11 +241,11 @@ function renderTableView() {
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="viewProject(${project.id})" 
+                    <button class="btn btn-outline-primary" onclick="viewProject('${project.project_id}')" 
                             title="View Details">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="editProject(${project.id})" 
+                    <button class="btn btn-outline-secondary" onclick="editProject('${project.project_id}')" 
                             title="Edit Project">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -255,14 +255,14 @@ function renderTableView() {
                             <i class="fas fa-ellipsis-v"></i>
                         </button>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#" onclick="duplicateProject(${project.id})">
+                            <li><a class="dropdown-item" href="#" onclick="duplicateProject('${project.project_id}')">
                                 <i class="fas fa-copy me-2"></i>Duplicate
                             </a></li>
-                            <li><a class="dropdown-item" href="#" onclick="exportProject(${project.id})">
+                            <li><a class="dropdown-item" href="#" onclick="exportProject('${project.project_id}')">
                                 <i class="fas fa-download me-2"></i>Export
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteProject(${project.id})">
+                            <li><a class="dropdown-item text-danger" href="#" onclick="deleteProject('${project.project_id}')">
                                 <i class="fas fa-trash me-2"></i>Delete
                             </a></li>
                         </ul>

@@ -1,0 +1,2005 @@
+{% extends "base.html" %}
+
+{% block title %}Comprehensive Project Management Dashboard{% endblock %}
+
+{% block page_title %}Comprehensive Dashboard{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <button type="button" class="btn btn-primary" onclick="loadComprehensiveDashboard()">
+        <i class="fas fa-sync-alt me-1"></i>Load Dashboard
+    </button>
+    <button type="button" class="btn btn-outline-secondary" onclick="refreshCharts()">
+        <i class="fas fa-chart-line me-1"></i>Refresh Charts
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Top Navigation and Filters -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label for="businessUnit" class="form-label">
+                                <i class="fas fa-building me-1"></i>Business Unit Filter
+                            </label>
+                            <select class="form-select" id="businessUnit" onchange="filterByBusinessUnit()">
+                                <option value="">All Business Units</option>
+                                <option value="IT">IT Department</option>
+                                <option value="Legal">Legal Department</option>
+                                <option value="Finance">Finance Department</option>
+                                <option value="HR">Human Resources</option>
+                                <option value="Facilities">Facilities Management</option>
+                                <option value="Sales">Sales & Marketing</option>
+                                <option value="Operations">Operations</option>
+                                <option value="R&D">Research & Development</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="selectElements" class="form-label">
+                                <i class="fas fa-filter me-1"></i>Data View Filter
+                            </label>
+                            <select class="form-select" id="selectElements" onchange="filterByDataView()">
+                                <option value="">All Data Views</option>
+                                <option value="projects">Projects Only</option>
+                                <option value="benefits">Benefits Analysis</option>
+                                <option value="costs">Cost Analysis</option>
+                                <option value="resources">Resource Allocation</option>
+                                <option value="timeline">Timeline View</option>
+                                <option value="performance">Performance Metrics</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="timeRange" class="form-label">
+                                <i class="fas fa-calendar me-1"></i>Time Range
+                            </label>
+                            <select class="form-select" id="timeRange" onchange="filterByTimeRange()">
+                                <option value="">All Time</option>
+                                <option value="current">Current Quarter</option>
+                                <option value="ytd">Year to Date</option>
+                                <option value="last30">Last 30 Days</option>
+                                <option value="last90">Last 90 Days</option>
+                                <option value="next30">Next 30 Days</option>
+                                <option value="next90">Next 90 Days</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="statusFilter" class="form-label">
+                                <i class="fas fa-tasks me-1"></i>Status Filter
+                            </label>
+                            <select class="form-select" id="statusFilter" onchange="filterByStatus()">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active Projects</option>
+                                <option value="completed">Completed Projects</option>
+                                <option value="on-hold">On Hold</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="planning">Planning Phase</option>
+                                <option value="execution">Execution Phase</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Navigation Row -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <ul class="nav nav-tabs" id="dashboardTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="summary-tab" data-bs-toggle="tab" data-bs-target="#summary" type="button" role="tab">
+                                        Summary
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="pipeline-tab" data-bs-toggle="tab" data-bs-target="#pipeline" type="button" role="tab">
+                                        Pipeline
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button" role="tab">
+                                        Project Health
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="quality-tab" data-bs-toggle="tab" data-bs-target="#quality" type="button" role="tab">
+                                        Data Quality
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="actuals-tab" data-bs-toggle="tab" data-bs-target="#actuals" type="button" role="tab">
+                                        Actuals
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar" type="button" role="tab">
+                                        Calendar
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="dashboardTabContent">
+        <!-- Summary Tab -->
+        <div class="tab-pane fade show active" id="summary" role="tabpanel">
+            
+            <!-- Key Performance Indicators (KPIs) - Top Row -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">Active Projects</h5>
+                            <h2 class="text-primary" id="active-projects">-</h2>
+                            <small class="text-muted">Sep 03: <span id="active-projects-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">Planned Cost</h5>
+                            <h2 class="text-success" id="planned-cost">-</h2>
+                            <small class="text-muted">Sep 03: <span id="planned-cost-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">Planned Benefits</h5>
+                            <h2 class="text-info" id="planned-benefits">-</h2>
+                            <small class="text-muted">Sep 03: <span id="planned-benefits-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">Estimate at Completion</h5>
+                            <h2 class="text-warning" id="estimate-at-completion">-</h2>
+                            <small class="text-muted">Sep 03: <span id="estimate-at-completion-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">Actual Cost</h5>
+                            <h2 class="text-danger" id="actual-cost">-</h2>
+                            <small class="text-muted">Sep 03: <span id="actual-cost-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-secondary">Actual Benefits</h5>
+                            <h2 class="text-secondary" id="actual-benefits">-</h2>
+                            <small class="text-muted">Sep 03: <span id="actual-benefits-prev">-</span></small>
+                            <div class="mt-2">
+                                <small class="text-muted">0 (0.0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Charts - Middle Row -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Benefit Plans by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="benefitPlansChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Projects Planned Benefits by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="plannedBenefitsChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Projects by Business Unit</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="businessUnitChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Charts - Bottom Row -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Projects by Investment Type</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="investmentTypeChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Projects by Investment Class</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="investmentClassChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Projects by Priority</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="priorityChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-robot me-2"></i>AI-Powered Analysis & Insights
+                                </h5>
+                                <button type="button" class="btn btn-light btn-sm" onclick="refreshAIAnalysis()">
+                                    <i class="fas fa-sync-alt me-1"></i>Refresh Analysis
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- AI Analysis Tabs -->
+                            <ul class="nav nav-tabs mb-3" id="aiAnalysisTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="comprehensive-tab" data-bs-toggle="tab" data-bs-target="#comprehensive-analysis" type="button" role="tab">
+                                        <i class="fas fa-chart-line me-1"></i>Strategic Overview
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health-analysis" type="button" role="tab">
+                                        <i class="fas fa-heartbeat me-1"></i>Project Health
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="financial-tab" data-bs-toggle="tab" data-bs-target="#financial-analysis" type="button" role="tab">
+                                        <i class="fas fa-dollar-sign me-1"></i>Financial Insights
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="resource-tab" data-bs-toggle="tab" data-bs-target="#resource-analysis" type="button" role="tab">
+                                        <i class="fas fa-users me-1"></i>Resource Analysis
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="predictive-tab" data-bs-toggle="tab" data-bs-target="#predictive-analysis" type="button" role="tab">
+                                        <i class="fas fa-crystal-ball me-1"></i>Predictive Insights
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <!-- AI Analysis Tab Content -->
+                            <div class="tab-content" id="aiAnalysisTabContent">
+                                <!-- Comprehensive Analysis Tab -->
+                                <div class="tab-pane fade show active" id="comprehensive-analysis" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="ai-analysis-content">
+                                                <h6 class="text-primary mb-3">
+                                                    <i class="fas fa-brain me-2"></i>Strategic Analysis & Recommendations
+                                                </h6>
+                                                <div id="comprehensive-analysis-content" class="analysis-text">
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading AI analysis...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ai-insights-sidebar">
+                                                <h6 class="text-info mb-3">
+                                                    <i class="fas fa-lightbulb me-2"></i>Key Insights
+                                                </h6>
+                                                <div id="comprehensive-insights" class="insights-list">
+                                                    <div class="text-center text-muted py-2">
+                                                        <small>Loading insights...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Project Health Analysis Tab -->
+                                <div class="tab-pane fade" id="health-analysis" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="ai-analysis-content">
+                                                <h6 class="text-success mb-3">
+                                                    <i class="fas fa-heartbeat me-2"></i>Project Health Assessment
+                                                </h6>
+                                                <div id="health-analysis-content" class="analysis-text">
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading health analysis...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ai-insights-sidebar">
+                                                <h6 class="text-warning mb-3">
+                                                    <i class="fas fa-exclamation-triangle me-2"></i>Risk Alerts
+                                                </h6>
+                                                <div id="health-insights" class="insights-list">
+                                                    <div class="text-center text-muted py-2">
+                                                        <small>Loading risk alerts...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Financial Analysis Tab -->
+                                <div class="tab-pane fade" id="financial-analysis" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="ai-analysis-content">
+                                                <h6 class="text-info mb-3">
+                                                    <i class="fas fa-dollar-sign me-2"></i>Financial Performance Analysis
+                                                </h6>
+                                                <div id="financial-analysis-content" class="analysis-text">
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading financial analysis...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ai-insights-sidebar">
+                                                <h6 class="text-success mb-3">
+                                                    <i class="fas fa-chart-line me-2"></i>ROI Insights
+                                                </h6>
+                                                <div id="financial-insights" class="insights-list">
+                                                    <div class="text-center text-muted py-2">
+                                                        <small>Loading ROI insights...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Resource Analysis Tab -->
+                                <div class="tab-pane fade" id="resource-analysis" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="ai-analysis-content">
+                                                <h6 class="text-warning mb-3">
+                                                    <i class="fas fa-users me-2"></i>Resource Utilization Analysis
+                                                </h6>
+                                                <div id="resource-analysis-content" class="analysis-text">
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading resource analysis...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ai-insights-sidebar">
+                                                <h6 class="text-primary mb-3">
+                                                    <i class="fas fa-cogs me-2"></i>Optimization Tips
+                                                </h6>
+                                                <div id="resource-insights" class="insights-list">
+                                                    <div class="text-center text-muted py-2">
+                                                        <small>Loading optimization tips...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Predictive Analysis Tab -->
+                                <div class="tab-pane fade" id="predictive-analysis" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="ai-analysis-content">
+                                                <h6 class="text-purple mb-3">
+                                                    <i class="fas fa-crystal-ball me-2"></i>Predictive Insights & Forecasts
+                                                </h6>
+                                                <div id="predictive-analysis-content" class="analysis-text">
+                                                    <div class="text-center text-muted py-4">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>Loading predictive analysis...
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="ai-insights-sidebar">
+                                                <h6 class="text-danger mb-3">
+                                                    <i class="fas fa-chart-area me-2"></i>Forecasts
+                                                </h6>
+                                                <div id="predictive-insights" class="insights-list">
+                                                    <div class="text-center text-muted py-2">
+                                                        <small>Loading forecasts...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Other tabs (placeholder) -->
+        <div class="tab-pane fade" id="pipeline" role="tabpanel">
+            <!-- Pipeline Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Pipeline</h5>
+                            <h2 class="card-text">134</h2>
+                            <small>Active Projects</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">In Progress</h5>
+                            <h2 class="card-text">89</h2>
+                            <small>66% of Pipeline</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Pending Start</h5>
+                            <h2 class="card-text">32</h2>
+                            <small>24% of Pipeline</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">On Hold</h5>
+                            <h2 class="card-text">13</h2>
+                            <small>10% of Pipeline</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline by Business Unit -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Pipeline by Business Unit</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pipelineBusinessUnitChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Pipeline by Investment Type</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="pipelineInvestmentChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline Timeline -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Pipeline Timeline</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Project ID</th>
+                                            <th>Project Name</th>
+                                            <th>Business Unit</th>
+                                            <th>Status</th>
+                                            <th>Start Date</th>
+                                            <th>Due Date</th>
+                                            <th>Progress</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pipelineTableBody">
+                                        <!-- Pipeline data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="health" role="tabpanel">
+            <!-- Health Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Healthy Projects</h5>
+                            <h2 class="card-text">98</h2>
+                            <small>73% of Portfolio</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">At Risk</h5>
+                            <h2 class="card-text">24</h2>
+                            <small>18% of Portfolio</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Critical</h5>
+                            <h2 class="card-text">12</h2>
+                            <small>9% of Portfolio</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Overall Health</h5>
+                            <h2 class="card-text">85%</h2>
+                            <small>Portfolio Score</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Metrics -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Health Distribution</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="healthDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Health Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="healthTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Health Details -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Project Health Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Project ID</th>
+                                            <th>Project Name</th>
+                                            <th>Health Score</th>
+                                            <th>Status</th>
+                                            <th>Budget Health</th>
+                                            <th>Timeline Health</th>
+                                            <th>Quality Health</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="healthTableBody">
+                                        <!-- Health data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="quality" role="tabpanel">
+            <!-- Data Quality Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Data Completeness</h5>
+                            <h2 class="card-text">92%</h2>
+                            <small>High Quality</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Data Accuracy</h5>
+                            <h2 class="card-text">88%</h2>
+                            <small>Good Quality</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Data Consistency</h5>
+                            <h2 class="card-text">85%</h2>
+                            <small>Needs Improvement</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Overall Quality</h5>
+                            <h2 class="card-text">88%</h2>
+                            <small>Portfolio Score</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Metrics -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Data Quality Trends</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="qualityTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Quality Issues by Category</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="qualityIssuesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Details -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Data Quality Issues</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Project ID</th>
+                                            <th>Issue Type</th>
+                                            <th>Severity</th>
+                                            <th>Description</th>
+                                            <th>Impact</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="qualityTableBody">
+                                        <!-- Quality data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="actuals" role="tabpanel">
+            <!-- Actuals Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Actual Cost</h5>
+                            <h2 class="card-text">$28.6M</h2>
+                            <small>Year to Date</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Budget Variance</h5>
+                            <h2 class="card-text">-79.9%</h2>
+                            <small>Under Budget</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Actual Benefits</h5>
+                            <h2 class="card-text">$28.1M</h2>
+                            <small>Realized Value</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">ROI</h5>
+                            <h2 class="card-text">-1.7%</h2>
+                            <small>Needs Improvement</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actuals Charts -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cost vs Budget Trend</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="costBudgetChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Benefits Realization</h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="benefitsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actuals Details -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Project Actuals Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Project ID</th>
+                                            <th>Project Name</th>
+                                            <th>Planned Cost</th>
+                                            <th>Actual Cost</th>
+                                            <th>Variance</th>
+                                            <th>Planned Benefits</th>
+                                            <th>Actual Benefits</th>
+                                            <th>ROI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="actualsTableBody">
+                                        <!-- Actuals data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="calendar" role="tabpanel">
+            <!-- Calendar Overview -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Upcoming Milestones</h5>
+                            <h2 class="card-text">47</h2>
+                            <small>Next 30 Days</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Completed This Month</h5>
+                            <h2 class="card-text">23</h2>
+                            <small>Milestones</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Overdue</h5>
+                            <h2 class="card-text">8</h2>
+                            <small>Requires Attention</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Project Starts</h5>
+                            <h2 class="card-text">12</h2>
+                            <small>This Quarter</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Navigation -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Project Calendar</h5>
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeCalendarView('month')">Month</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeCalendarView('week')">Week</button>
+                                <button type="button" class="btn btn-outline-primary btn-sm" onclick="changeCalendarView('day')">Day</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Calendar Navigation -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeCalendarMonth(-1)">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="goToToday()">
+                                        Today
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="changeCalendarMonth(1)">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                                <h6 class="mb-0" id="calendar-month-year">September 2024</h6>
+                            </div>
+                            
+                            <!-- Calendar Grid -->
+                            <div id="calendar-container">
+                                <div class="calendar-grid">
+                                    <!-- Calendar header with day names -->
+                                    <div class="calendar-header">
+                                        <div class="calendar-day-header">Sun</div>
+                                        <div class="calendar-day-header">Mon</div>
+                                        <div class="calendar-day-header">Tue</div>
+                                        <div class="calendar-day-header">Wed</div>
+                                        <div class="calendar-day-header">Thu</div>
+                                        <div class="calendar-day-header">Fri</div>
+                                        <div class="calendar-day-header">Sat</div>
+                                    </div>
+                                    
+                                    <!-- Calendar days will be populated by JavaScript -->
+                                    <div class="calendar-days" id="calendar-days">
+                                        <!-- Days will be dynamically generated -->
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Calendar Legend -->
+                            <div class="mt-3">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <span class="badge bg-primary me-2">●</span>
+                                        <small>Project Milestones</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-success me-2">●</span>
+                                        <small>Deadlines</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-warning me-2">●</span>
+                                        <small>Reviews</small>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <span class="badge bg-info me-2">●</span>
+                                        <small>Meetings</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Events -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Upcoming Milestones</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Project P-00001</strong><br>
+                                        <small class="text-muted">Phase 2 Completion</small>
+                                    </div>
+                                    <span class="badge bg-primary">Sep 15</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Project P-00002</strong><br>
+                                        <small class="text-muted">Budget Review</small>
+                                    </div>
+                                    <span class="badge bg-warning">Sep 18</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Project P-00003</strong><br>
+                                        <small class="text-muted">Go-Live Date</small>
+                                    </div>
+                                    <span class="badge bg-success">Sep 22</span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Project P-00004</strong><br>
+                                        <small class="text-muted">Stakeholder Review</small>
+                                    </div>
+                                    <span class="badge bg-info">Sep 25</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Project Deadlines</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Project</th>
+                                            <th>Deadline</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>P-00001</td>
+                                            <td>Sep 15, 2024</td>
+                                            <td><span class="badge bg-success">On Track</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>P-00002</td>
+                                            <td>Sep 18, 2024</td>
+                                            <td><span class="badge bg-warning">At Risk</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>P-00003</td>
+                                            <td>Sep 22, 2024</td>
+                                            <td><span class="badge bg-success">On Track</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>P-00004</td>
+                                            <td>Sep 25, 2024</td>
+                                            <td><span class="badge bg-info">Pending</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading-indicator" class="text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading dashboard data...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* AI Analysis Section Styles */
+.ai-analysis-content {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 300px;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.ai-insights-sidebar {
+    background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    min-height: 300px;
+    overflow-y: auto;
+    max-height: 600px;
+}
+
+.analysis-text {
+    line-height: 1.6;
+    font-size: 14px;
+    color: #495057;
+}
+
+/* Enhanced AI Analysis Formatting */
+.ai-analysis-report {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+
+.ai-analysis-report h2 {
+    color: #2c3e50;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+.ai-analysis-report h3 {
+    color: #34495e;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #3498db;
+    padding-left: 1rem;
+}
+
+.ai-analysis-report h4 {
+    color: #2c3e50;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Summary Cards */
+.summary-cards {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.summary-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.summary-card .label {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.summary-card .value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Health Summary */
+.health-summary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.health-metric {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.health-metric .metric-label {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.health-metric .metric-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Tables */
+.data-table, .health-table, .action-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.data-table th, .health-table th, .action-table th {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.data-table td, .health-table td, .action-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ecf0f1;
+    font-size: 0.9rem;
+}
+
+.data-table tr:nth-child(even), .health-table tr:nth-child(even), .action-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.data-table tr:hover, .health-table tr:hover, .action-table tr:hover {
+    background-color: #e3f2fd;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.metric-value {
+    color: #495057;
+}
+
+/* Recommendation Items */
+.recommendation-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.recommendation-item h4 {
+    color: #3498db;
+    margin-bottom: 0.5rem;
+}
+
+.action-item {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Assessment Items */
+.assessment-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.assessment-item h4 {
+    color: #27ae60;
+    margin-bottom: 0.5rem;
+}
+
+/* Mitigation Sections */
+.mitigation-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-list, .preventive-list, .recommendation-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.action-list li, .preventive-list li, .recommendation-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.metric-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.metric-name {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.metric-target {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Trend Indicator */
+.trend-indicator {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.trend-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 1rem;
+}
+
+.trend-value {
+    font-weight: 600;
+}
+
+/* Status Classes */
+.status-excellent { color: #27ae60; }
+.status-good { color: #f39c12; }
+.status-needs-attention { color: #e74c3c; }
+.status-critical { color: #8e44ad; }
+
+.health-score-excellent { color: #27ae60; }
+.health-score-good { color: #f39c12; }
+.health-score-needs-attention { color: #e74c3c; }
+.health-score-critical { color: #8e44ad; }
+
+.risk-low { color: #27ae60; }
+.risk-medium { color: #f39c12; }
+.risk-high { color: #e74c3c; }
+
+.status-active { color: #27ae60; }
+.status-low-risk { color: #27ae60; }
+.status-medium-risk { color: #f39c12; }
+.status-high-risk { color: #e74c3c; }
+
+.status-low { color: #27ae60; }
+.status-medium { color: #f39c12; }
+.status-high { color: #e74c3c; }
+
+.trend-positive { color: #27ae60; }
+.trend-stable { color: #f39c12; }
+.trend-declining { color: #e74c3c; }
+
+.priority-high { color: #e74c3c; font-weight: 600; }
+.priority-medium { color: #f39c12; font-weight: 600; }
+
+/* Analysis Footer */
+.analysis-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+    text-align: center;
+    color: #6c757d;
+}
+
+/* Financial Analysis Specific Styles */
+.financial-summary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.financial-metric {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.financial-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.financial-table th {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.financial-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ecf0f1;
+    font-size: 0.9rem;
+}
+
+.financial-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.financial-table tr:hover {
+    background-color: #e8f5e8;
+}
+
+.insight-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.insight-item h4 {
+    color: #27ae60;
+    margin-bottom: 0.5rem;
+}
+
+.cost-savings, .roi-trend {
+    background: #f8f9fa;
+    border-left: 4px solid #27ae60;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.recommendation-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.strategy-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.strategy-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.targets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.target-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.target-name {
+    display: block;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.target-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Resource Analysis Specific Styles */
+.resource-summary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.resource-metric {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.resource-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.resource-table th {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.resource-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ecf0f1;
+    font-size: 0.9rem;
+}
+
+.resource-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.resource-table tr:hover {
+    background-color: #e3f2fd;
+}
+
+.optimization-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.efficiency-details, .distribution-details, .coverage-details {
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.forecast-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.forecast-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.forecast-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Predictive Analysis Specific Styles */
+.predictive-summary {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.predictive-metric {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    flex: 1;
+    min-width: 200px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.predictive-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.predictive-table th {
+    background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+    color: white;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.predictive-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ecf0f1;
+    font-size: 0.9rem;
+}
+
+.predictive-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.predictive-table tr:hover {
+    background-color: #f4e6ff;
+}
+
+.success-details, .forecast-details, .risk-details {
+    background: #f8f9fa;
+    border-left: 4px solid #9b59b6;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 0 4px 4px 0;
+}
+
+.success-factors {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.factors-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.factors-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.confidence-section {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.confidence-list {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.confidence-list li {
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+/* Additional Status Classes */
+.status-under-budget { color: #27ae60; }
+.status-over-budget { color: #e74c3c; }
+.status-on-budget { color: #f39c12; }
+.status-exceeding { color: #27ae60; }
+.status-below-target { color: #e74c3c; }
+.status-needs-improvement { color: #e74c3c; }
+
+.budget-under-budget { color: #27ae60; }
+.budget-over-budget { color: #e74c3c; }
+.budget-on-budget { color: #f39c12; }
+
+.efficiency-excellent { color: #27ae60; }
+.efficiency-good { color: #f39c12; }
+.efficiency-needs-improvement { color: #e74c3c; }
+
+.outlook-high { color: #27ae60; }
+.outlook-moderate { color: #f39c12; }
+.outlook-low { color: #e74c3c; }
+
+.confidence-high { color: #27ae60; }
+.confidence-medium { color: #f39c12; }
+.confidence-low { color: #e74c3c; }
+
+.status-covered { color: #27ae60; }
+.status-optimal { color: #27ae60; }
+.status-high { color: #f39c12; }
+.status-overloaded { color: #e74c3c; }
+.status-on-track { color: #27ae60; }
+.status-behind { color: #f39c12; }
+.status-moderate { color: #f39c12; }
+
+.trend-growing { color: #27ae60; }
+.trend-stable { color: #f39c12; }
+.trend-improving { color: #27ae60; }
+.trend-declining { color: #e74c3c; }
+.trend-increasing { color: #e74c3c; }
+.trend-balanced { color: #27ae60; }
+.trend-neutral { color: #f39c12; }
+.trend-negative { color: #e74c3c; }
+
+.probability-high { color: #27ae60; }
+.probability-medium { color: #f39c12; }
+
+/* Status indicators */
+.status-excellent { color: #27ae60; font-weight: 600; }
+.status-good { color: #f39c12; font-weight: 600; }
+.status-needs-attention { color: #e74c3c; font-weight: 600; }
+.status-critical { color: #8e44ad; font-weight: 600; }
+
+/* Emoji styling */
+.analysis-text {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Code blocks */
+.analysis-text code {
+    background: #f1f2f6;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+/* Blockquotes */
+.analysis-text blockquote {
+    border-left: 4px solid #3498db;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #2c3e50;
+}
+
+.insights-list {
+    font-size: 13px;
+}
+
+.insights-list .insight-item {
+    background: #fff;
+    border-left: 3px solid #007bff;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.insights-list .insight-item.warning {
+    border-left-color: #ffc107;
+}
+
+.insights-list .insight-item.success {
+    border-left-color: #28a745;
+}
+
+.insights-list .insight-item.danger {
+    border-left-color: #dc3545;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.ai-analysis-loading {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+}
+
+.ai-analysis-error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #f5c6cb;
+}
+
+.ai-analysis-success {
+    background: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+    border: 1px solid #c3e6cb;
+}
+
+/* Enhanced card styling for AI section */
+.card.border-primary {
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+/* Calendar Styles */
+.calendar-grid {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.calendar-day-header {
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #6c757d;
+    border-right: 1px solid #dee2e6;
+}
+
+.calendar-day-header:last-child {
+    border-right: none;
+}
+
+.calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    min-height: 300px;
+}
+
+.calendar-day {
+    padding: 8px;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+    min-height: 50px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day:last-child {
+    border-right: none;
+}
+
+.calendar-day.other-month {
+    color: #adb5bd;
+    background-color: #f8f9fa;
+}
+
+.calendar-day.today {
+    background-color: #e3f2fd;
+    font-weight: 600;
+}
+
+.calendar-day.has-events {
+    background-color: #fff3cd;
+}
+
+.calendar-day-number {
+    font-size: 0.875rem;
+    margin-bottom: 2px;
+}
+
+.calendar-events {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    right: 2px;
+}
+
+.calendar-event {
+    height: 4px;
+    border-radius: 2px;
+    margin-bottom: 1px;
+    font-size: 0.625rem;
+    overflow: hidden;
+}
+
+.calendar-event.milestone {
+    background-color: #007bff;
+}
+
+.calendar-event.deadline {
+    background-color: #28a745;
+}
+
+.calendar-event.review {
+    background-color: #ffc107;
+}
+
+.calendar-event.meeting {
+    background-color: #17a2b8;
+}
+
+.calendar-event-overdue {
+    background-color: #dc3545 !important;
+}
+
+/* Event Tooltip */
+.calendar-event-tooltip {
+    position: absolute;
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.calendar-event-tooltip.show {
+    opacity: 1;
+}
+
+.calendar-event-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border: 5px solid transparent;
+    border-top-color: #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .ai-analysis-content,
+    .ai-insights-sidebar {
+        min-height: 200px;
+    }
+    
+    .analysis-text {
+        font-size: 13px;
+    }
+    
+    .calendar-day {
+        min-height: 40px;
+        padding: 4px;
+    }
+    
+    .calendar-day-number {
+        font-size: 0.75rem;
+    }
+    
+    .calendar-event {
+        height: 3px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', path='/js/comprehensive_dashboard.js') }}?v=2.0"></script>
+{% endblock %}

@@ -35,8 +35,18 @@ class Project(Base):
     
     # Financial information
     budget_amount = Column(Numeric(15, 2))
+    planned_cost = Column(Numeric(15, 2))
+    planned_benefits = Column(Numeric(15, 2))
+    actual_cost = Column(Numeric(15, 2))
+    actual_benefits = Column(Numeric(15, 2))
+    estimate_at_completion = Column(Numeric(15, 2))
     funding_status = Column(String(50))
     budget_status = Column(String(50))
+    
+    # Business unit and classification
+    business_unit_id = Column(Integer, ForeignKey("business_units.id"))
+    investment_class_id = Column(Integer, ForeignKey("investment_classes.id"))
+    benefit_category_id = Column(Integer, ForeignKey("benefit_categories.id"))
     
     # Timeline information
     start_date = Column(Date)
@@ -67,6 +77,9 @@ class Project(Base):
     criticality = relationship("app.models.lookup_tables.ProjectCriticalityLevel")
     portfolio = relationship("app.models.lookup_tables.Portfolio")
     investment_type = relationship("app.models.lookup_tables.InvestmentType")
+    business_unit = relationship("app.models.lookup_tables.BusinessUnit")
+    investment_class = relationship("app.models.lookup_tables.InvestmentClass")
+    benefit_category = relationship("app.models.lookup_tables.BenefitCategory")
 
 class Task(Base):
     """Enhanced Tasks table with Gantt chart support"""

@@ -35,6 +35,14 @@ async def dashboard_page(request: Request, db: Session = Depends(get_db), curren
         "user": current_user
     })
 
+@router.get("/comprehensive-dashboard", response_class=HTMLResponse)
+async def comprehensive_dashboard_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Comprehensive Dashboard page matching the screenshot"""
+    return templates.TemplateResponse("comprehensive_dashboard.html", {
+        "request": request,
+        "user": current_user
+    })
+
 @router.get("/projects", response_class=HTMLResponse)
 async def projects_list(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """Projects list view"""
@@ -43,14 +51,22 @@ async def projects_list(request: Request, db: Session = Depends(get_db), current
         "user": current_user
     })
 
+@router.get("/work-plan", response_class=HTMLResponse)
+async def work_plan_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Work Plan page with Gantt chart functionality"""
+    return templates.TemplateResponse("work_plan.html", {
+        "request": request,
+        "user": current_user
+    })
+
 @router.get("/projects/{project_id}", response_class=HTMLResponse)
-async def project_detail(request: Request, project_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    """Project detail view"""
+async def project_detail(request: Request, project_id: str, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Comprehensive Project Detail view matching the screenshots"""
     from app.models.main_tables import Project
     from app.models.lookup_tables import Status, Priority
     
     # Fetch project data from database
-    project = db.query(Project).filter(Project.id == project_id).first()
+    project = db.query(Project).filter(Project.project_id == project_id).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     
@@ -60,6 +76,43 @@ async def project_detail(request: Request, project_id: int, db: Session = Depend
     from app.models.lookup_tables import ProjectType, Portfolio
     project_type = db.query(ProjectType).filter(ProjectType.id == project.project_type_id).first()
     portfolio = db.query(Portfolio).filter(Portfolio.id == project.portfolio_id).first()
+    
+    # Get real lookup data from database
+    from app.models.project_detail_lookups import (
+        DemandCategory, ModernizationDomain, DigitizationCategory,
+        DeliveryOrganization, ExpenseType, BusinessProcess,
+        GenerativeAIImpact, ProjectPhase, ProjectState,
+        NISTDomain, NISTMapping
+    )
+    from app.models.project_detail_models import (
+        ProjectStakeholder, ProjectCharter, ProjectNIST, 
+        ProjectLifecycle, ProjectDependency, ProjectApplication,
+        ProjectBaseline, ProjectStatusDetail
+    )
+    
+    lookup_data = {
+        "demand_categories": db.query(DemandCategory).all(),
+        "modernization_domains": db.query(ModernizationDomain).all(),
+        "digitization_categories": db.query(DigitizationCategory).all(),
+        "delivery_organizations": db.query(DeliveryOrganization).all(),
+        "expense_types": db.query(ExpenseType).all(),
+        "business_processes": db.query(BusinessProcess).all(),
+        "generative_ai_impacts": db.query(GenerativeAIImpact).all(),
+        "project_phases": db.query(ProjectPhase).all(),
+        "project_states": db.query(ProjectState).all(),
+        "nist_domains": db.query(NISTDomain).all(),
+        "nist_mappings": db.query(NISTMapping).all(),
+    }
+    
+    # Get comprehensive project detail data
+    stakeholders = db.query(ProjectStakeholder).filter(ProjectStakeholder.project_id == project.id).all()
+    charter = db.query(ProjectCharter).filter(ProjectCharter.project_id == project.id).first()
+    nist_info = db.query(ProjectNIST).filter(ProjectNIST.project_id == project.id).first()
+    lifecycle = db.query(ProjectLifecycle).filter(ProjectLifecycle.project_id == project.id).first()
+    dependencies = db.query(ProjectDependency).filter(ProjectDependency.project_id == project.id).all()
+    applications = db.query(ProjectApplication).filter(ProjectApplication.project_id == project.id).all()
+    baseline = db.query(ProjectBaseline).filter(ProjectBaseline.project_id == project.id).first()
+    status_detail = db.query(ProjectStatusDetail).filter(ProjectStatusDetail.project_id == project.id).first()
     
     # Template functions for badge classes
     def get_status_badge_class(status_name):
@@ -92,6 +145,15 @@ async def project_detail(request: Request, project_id: int, db: Session = Depend
         "project_priority": priority.name if priority else "Medium",
         "project_type_name": project_type.name if project_type else "N/A",
         "portfolio_name": portfolio.name if portfolio else "N/A",
+        "stakeholders": stakeholders,
+        "charter": charter,
+        "nist_info": nist_info,
+        "lifecycle": lifecycle,
+        "dependencies": dependencies,
+        "applications": applications,
+        "baseline": baseline,
+        "status_detail": status_detail,
+        "lookup_data": lookup_data,
         "getStatusBadgeClass": get_status_badge_class,
         "getPriorityBadgeClass": get_priority_badge_class
     })
