@@ -14,7 +14,125 @@ let workPlanState = {
     currentDate: new Date()
 };
 
-// Sample task data (matching the screenshot)
+// API Integration Functions
+async function loadLiveTasks(projectId = null) {
+    try {
+        console.log('🔄 Loading live tasks from API...');
+        
+        // If no project ID provided, get the first available project
+        if (!projectId) {
+            const projects = await fetchProjects();
+            if (projects && projects.length > 0) {
+                projectId = projects[0].id;
+                currentProjectId = projectId;
+            } else {
+                console.warn('⚠️ No projects found, using sample data');
+                workPlanState.tasks = sampleTasks;
+                renderGanttChart();
+                return;
+            }
+        }
+        
+        // Fetch tasks for the project
+        const response = await fetch(`/api/v1/projects/${projectId}/tasks`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken()
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const apiTasks = await response.json();
+        console.log(`✅ Loaded ${apiTasks.length} tasks from API`);
+        
+        // Transform API tasks to Gantt chart format
+        liveTasks = apiTasks.map(task => transformApiTaskToGantt(task));
+        
+        // Update work plan state
+        workPlanState.tasks = liveTasks.length > 0 ? liveTasks : sampleTasks;
+        
+        // Re-render the Gantt chart
+        renderGanttChart();
+        
+        // Update task list
+        renderTaskList();
+        
+        console.log('✅ Work plan updated with live data');
+        
+    } catch (error) {
+        console.error('❌ Error loading live tasks:', error);
+        console.log('🔄 Falling back to sample data');
+        
+        // Fallback to sample data
+        workPlanState.tasks = sampleTasks;
+        renderGanttChart();
+        renderTaskList();
+    }
+}
+
+async function fetchProjects() {
+    try {
+        const response = await fetch('/api/v1/projects?limit=10', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': getCsrfToken()
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('❌ Error fetching projects:', error);
+        return [];
+    }
+}
+
+function transformApiTaskToGantt(apiTask) {
+    // Transform API task data to Gantt chart format
+    const statusMap = {
+        'Active': 'in-progress',
+        'Completed': 'completed',
+        'Planning': 'planned',
+        'On Hold': 'on-hold',
+        'Cancelled': 'cancelled'
+    };
+    
+    return {
+        id: `T-${apiTask.id}`,
+        name: apiTask.task_name || 'Unnamed Task',
+        status: statusMap[apiTask.status?.name] || 'planned',
+        deliverable: apiTask.description ? true : false,
+        startDate: apiTask.start_date ? new Date(apiTask.start_date) : new Date(),
+        endDate: apiTask.due_date ? new Date(apiTask.due_date) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        progress: parseFloat(apiTask.percent_complete) || 0,
+        type: apiTask.description ? 'task' : 'milestone',
+        description: apiTask.description,
+        estimatedHours: apiTask.estimated_hours,
+        actualHours: apiTask.actual_hours,
+        priority: apiTask.priority?.name || 'Medium',
+        apiId: apiTask.id
+    };
+}
+
+function getCsrfToken() {
+    // Get CSRF token from meta tag or cookie
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    return token || '';
+}
+
+// Live task data from API
+let liveTasks = [];
+let currentProjectId = null;
+
+// Sample task data (fallback for demo)
 const sampleTasks = [
     {
         id: 'M-16401',
@@ -115,33 +233,16 @@ const sampleTasks = [
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 Initializing Work Plan...');
     
-    // Initialize work plan state
+    // Initialize work plan state with live data
     try {
         const projectIdEl = document.getElementById('workPlanProjectId');
         const projectId = projectIdEl ? projectIdEl.value : null;
-        if (projectId) {
-            const res = await fetch(`/api/v1/projects/${projectId}/tasks`, { credentials: 'include' });
-            if (res.ok) {
-                const tasks = await res.json();
-                workPlanState.tasks = tasks.map(t => ({
-                    id: String(t.id),
-                    name: t.task_name,
-                    status: (t.status && t.status.name) ? t.status.name.toLowerCase().replace(' ', '-') : (t.percent_complete >= 100 ? 'completed' : 'in-progress'),
-                    deliverable: false,
-                    startDate: t.start_date ? new Date(t.start_date) : new Date('2022-01-01'),
-                    endDate: t.due_date ? new Date(t.due_date) : new Date('2022-03-31'),
-                    progress: Number(t.percent_complete || 0),
-                    type: 'task'
-                }));
-            } else {
-                console.warn('Falling back to sample tasks; API returned', res.status);
-                workPlanState.tasks = [...sampleTasks];
-            }
-        } else {
-            workPlanState.tasks = [...sampleTasks];
-        }
+        
+        // Load live tasks from API
+        await loadLiveTasks(projectId);
+        
     } catch (e) {
-        console.error('Failed loading tasks, using samples', e);
+        console.error('Failed loading tasks, using samples:', e);
         workPlanState.tasks = [...sampleTasks];
     }
     
@@ -374,6 +475,44 @@ function generateMonthPositions() {
 }
 
 /**
+ * Get task status from API data
+ */
+function getTaskStatus(task) {
+    if (task.percent_complete >= 100) {
+        return 'completed';
+    } else if (task.percent_complete > 0) {
+        return 'in-progress';
+    } else if (task.start_date && new Date(task.start_date) <= new Date()) {
+        return 'in-progress';
+    } else {
+        return 'planned';
+    }
+}
+
+/**
+ * Update timeline based on actual task dates
+ */
+function updateTimelineFromTasks() {
+    if (workPlanState.tasks.length === 0) return;
+    
+    const dates = workPlanState.tasks.flatMap(task => [
+        task.startDate,
+        task.endDate
+    ]).filter(date => date instanceof Date);
+    
+    if (dates.length > 0) {
+        const minDate = new Date(Math.min(...dates));
+        const maxDate = new Date(Math.max(...dates));
+        
+        // Add some padding
+        workPlanState.timelineStart = new Date(minDate.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days before
+        workPlanState.timelineEnd = new Date(maxDate.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days after
+        
+        console.log(`📅 Updated timeline: ${workPlanState.timelineStart.toISOString().split('T')[0]} to ${workPlanState.timelineEnd.toISOString().split('T')[0]}`);
+    }
+}
+
+/**
  * Get status color class
  */
 function getStatusColor(status) {
@@ -536,18 +675,22 @@ function printWorkPlan() {
 /**
  * Refresh work plan
  */
-function refreshWorkPlan() {
+async function refreshWorkPlan() {
     console.log('🔄 Refreshing work plan...');
     
-    // Reload data
-    loadWorkPlanData();
-    
-    // Re-render components
-    renderTaskList();
-    renderGanttChart();
-    
-    // Show refresh notification
-    showNotification('Work plan refreshed successfully', 'success');
+    try {
+        const projectIdEl = document.getElementById('workPlanProjectId');
+        const projectId = projectIdEl ? projectIdEl.value : null;
+        
+        // Use our new loadLiveTasks function
+        await loadLiveTasks(projectId);
+        
+        // Show refresh notification
+        showNotification('Work plan refreshed successfully', 'success');
+    } catch (error) {
+        console.error('Error refreshing work plan:', error);
+        showNotification('Failed to refresh work plan', 'error');
+    }
 }
 
 /**

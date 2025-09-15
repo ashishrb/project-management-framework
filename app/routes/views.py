@@ -179,20 +179,18 @@ async def gantt_chart(request: Request, db: Session = Depends(get_db), current_u
 async def manager_dashboard(request: Request, current_user: dict = Depends(get_current_user)):
     if (current_user.get("role") or "").lower() not in ["admin", "owner", "manager"]:
         raise HTTPException(status_code=403, detail="Forbidden")
-    return templates.TemplateResponse("generic.html", {
+    return templates.TemplateResponse("manager_dashboard.html", {
         "request": request,
-        "user": current_user,
-        "page_title": "Manager Dashboard"
+        "user": current_user
     })
 
 @router.get("/dashboard/portfolio", response_class=HTMLResponse)
 async def portfolio_dashboard(request: Request, current_user: dict = Depends(get_current_user)):
     if (current_user.get("role") or "").lower() not in ["admin", "portfolio"]:
         raise HTTPException(status_code=403, detail="Forbidden")
-    return templates.TemplateResponse("generic.html", {
+    return templates.TemplateResponse("portfolio_dashboard.html", {
         "request": request,
-        "user": current_user,
-        "page_title": "Portfolio Dashboard"
+        "user": current_user
     })
 
 @router.get("/risks", response_class=HTMLResponse)

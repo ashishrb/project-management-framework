@@ -405,6 +405,8 @@ function applyInitialFiltersFromURL() {
         const priority = params.get('priority');
         const status = params.get('status');
         const portfolio = params.get('portfolio');
+        const businessUnit = params.get('business_unit');
+        
         if (priority && document.getElementById('priorityFilter')) {
             document.getElementById('priorityFilter').value = priority;
         }
@@ -413,6 +415,9 @@ function applyInitialFiltersFromURL() {
         }
         if (portfolio && document.getElementById('portfolioFilter')) {
             document.getElementById('portfolioFilter').value = portfolio;
+        }
+        if (businessUnit && document.getElementById('businessUnitFilter')) {
+            document.getElementById('businessUnitFilter').value = businessUnit;
         }
     } catch (e) {
         console.warn('Failed to parse initial filters from URL:', e);

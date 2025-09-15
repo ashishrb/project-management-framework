@@ -29,8 +29,52 @@ Chart.defaults.font.size = 12;
 Chart.defaults.color = '#6c757d';
 
 /**
+ * Navigate to filtered view based on chart click
+ */
+function navigateToFilteredView(filterType, filterValue) {
+    console.log(`🔍 Navigating to filtered view: ${filterType} = ${filterValue}`);
+    
+    // Show loading indicator
+    showLoadingIndicator(true);
+    
+    // Create filter parameters
+    const params = new URLSearchParams();
+    params.set(filterType, filterValue);
+    
+    // Navigate to projects page with filter
+    const projectsUrl = `/projects?${params.toString()}`;
+    console.log(`📋 Navigating to: ${projectsUrl}`);
+    
+    // Add a small delay for UX
+    setTimeout(() => {
+        window.location.href = projectsUrl;
+    }, 500);
+}
+
+/**
+ * Show loading indicator
+ */
+function showLoadingIndicator(show) {
+    const indicator = document.getElementById('loadingIndicator');
+    if (indicator) {
+        indicator.style.display = show ? 'block' : 'none';
+    }
+}
+
+/**
  * Load comprehensive dashboard data
  */
+// WebSocket integration
+function refreshDashboardMetrics() {
+    console.log('🔄 Refreshing dashboard metrics via WebSocket...');
+    loadComprehensiveDashboard();
+}
+
+function refreshComprehensiveDashboard() {
+    console.log('🔄 Refreshing comprehensive dashboard via WebSocket...');
+    loadComprehensiveDashboard();
+}
+
 window.loadComprehensiveDashboard = async function() {
     console.log('🚀 Loading comprehensive dashboard data...');
     
@@ -267,6 +311,14 @@ function createPlannedBenefitsChart() {
                         display: false
                     }
                 }
+            },
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    const element = elements[0];
+                    const label = chartData.labels[element.index];
+                    console.log(`📊 Planned Benefits Chart clicked: ${label}`);
+                    navigateToFilteredView('benefit_category', label);
+                }
             }
         }
     });
@@ -295,6 +347,14 @@ function createBusinessUnitChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const elementIndex = elements[0].index;
+                    const label = chartData.labels[elementIndex];
+                    console.log(`Business unit clicked: ${label}`);
+                    window.location.href = `/projects?business_unit=${encodeURIComponent(label)}`;
+                }
+            },
             plugins: {
                 legend: {
                     position: 'right',
@@ -309,6 +369,9 @@ function createBusinessUnitChart() {
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((context.parsed / total) * 100).toFixed(1);
                             return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        },
+                        afterLabel: function(context) {
+                            return 'Click to filter projects by business unit';
                         }
                     }
                 }
@@ -335,6 +398,14 @@ function createBusinessUnitChart() {
                 if (typeof window.updateKPICardsWithFilters === 'function') {
                     window.updateKPICardsWithFilters();
                 }
+            }
+        }
+    });
+}
+
+// Export WebSocket functions for global access
+window.refreshDashboardMetrics = refreshDashboardMetrics;
+window.refreshComprehensiveDashboard = refreshComprehensiveDashboard;
             } catch (e) {
                 console.warn('Business unit click handler failed:', e);
             }
@@ -458,6 +529,14 @@ function createPriorityChart() {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: false,
+            onClick: (event, elements) => {
+                if (elements.length > 0) {
+                    const elementIndex = elements[0].index;
+                    const label = chartData.labels[elementIndex];
+                    console.log(`Priority clicked: ${label}`);
+                    window.location.href = `/projects?priority=${encodeURIComponent(label)}`;
+                }
+            },
             plugins: {
                 legend: {
                     display: false
@@ -466,6 +545,9 @@ function createPriorityChart() {
                     callbacks: {
                         label: function(context) {
                             return context.label + ': ' + context.parsed.x + ' projects';
+                        },
+                        afterLabel: function(context) {
+                            return 'Click to filter projects by priority';
                         }
                     }
                 }

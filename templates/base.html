@@ -256,6 +256,19 @@
     <!-- AI Command Bar -->
     <script src="{{ url_for('static', path='/js/command_bar.js') }}?v=1.0"></script>
     
+    <!-- WebSocket Manager for Real-time Updates -->
+    <script src="{{ url_for('static', path='/js/websocket_manager.js') }}?v=1.0"></script>
+    
+    <!-- Initialize WebSocket Manager -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize WebSocket Manager for real-time updates
+            if (typeof initializeWebSocketManager === 'function') {
+                initializeWebSocketManager();
+            }
+        });
+    </script>
+    
     <!-- Mobile Sidebar Toggle Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
