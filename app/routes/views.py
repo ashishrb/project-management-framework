@@ -18,13 +18,37 @@ templates = Jinja2Templates(directory="templates")
 router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse)
-async def home(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    """Home page view"""
+async def login_page(request: Request):
+    """Login page - landing page"""
     try:
-        return templates.TemplateResponse("home.html", {
-            "request": request,
-            "user": current_user
+        return templates.TemplateResponse("login.html", {
+            "request": request
         })
+    except Exception as e:
+        return HTMLResponse(f"<h1>Error loading login page: {str(e)}</h1>", status_code=500)
+
+@router.get("/home", response_class=HTMLResponse)
+async def home(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Home page view - role-based dashboard"""
+    try:
+        # Redirect based on user role
+        user_role = current_user.get("role", "manager")
+        
+        if user_role == "admin":
+            return templates.TemplateResponse("admin.html", {
+                "request": request,
+                "user": current_user
+            })
+        elif user_role == "executive":
+            return templates.TemplateResponse("portfolio_dashboard.html", {
+                "request": request,
+                "user": current_user
+            })
+        else:  # manager
+            return templates.TemplateResponse("manager_dashboard.html", {
+                "request": request,
+                "user": current_user
+            })
     except Exception as e:
         return HTMLResponse(f"<h1>Error loading home page: {str(e)}</h1>", status_code=500)
 
@@ -40,6 +64,22 @@ async def dashboard_page(request: Request, db: Session = Depends(get_db), curren
 async def comprehensive_dashboard_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     """Comprehensive Dashboard page matching the screenshot"""
     return templates.TemplateResponse("comprehensive_dashboard.html", {
+        "request": request,
+        "user": current_user
+    })
+
+@router.get("/manager-dashboard", response_class=HTMLResponse)
+async def manager_dashboard_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Manager Dashboard page"""
+    return templates.TemplateResponse("manager_dashboard.html", {
+        "request": request,
+        "user": current_user
+    })
+
+@router.get("/portfolio-dashboard", response_class=HTMLResponse)
+async def portfolio_dashboard_page(request: Request, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    """Portfolio Dashboard page"""
+    return templates.TemplateResponse("portfolio_dashboard.html", {
         "request": request,
         "user": current_user
     })

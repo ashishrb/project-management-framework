@@ -16,21 +16,19 @@ let websocketManager = {
  * Initialize WebSocket Manager
  */
 function initializeWebSocketManager() {
-    console.log('🔌 Initializing WebSocket Manager...');
+    console.log('🔌 WebSocket Manager disabled for demo mode...');
     
-    try {
-        // Connect to different WebSocket rooms
-        connectToRoom('dashboard', '/ws/dashboard');
-        connectToRoom('projects', '/ws/projects');
-        connectToRoom('risks', '/ws/risks');
-        connectToRoom('resources', '/ws/resources');
-        
-        websocketManager.isInitialized = true;
-        console.log('✅ WebSocket Manager initialized successfully');
-        
-    } catch (error) {
-        console.error('❌ Error initializing WebSocket Manager:', error);
-    }
+    // Disable WebSocket connections for demo mode
+    // The simple server doesn't support WebSocket connections
+    websocketManager.isInitialized = true;
+    console.log('✅ WebSocket Manager disabled - using polling instead');
+    
+    // Use polling for real-time updates instead
+    setInterval(() => {
+        if (typeof loadComprehensiveDashboard === 'function') {
+            loadComprehensiveDashboard();
+        }
+    }, 30000); // Refresh every 30 seconds
 }
 
 /**

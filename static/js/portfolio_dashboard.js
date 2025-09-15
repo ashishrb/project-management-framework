@@ -3,6 +3,21 @@
  * Executive dashboard for portfolio managers and administrators
  */
 
+console.log('🚀 Portfolio Dashboard JavaScript file loaded successfully!');
+console.log('🔍 External JS test - this should appear in console');
+
+// Test if JavaScript is executing
+setTimeout(() => {
+    console.log('🔍 JavaScript execution test - this should appear in console');
+    const testElement = document.getElementById('totalProjectsCount');
+    if (testElement) {
+        console.log('🔍 Found totalProjectsCount element:', testElement);
+        testElement.textContent = 'TEST';
+    } else {
+        console.error('❌ totalProjectsCount element not found!');
+    }
+}, 1000);
+
 // Portfolio Dashboard State
 let portfolioDashboardState = {
     charts: {},
@@ -29,10 +44,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         await loadPortfolioDashboardData();
         
         // Initialize charts
+        console.log('🔧 About to call initializeCharts...');
         initializeCharts();
+        console.log('🔧 initializeCharts completed');
         
         // Load at-risk projects
+        console.log('🔧 About to call loadAtRiskProjects...');
         loadAtRiskProjects();
+        console.log('🔧 loadAtRiskProjects completed');
         
         portfolioDashboardState.isInitialized = true;
         console.log('✅ Portfolio Dashboard initialized successfully');
@@ -52,26 +71,47 @@ async function loadPortfolioDashboardData() {
     console.log('📊 Loading portfolio dashboard data...');
     
     try {
-        // Load data in parallel
-        const [projectsData, analyticsData, dashboardData] = await Promise.all([
-            fetch('/api/v1/projects?limit=100', { credentials: 'include' }).then(r => r.json()),
-            fetch('/api/v1/analytics/comparative-analysis', { credentials: 'include' }).then(r => r.json()),
-            fetch('/api/v1/dashboards/metrics', { credentials: 'include' }).then(r => r.json())
+        // Load data in parallel with error handling
+        const [projectsResponse, analyticsResponse, dashboardResponse] = await Promise.all([
+            fetch('/api/v1/projects?limit=100', { credentials: 'include' }),
+            fetch('/api/v1/analytics/comparative-analysis', { credentials: 'include' }),
+            fetch('/api/v1/dashboards/metrics', { credentials: 'include' })
         ]);
         
-        portfolioDashboardState.data.projects = projectsData;
+        // Parse responses with error handling
+        const projectsData = projectsResponse.ok ? await projectsResponse.json() : [];
+        const analyticsData = analyticsResponse.ok ? await analyticsResponse.json() : {};
+        const dashboardData = dashboardResponse.ok ? await dashboardResponse.json() : {};
+        
+        console.log('📊 API Response Status:', {
+            projects: projectsResponse.status,
+            analytics: analyticsResponse.status,
+            dashboard: dashboardResponse.status
+        });
+        
+        console.log('📊 API Response Data:', {
+            projectsData: projectsData,
+            analyticsData: analyticsData,
+            dashboardData: dashboardData
+        });
+        
+        // Handle API response structure - projects API returns {projects: [...]}
+        portfolioDashboardState.data.projects = projectsData.projects || projectsData;
         portfolioDashboardState.data.analytics = analyticsData;
         portfolioDashboardState.data.dashboard = dashboardData;
         
         // Extract unique managers
+        const projects = portfolioDashboardState.data.projects;
         portfolioDashboardState.data.managers = [...new Set(
-            projectsData.map(p => p.project_manager || p.owner || 'Unassigned')
+            projects.map(p => p.project_manager || p.owner || 'Unassigned')
         )].filter(Boolean);
         
         // Update KPI cards
+        console.log('🔧 About to call updateKPICards...');
         updateKPICards();
+        console.log('🔧 updateKPICards completed');
         
-        console.log(`✅ Loaded ${projectsData.length} projects and ${portfolioDashboardState.data.managers.length} managers`);
+        console.log(`✅ Loaded ${projects.length} projects and ${portfolioDashboardState.data.managers.length} managers`);
         
     } catch (error) {
         console.error('Error loading dashboard data:', error);
@@ -84,21 +124,95 @@ async function loadPortfolioDashboardData() {
  */
 function updateKPICards() {
     const projects = portfolioDashboardState.data.projects;
+    const dashboardData = portfolioDashboardState.data.dashboard;
     
-    // Total Projects
-    document.getElementById('totalProjectsCount').textContent = projects.length;
+    console.log('🔧 updateKPICards called with:', {
+        projects: projects,
+        dashboardData: dashboardData,
+        projectsLength: projects ? projects.length : 'undefined'
+    });
     
-    // Active Projects
-    const activeProjects = projects.filter(p => p.status && p.status.name === 'Active');
-    document.getElementById('activeProjectsCount').textContent = activeProjects.length;
-    
-    // Average Portfolio Health (mock calculation)
-    const avgHealth = Math.floor(Math.random() * 20) + 75; // 75-95
-    document.getElementById('avgPortfolioHealth').textContent = `${avgHealth}%`;
-    
-    // Budget Utilization (mock calculation)
-    const budgetUtilization = Math.floor(Math.random() * 30) + 60; // 60-90%
-    document.getElementById('budgetUtilization').textContent = `${budgetUtilization}%`;
+    // Use real data from dashboard metrics if available
+    if (dashboardData && dashboardData.kpis) {
+        const kpis = dashboardData.kpis;
+        
+        // Total Projects
+        const totalProjectsEl = document.getElementById('totalProjectsCount');
+        if (totalProjectsEl) {
+            totalProjectsEl.textContent = kpis.total_projects || projects.length;
+            console.log('✅ Updated totalProjectsCount:', kpis.total_projects);
+        } else {
+            console.error('❌ Element totalProjectsCount not found');
+        }
+        
+        // Active Projects
+        const activeProjectsEl = document.getElementById('activeProjectsCount');
+        if (activeProjectsEl) {
+            activeProjectsEl.textContent = kpis.active_projects || projects.filter(p => p.status_id === 1).length;
+            console.log('✅ Updated activeProjectsCount:', kpis.active_projects);
+        } else {
+            console.error('❌ Element activeProjectsCount not found');
+        }
+        
+        // Average Portfolio Health (real calculation)
+        const avgHealthEl = document.getElementById('avgPortfolioHealth');
+        if (avgHealthEl) {
+            avgHealthEl.textContent = `${kpis.avg_portfolio_health || 0}%`;
+            console.log('✅ Updated avgPortfolioHealth:', kpis.avg_portfolio_health);
+        } else {
+            console.error('❌ Element avgPortfolioHealth not found');
+        }
+        
+        // Budget Utilization (real calculation)
+        const budgetUtilEl = document.getElementById('budgetUtilization');
+        if (budgetUtilEl) {
+            budgetUtilEl.textContent = `${kpis.budget_utilization || 0}%`;
+            console.log('✅ Updated budgetUtilization:', kpis.budget_utilization);
+        } else {
+            console.error('❌ Element budgetUtilization not found');
+        }
+        
+        console.log('✅ KPI Cards updated with real data:', kpis);
+    } else {
+        // Fallback to project-based calculations
+        const projects = portfolioDashboardState.data.projects;
+        
+        // Total Projects
+        document.getElementById('totalProjectsCount').textContent = projects.length;
+        
+        // Active Projects
+        const activeProjects = projects.filter(p => p.status_id === 1);
+        document.getElementById('activeProjectsCount').textContent = activeProjects.length;
+        
+        // Calculate average portfolio health from project data
+        let avgHealth = 0;
+        if (projects.length > 0) {
+            const healthScores = projects.map(p => {
+                let baseHealth = 75;
+                if (p.status_id === 1) baseHealth = 85;      // Active
+                else if (p.status_id === 2) baseHealth = 95; // Completed
+                else if (p.status_id === 4) baseHealth = 45; // At Risk
+                
+                const completionFactor = (p.percent_complete || 0) * 0.2;
+                return Math.min(100, baseHealth + completionFactor);
+            });
+            avgHealth = Math.round(sum(healthScores) / healthScores.length);
+        }
+        document.getElementById('avgPortfolioHealth').textContent = `${avgHealth}%`;
+        
+        // Calculate budget utilization from project data
+        const totalBudget = projects.reduce((sum, p) => sum + (parseFloat(p.budget_amount) || 0), 0);
+        const totalActualCost = projects.reduce((sum, p) => sum + (parseFloat(p.actual_cost) || 0), 0);
+        const budgetUtilization = totalBudget > 0 ? Math.round((totalActualCost / totalBudget) * 100) : 0;
+        document.getElementById('budgetUtilization').textContent = `${budgetUtilization}%`;
+        
+        console.log('✅ KPI Cards updated with calculated data');
+    }
+}
+
+// Helper function for sum calculation
+function sum(arr) {
+    return arr.reduce((a, b) => a + b, 0);
 }
 
 /**
@@ -128,9 +242,38 @@ function initializeManagerHealthChart() {
     if (!ctx) return;
     
     const managers = portfolioDashboardState.data.managers.slice(0, 8); // Top 8 managers
-    const healthScores = managers.map(() => Math.floor(Math.random() * 30) + 70); // 70-100
+    const analyticsData = portfolioDashboardState.data.analytics;
     
-    managerDashboardState.charts.managerHealth = new Chart(ctx, {
+    // Use real manager performance data if available
+    let healthScores = [];
+    if (analyticsData && analyticsData.manager_performance) {
+        healthScores = managers.map(manager => {
+            const performance = analyticsData.manager_performance[manager];
+            return performance ? performance.health_score : 75; // Default fallback
+        });
+        console.log('✅ Manager Health Chart using real data:', healthScores);
+    } else {
+        // Fallback: Calculate health scores from project data
+        healthScores = managers.map(manager => {
+            const managerProjects = portfolioDashboardState.data.projects.filter(p => p.project_manager === manager);
+            if (managerProjects.length === 0) return 75;
+            
+            const avgHealth = managerProjects.reduce((sum, p) => {
+                let baseHealth = 75;
+                if (p.status_id === 1) baseHealth = 85;      // Active
+                else if (p.status_id === 2) baseHealth = 95; // Completed
+                else if (p.status_id === 4) baseHealth = 45; // At Risk
+                
+                const completionFactor = (p.percent_complete || 0) * 0.2;
+                return sum + Math.min(100, baseHealth + completionFactor);
+            }, 0);
+            
+            return Math.round(avgHealth / managerProjects.length);
+        });
+        console.log('✅ Manager Health Chart using calculated data:', healthScores);
+    }
+    
+    portfolioDashboardState.charts.managerHealth = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: managers.map(m => m.substring(0, 12) + '...'),
@@ -190,12 +333,23 @@ function initializeStatusDistributionChart() {
     if (!ctx) return;
     
     const projects = portfolioDashboardState.data.projects;
-    const statusCounts = {
-        'Active': projects.filter(p => p.status && p.status.name === 'Active').length,
-        'Completed': projects.filter(p => p.status && p.status.name === 'Completed').length,
-        'Planning': projects.filter(p => p.status && p.status.name === 'Planning').length,
-        'At Risk': projects.filter(p => p.status && p.status.name === 'At Risk').length
-    };
+    const analyticsData = portfolioDashboardState.data.analytics;
+    
+    // Use real status distribution data if available
+    let statusCounts = {};
+    if (analyticsData && analyticsData.status_distribution) {
+        statusCounts = analyticsData.status_distribution;
+        console.log('✅ Status Distribution Chart using real data:', statusCounts);
+    } else {
+        // Fallback: Calculate from project data using status_id
+        statusCounts = {
+            'Active': projects.filter(p => p.status_id === 1).length,
+            'Completed': projects.filter(p => p.status_id === 2).length,
+            'Planning': projects.filter(p => p.status_id === 3).length,
+            'At Risk': projects.filter(p => p.status_id === 4).length
+        };
+        console.log('✅ Status Distribution Chart using calculated data:', statusCounts);
+    }
     
     portfolioDashboardState.charts.statusDistribution = new Chart(ctx, {
         type: 'doughnut',
@@ -448,14 +602,20 @@ async function loadAtRiskProjects() {
     try {
         const projects = portfolioDashboardState.data.projects;
         const atRiskProjects = projects.filter(p => 
-            p.status && p.status.name === 'At Risk'
+            p.status_id === 4  // At Risk status
         ).slice(0, 10); // Top 10 at-risk projects
         
         const atRiskBody = document.getElementById('atRiskProjectsBody');
         
         if (atRiskBody) {
             atRiskBody.innerHTML = atRiskProjects.map(project => {
-                const healthScore = Math.floor(Math.random() * 30) + 40; // 40-70
+                // Calculate real health score based on project data
+                let healthScore = 45; // Base score for at-risk projects
+                if (project.percent_complete) {
+                    healthScore += (project.percent_complete * 0.3); // Adjust based on completion
+                }
+                healthScore = Math.round(Math.min(70, healthScore)); // Cap at 70 for at-risk projects
+                
                 const riskLevel = healthScore < 50 ? 'High' : healthScore < 60 ? 'Medium' : 'Low';
                 
                 return `
@@ -558,8 +718,12 @@ function exportPortfolioReport() {
  */
 function showLoadingOverlay(show) {
     const overlay = document.getElementById('loadingOverlay');
+    console.log(`🔧 showLoadingOverlay(${show}) - overlay found:`, !!overlay);
     if (overlay) {
         overlay.style.display = show ? 'flex' : 'none';
+        console.log(`🔧 Loading overlay display set to: ${overlay.style.display}`);
+    } else {
+        console.error('❌ Loading overlay element not found!');
     }
 }
 

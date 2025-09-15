@@ -3,46 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Details - GenAI Metrics Dashboard</title>
+    <title>{% if mode == 'edit' %}Edit Project{% else %}Project Details{% endif %} - GenAI Metrics Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .readonly-field {
+            background-color: #f8f9fa !important;
+            cursor: not-allowed;
+        }
+        .edit-mode .form-control:not([readonly]) {
+            background-color: #fff;
+        }
+        
+        /* Project Phases Process Flow Styles */
+        .project-phases-flow {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px 20px;
+            margin: 20px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .phase-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .phase-box {
+            flex: 1;
+            min-width: 180px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border: 3px solid transparent;
+        }
+        
+        .phase-box.active {
+            border-color: #007bff;
+            box-shadow: 0 5px 20px rgba(0, 123, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .phase-box.completed {
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+        
+        .phase-box.upcoming {
+            border-color: #17a2b8;
+            background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        }
+        
+        .phase-box.not-started {
+            border-color: #6c757d;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            opacity: 0.7;
+        }
+        
+        .phase-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        
+        .phase-box.active .phase-icon {
+            color: #007bff;
+            animation: pulse 2s infinite;
+        }
+        
+        .phase-box.completed .phase-icon {
+            color: #28a745;
+        }
+        
+        .phase-box.upcoming .phase-icon {
+            color: #17a2b8;
+        }
+        
+        .phase-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 8px;
+        }
+        
+        .phase-status {
+            margin-top: 8px;
+        }
+        
+        .phase-arrow {
+            font-size: 1.5rem;
+            color: #6c757d;
+            margin: 0 10px;
+            animation: slideIn 1s ease-in-out;
+        }
+        
+        .phase-box.active .phase-arrow {
+            color: #007bff;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .phase-container {
+                flex-direction: column;
+            }
+            
+            .phase-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            
+            .phase-box {
+                min-width: 100%;
+            }
+        }
+        
+        /* Hover Effects */
+        .phase-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .phase-box.not-started:hover {
+            transform: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body>
+<body class="{% if mode == 'edit' %}edit-mode{% endif %}">
     <div class="container-fluid">
         <div class="row">
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h1 class="mb-0">PROJECT DETAILS, PROJECT STATUS DETAILS</h1>
-                        <p class="mb-0">Comprehensive project management and tracking</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="mb-0">{% if mode == 'edit' %}EDIT PROJECT{% else %}PROJECT DETAILS{% endif %}</h1>
+                                <p class="mb-0">{% if mode == 'edit' %}Modify project information{% else %}Comprehensive project management and tracking{% endif %}</p>
+                            </div>
+                            <div>
+                                {% if mode == 'edit' %}
+                                    <button type="button" class="btn btn-light me-2" onclick="cancelEdit()">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-success" onclick="saveProject()">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="btn btn-light" onclick="goBack()">
+                                        <i class="fas fa-arrow-left"></i> Back to Projects
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body">
+                        <!-- Project Phases Process Flow -->
                         <div class="row mb-4">
-                            <div class="col-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <h5>Initiation</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="card bg-success text-white">
-                                    <div class="card-body text-center">
-                                        <h5>Planning</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="card bg-primary text-white">
-                                    <div class="card-body text-center">
-                                        <h5>Execution</h5>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="card bg-secondary text-white">
-                                    <div class="card-body text-center">
-                                        <h5>Closure</h5>
+                            <div class="col-12">
+                                <div class="project-phases-flow">
+                                    <div class="phase-container">
+                                        <!-- Initiation Phase -->
+                                        <div class="phase-box {% if project.status_id == 1 %}active{% elif project.status_id > 1 %}completed{% else %}upcoming{% endif %}" data-phase="initiation">
+                                            <div class="phase-icon">
+                                                <i class="fas fa-play-circle"></i>
+                                            </div>
+                                            <div class="phase-title">Initiation</div>
+                                            <div class="phase-status">
+                                                {% if project.status_id == 1 %}
+                                                    <span class="badge bg-primary">Active</span>
+                                                {% elif project.status_id > 1 %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Started</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Arrow 1 -->
+                                        <div class="phase-arrow">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        
+                                        <!-- Planning Phase -->
+                                        <div class="phase-box {% if project.status_id == 3 %}active{% elif project.status_id > 3 %}completed{% elif project.status_id >= 1 %}upcoming{% else %}not-started{% endif %}" data-phase="planning">
+                                            <div class="phase-icon">
+                                                <i class="fas fa-tasks"></i>
+                                            </div>
+                                            <div class="phase-title">Planning</div>
+                                            <div class="phase-status">
+                                                {% if project.status_id == 3 %}
+                                                    <span class="badge bg-warning">Active</span>
+                                                {% elif project.status_id > 3 %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif project.status_id >= 1 %}
+                                                    <span class="badge bg-info">Upcoming</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Started</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Arrow 2 -->
+                                        <div class="phase-arrow">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        
+                                        <!-- Execution Phase -->
+                                        <div class="phase-box {% if project.status_id == 4 %}active{% elif project.status_id == 2 %}completed{% elif project.status_id >= 3 %}upcoming{% else %}not-started{% endif %}" data-phase="execution">
+                                            <div class="phase-icon">
+                                                <i class="fas fa-cogs"></i>
+                                            </div>
+                                            <div class="phase-title">Execution</div>
+                                            <div class="phase-status">
+                                                {% if project.status_id == 4 %}
+                                                    <span class="badge bg-danger">Active</span>
+                                                {% elif project.status_id == 2 %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% elif project.status_id >= 3 %}
+                                                    <span class="badge bg-info">Upcoming</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Started</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Arrow 3 -->
+                                        <div class="phase-arrow">
+                                            <i class="fas fa-arrow-right"></i>
+                                        </div>
+                                        
+                                        <!-- Closure Phase -->
+                                        <div class="phase-box {% if project.status_id == 2 %}active{% elif project.status_id == 2 %}completed{% else %}not-started{% endif %}" data-phase="closure">
+                                            <div class="phase-icon">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <div class="phase-title">Closure</div>
+                                            <div class="phase-status">
+                                                {% if project.status_id == 2 %}
+                                                    <span class="badge bg-success">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Not Started</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -57,20 +278,20 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">ID:</label>
-                                            <input type="text" class="form-control" value="{{ project.project_id }}" readonly>
+                                            <input type="text" class="form-control" id="projectId" value="{{ project.id }}" {% if mode != 'edit' %}readonly{% endif %}>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label class="form-label">ESA ID:</label>
-                                            <input type="text" class="form-control" value="{{ project.esa_id or '' }}" placeholder="Enter ESA ID">
+                                            <input type="text" class="form-control" id="esaId" value="{{ project.esa_id or '' }}" placeholder="Enter ESA ID" {% if mode != 'edit' %}readonly{% endif %}>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div class="mb-3">
                                     <label class="form-label">Description:</label>
-                                    <textarea class="form-control" rows="4" readonly>{{ project.description or 'Implement the Orbus iServer365 (SaaS) across S&T as a repository for all Architecture artifacts.' }}</textarea>
+                                    <textarea class="form-control" id="description" rows="4" {% if mode != 'edit' %}readonly{% endif %}>{{ project.description or 'Implement the Orbus iServer365 (SaaS) across S&T as a repository for all Architecture artifacts.' }}</textarea>
                                 </div>
                                 
                                 <div class="row">
@@ -209,10 +430,12 @@
                             </div>
                         </div>
                         
+                        {% if mode == 'edit' %}
                         <div class="mt-4 text-end">
-                            <button type="button" class="btn btn-secondary me-2">Save Draft</button>
-                            <button type="button" class="btn btn-primary">Save & Submit</button>
+                            <button type="button" class="btn btn-secondary me-2" onclick="cancelEdit()">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="saveProject()">Save Changes</button>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -220,6 +443,81 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Get current project ID from URL
+        const projectId = window.location.pathname.split('/').pop().split('?')[0];
+        const mode = new URLSearchParams(window.location.search).get('mode') || 'readonly';
+        
+        // Go back to projects list
+        function goBack() {
+            window.location.href = '/projects';
+        }
+        
+        // Cancel edit and go back
+        function cancelEdit() {
+            window.location.href = '/projects';
+        }
+        
+        // Save project changes
+        async function saveProject() {
+            try {
+                // Collect form data using IDs for better reliability
+                const formData = {
+                    name: '{{ project.name }}', // Project name is not editable in this form
+                    description: document.getElementById('description')?.value || '',
+                    esa_id: document.getElementById('esaId')?.value || '',
+                    // Add other fields as they get IDs
+                };
+                
+                console.log('Saving project data:', formData);
+                
+                // Show loading state
+                const saveBtn = document.querySelector('button[onclick="saveProject()"]');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveBtn.disabled = true;
+                
+                // Send update request
+                const response = await fetch(`/api/v1/projects/${projectId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                // Show success message and redirect
+                alert('Project updated successfully in the database!');
+                window.location.href = '/projects';
+                
+            } catch (error) {
+                console.error('Error saving project:', error);
+                alert('Error saving project: ' + error.message);
+                
+                // Restore button state
+                const saveBtn = document.querySelector('button[onclick="saveProject()"]');
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                saveBtn.disabled = false;
+            }
+        }
+        
+        // Initialize page based on mode
+        document.addEventListener('DOMContentLoaded', function() {
+            if (mode === 'readonly') {
+                // Add readonly styling to all form controls
+                document.querySelectorAll('.form-control').forEach(field => {
+                    field.classList.add('readonly-field');
+                });
+            }
+        });
+    </script>
     <script src="/static/js/project_detail.js"></script>
 </body>
 </html>

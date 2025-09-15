@@ -90,34 +90,107 @@ def analyze_risks(
         )
     ).all()
     
-    # AI analysis (placeholder)
-    risk_analysis = {
-        "project_name": project.name,
-        "risk_score": 7.5,  # Calculated based on various factors
-        "risk_level": "High",
-        "identified_risks": [
-            {
-                "risk_name": "Resource Availability",
-                "probability": 0.7,
-                "impact": 0.8,
-                "risk_score": 0.56,
-                "mitigation": "Cross-train team members and maintain backup resources"
-            },
-            {
-                "risk_name": "Technical Complexity",
-                "probability": 0.6,
-                "impact": 0.9,
-                "risk_score": 0.54,
-                "mitigation": "Conduct technical spike and create proof of concept"
-            },
-            {
-                "risk_name": "Timeline Pressure",
+    # Calculate actual risk analysis based on project data
+    # Calculate risk score based on project factors
+    risk_factors = []
+    total_risk_score = 0.0
+    
+    # Factor 1: Project status
+    if project.status_id == 3:  # At Risk
+        risk_factors.append({"factor": "Project Status", "score": 0.8})
+        total_risk_score += 0.8
+    elif project.status_id == 4:  # Off Track
+        risk_factors.append({"factor": "Project Status", "score": 1.0})
+        total_risk_score += 1.0
+    else:
+        risk_factors.append({"factor": "Project Status", "score": 0.3})
+        total_risk_score += 0.3
+    
+    # Factor 2: Completion percentage
+    if project.percent_complete:
+        if project.percent_complete < 25:
+            risk_factors.append({"factor": "Low Progress", "score": 0.7})
+            total_risk_score += 0.7
+        elif project.percent_complete > 75:
+            risk_factors.append({"factor": "Good Progress", "score": 0.2})
+            total_risk_score += 0.2
+        else:
+            risk_factors.append({"factor": "Moderate Progress", "score": 0.4})
+            total_risk_score += 0.4
+    
+    # Factor 3: Existing risks
+    existing_risk_count = len(existing_risks)
+    if existing_risk_count > 5:
+        risk_factors.append({"factor": "High Risk Count", "score": 0.6})
+        total_risk_score += 0.6
+    elif existing_risk_count > 2:
+        risk_factors.append({"factor": "Moderate Risk Count", "score": 0.3})
+        total_risk_score += 0.3
+    
+    # Normalize risk score to 0-10 scale
+    normalized_risk_score = min(10.0, (total_risk_score / len(risk_factors)) * 10) if risk_factors else 5.0
+    
+    # Determine risk level
+    if normalized_risk_score >= 7.5:
+        risk_level = "High"
+    elif normalized_risk_score >= 5.0:
+        risk_level = "Medium"
+    else:
+        risk_level = "Low"
+    
+    # Generate dynamic risks based on actual project data
+    identified_risks = []
+    
+    # Resource risk based on project manager assignment
+    if not project.project_manager:
+        identified_risks.append({
+            "risk_name": "Missing Project Manager",
+            "probability": 0.9,
+            "impact": 0.8,
+            "risk_score": 0.72,
+            "mitigation": "Assign a dedicated project manager immediately"
+        })
+    
+    # Timeline risk based on completion percentage
+    if project.percent_complete and project.percent_complete < 30:
+        identified_risks.append({
+            "risk_name": "Timeline Risk",
+            "probability": 0.7,
+            "impact": 0.8,
+            "risk_score": 0.56,
+            "mitigation": "Review project timeline and add buffer time"
+        })
+    
+    # Budget risk (placeholder - would need actual budget data)
+    if project.budget_amount and project.actual_cost:
+        budget_utilization = (project.actual_cost / project.budget_amount) * 100
+        if budget_utilization > 80:
+            identified_risks.append({
+                "risk_name": "Budget Overrun Risk",
                 "probability": 0.8,
                 "impact": 0.7,
                 "risk_score": 0.56,
-                "mitigation": "Break down tasks into smaller increments and add buffer time"
+                "mitigation": "Review budget allocation and consider scope adjustments"
+            })
+    
+    # Default risks if none identified
+    if not identified_risks:
+        identified_risks = [
+            {
+                "risk_name": "General Project Risk",
+                "probability": 0.5,
+                "impact": 0.6,
+                "risk_score": 0.30,
+                "mitigation": "Implement regular project monitoring and risk reviews"
             }
-        ],
+        ]
+    
+    risk_analysis = {
+        "project_name": project.name,
+        "risk_score": round(normalized_risk_score, 1),
+        "risk_level": risk_level,
+        "risk_factors": risk_factors,
+        "identified_risks": identified_risks,
         "recommendations": [
             "Implement daily standups for better communication",
             "Create contingency plans for critical path items",

@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-09-15T12:08:44.712435",
+  "tests_passed": 252,
+  "tests_failed": 1,
+  "issues": [
+    {
+      "test": "Projects API returns active projects",
+      "error": "Projects API returned no data"
+    }
+  ]
+}

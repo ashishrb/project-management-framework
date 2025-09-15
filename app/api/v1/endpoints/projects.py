@@ -36,8 +36,22 @@ def get_projects(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get all projects with filtering and pagination"""
+    """Get projects with filtering and pagination based on user role"""
     query = db.query(Project)
+    
+    # Apply role-based filtering
+    user_role = current_user.get("role", "guest")
+    username = current_user.get("username", "")
+    
+    if user_role == "manager":
+        # Managers see only their assigned projects (based on project_manager field)
+        query = query.filter(Project.project_manager == username)
+    elif user_role in ["executive", "admin"]:
+        # Executives and admins see all projects
+        pass
+    else:
+        # Guests see no projects
+        query = query.filter(Project.id == -1)  # Impossible condition
     
     # Apply filters
     if status_id:
@@ -53,6 +67,9 @@ def get_projects(
                 Project.description.ilike(f"%{search}%")
             )
         )
+    
+    # Only show active projects
+    query = query.filter(Project.is_active == True)
     
     # DEMO_MODE: limit to 10 most recently updated projects without DB mutation
     if settings.DEMO_MODE:

@@ -370,6 +370,7 @@ async function getAIResponse(message) {
             'Content-Type': 'application/json',
             'X-CSRF-Token': token || ''
         },
+        credentials: 'include',
         body: JSON.stringify({
             ...requestData,
             csrf_token: token
@@ -446,10 +447,10 @@ async function loadContext(type) {
         
         switch (type) {
             case 'projects':
-                endpoint = '/api/v1/projects/';
+                endpoint = '/api/v1/projects';
                 break;
             case 'resources':
-                endpoint = '/api/v1/resources/';
+                endpoint = '/api/v1/resources';
                 break;
             case 'finance':
                 endpoint = '/api/v1/analytics/financial-summary';

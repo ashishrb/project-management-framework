@@ -1,66 +1,109 @@
-"""
-Authentication endpoints: login, logout, profile
-"""
-from datetime import datetime, timedelta
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Form
-from sqlalchemy.orm import Session
-
-from app.database import get_db
-from app.api.deps import get_current_user
-from app.models.users import User
-from app.core.secrets import verify_password, hash_password
-from app.config import settings
-from jose import jwt
+from fastapi import APIRouter, HTTPException, status, Response, Request
+import json
+import base64
 
 router = APIRouter()
 
-ACCESS_TOKEN_COOKIE = "access_token"
+# Simple demo users - no password hashing for demo simplicity
+DEMO_USERS = {
+    "manager1": {"password": "password123", "role": "manager", "id": 1, "email": "manager1@demo.com"},
+    "manager2": {"password": "password123", "role": "manager", "id": 2, "email": "manager2@demo.com"},
+    "executive": {"password": "password123", "role": "executive", "id": 3, "email": "executive@demo.com"},
+    "admin": {"password": "password123", "role": "admin", "id": 4, "email": "admin@demo.com"}
+}
 
+def encode_user_data(user_data):
+    """Simple base64 encoding for demo"""
+    return base64.b64encode(json.dumps(user_data).encode()).decode()
 
-def create_access_token(*, data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
-
+def decode_user_data(encoded_data):
+    """Simple base64 decoding for demo"""
+    try:
+        return json.loads(base64.b64decode(encoded_data.encode()).decode())
+    except:
+        return None
 
 @router.post("/login")
-def login(
-    response: Response,
-    db: Session = Depends(get_db),
-    email: str = Form(...),
-    password: str = Form(...),
-):
-    user: Optional[User] = db.query(User).filter(User.email == email).first()
-    if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not verify_password(password, user.password_hash, user.password_salt):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    token = create_access_token(data={"sub": str(user.id), "email": user.email, "name": user.name or user.email, "role": user.role})
-    # httpOnly, secure in prod
-    response.set_cookie(
-        key=ACCESS_TOKEN_COOKIE,
-        value=token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        path="/",
-    )
-    return {"message": "Login successful", "role": user.role}
-
+async def login(request: Request, response: Response):
+    """Super simple login for demo - no database dependency"""
+    try:
+        # Get form data
+        form_data = await request.form()
+        username = form_data.get("username")
+        password = form_data.get("password")
+        
+        if not username or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username and password are required"
+            )
+        
+        # Check demo users
+        if username in DEMO_USERS:
+            user_data = DEMO_USERS[username]
+            if user_data["password"] == password:
+                # Create simple user info
+                user_info = {
+                    "id": user_data["id"],
+                    "username": username,
+                    "email": user_data["email"],
+                    "role": user_data["role"]
+                }
+                
+                # Set simple cookie
+                encoded_user = encode_user_data(user_info)
+                response.set_cookie(
+                    key="user_session",
+                    value=encoded_user,
+                    httponly=True,
+                    samesite="lax",
+                    secure=False,  # Set to True in production with HTTPS
+                    max_age=3600  # 1 hour
+                )
+                
+                return {
+                    "message": "Login successful",
+                    "user": user_info
+                }
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Login error: {str(e)}"
+        )
 
 @router.post("/logout")
-def logout(response: Response):
-    response.delete_cookie(ACCESS_TOKEN_COOKIE, path="/")
-    return {"message": "Logged out"}
-
+async def logout(response: Response):
+    """Simple logout - clear cookie"""
+    try:
+        response.delete_cookie(key="user_session")
+        return {"message": "Logout successful"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Logout error: {str(e)}"
+        )
 
 @router.get("/me")
-def me(current_user: dict = Depends(get_current_user)):
-    return current_user
-
-
+async def get_current_user_info(request: Request):
+    """Get current user info from cookie"""
+    try:
+        user_cookie = request.cookies.get("user_session")
+        if user_cookie:
+            user_data = decode_user_data(user_cookie)
+            if user_data:
+                return user_data
+        
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting user info: {str(e)}"
+        )

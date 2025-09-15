@@ -9,6 +9,8 @@ from fastapi.staticfiles import StaticFiles
 import time
 import logging
 import uuid
+import json
+import base64
 
 from app.config import settings
 from app.api.v1.api import api_router
@@ -51,6 +53,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Simple auth middleware - no complex session management
+
 # Add trusted host middleware
 app.add_middleware(
     TrustedHostMiddleware,
@@ -76,7 +80,7 @@ async def add_process_time_header(request: Request, call_next):
 # Include view router FIRST (higher priority for exact matches)
 app.include_router(views_router)
 
-# Include API router with prefix
+# Include API router with prefix (includes auth endpoints)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 # Include WebSocket router

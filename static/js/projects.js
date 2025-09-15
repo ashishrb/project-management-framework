@@ -99,14 +99,30 @@ async function loadProjects() {
         console.log('📊 Loading projects data...');
         showLoading(true);
         
-        const response = await fetch('/api/v1/projects/');
+        const response = await fetch('/api/v1/projects', {
+            credentials: 'include'
+        });
         console.log('Response status:', response.status);
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
-        projectsData = await response.json();
+        const responseData = await response.json();
+        console.log('🔍 DEBUG: Raw API response:', responseData);
+        console.log('🔍 DEBUG: Response type:', typeof responseData);
+        console.log('🔍 DEBUG: Is array?', Array.isArray(responseData));
+        
+        projectsData = responseData.projects || responseData; // Handle both formats
+        console.log('🔍 DEBUG: Processed projectsData:', projectsData);
+        console.log('🔍 DEBUG: ProjectsData type:', typeof projectsData);
+        console.log('🔍 DEBUG: ProjectsData is array?', Array.isArray(projectsData));
+        
+        if (!Array.isArray(projectsData)) {
+            console.error('❌ ERROR: projectsData is not an array!', projectsData);
+            projectsData = []; // Fallback to empty array
+        }
+        
         console.log('Projects data received:', projectsData.length, 'projects');
         console.log('Sample project:', projectsData[0]);
         
@@ -243,11 +259,11 @@ function renderTableView() {
             </td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="viewProject('${project.project_id}')" 
+                    <button class="btn btn-outline-primary" onclick="viewProject(${project.id})" 
                             title="View Details">
                         <i class="fas fa-eye"></i>
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="editProject('${project.project_id}')" 
+                    <button class="btn btn-outline-secondary" onclick="editProject(${project.id})" 
                             title="Edit Project">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -557,11 +573,12 @@ async function createProject() {
             percent_complete: parseInt(document.getElementById('percentComplete').value) || 0
         };
         
-        const response = await fetch('/api/v1/projects/', {
+        const response = await fetch('/api/v1/projects', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(formData)
         });
         
@@ -589,16 +606,7 @@ async function createProject() {
  * Edit project
  */
 function editProject(projectId) {
-    const project = projectsData.find(p => p.id === projectId);
-    if (!project) return;
-    
-    // Populate edit form
-    document.getElementById('editProjectId').value = project.id;
-    document.getElementById('editProjectName').value = project.name || '';
-    // ... populate other fields
-    
-    const modal = new bootstrap.Modal(document.getElementById('editProjectModal'));
-    modal.show();
+    window.location.href = `/project/${projectId}?mode=edit`;
 }
 
 /**
@@ -609,7 +617,13 @@ async function updateProject() {
         const projectId = document.getElementById('editProjectId').value;
         const formData = {
             name: document.getElementById('editProjectName').value,
-            // ... other fields
+            description: document.getElementById('editProjectDescription')?.value || '',
+            status_id: parseInt(document.getElementById('editProjectStatus')?.value) || 1,
+            priority_id: parseInt(document.getElementById('editProjectPriority')?.value) || 1,
+            project_manager: document.getElementById('editProjectManager')?.value || '',
+            percent_complete: parseFloat(document.getElementById('editProjectPercent')?.value) || 0,
+            start_date: document.getElementById('editProjectStartDate')?.value || '',
+            due_date: document.getElementById('editProjectDueDate')?.value || ''
         };
         
         const response = await fetch(`/api/v1/projects/${projectId}`, {
@@ -617,6 +631,7 @@ async function updateProject() {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(formData)
         });
         
@@ -638,7 +653,7 @@ async function updateProject() {
  * View project details
  */
 function viewProject(projectId) {
-    window.location.href = `/projects/${projectId}`;
+    window.location.href = `/project/${projectId}?mode=readonly`;
 }
 
 /**
@@ -651,7 +666,8 @@ async function deleteProject(projectId) {
     
     try {
         const response = await fetch(`/api/v1/projects/${projectId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            credentials: 'include'
         });
         
         if (!response.ok) {
@@ -683,11 +699,12 @@ async function duplicateProject(projectId) {
             id: undefined
         };
         
-        const response = await fetch('/api/v1/projects/', {
+        const response = await fetch('/api/v1/projects', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(duplicateData)
         });
         
@@ -756,11 +773,12 @@ function importProjects() {
             
             // Import projects
             for (const project of projects) {
-                await fetch('/api/v1/projects/', {
+                await fetch('/api/v1/projects', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                     body: JSON.stringify(project)
                 });
             }

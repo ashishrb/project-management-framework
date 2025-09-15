@@ -300,5 +300,18 @@
 }
 </style>
 
-<script src="/static/js/portfolio_dashboard.js"></script>
+<script src="/static/js/portfolio_dashboard.js?v=2.0"></script>
+<script>
+console.log('🔍 Inline script test - this should appear in console');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔍 DOMContentLoaded fired in inline script');
+    const testEl = document.getElementById('totalProjectsCount');
+    if (testEl) {
+        console.log('🔍 Found totalProjectsCount element in inline script');
+        testEl.textContent = 'INLINE TEST';
+    } else {
+        console.error('❌ totalProjectsCount element not found in inline script');
+    }
+});
+</script>
 {% endblock %}

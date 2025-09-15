@@ -41,7 +41,7 @@ def get_all_projects_dashboard(
     approved_projects = db.query(Project).filter(
         and_(
             Project.is_active == True,
-            Project.status_id == 1  # Active status
+            Project.status_id == 2  # Approved/Completed status
         )
     ).count()
     
@@ -49,7 +49,8 @@ def get_all_projects_dashboard(
         Backlog.is_active == True
     ).count()
     
-    total_projects = current_projects + approved_projects + backlog_projects
+    # Total projects should only count projects, not backlogs
+    total_projects = db.query(Project).filter(Project.is_active == True).count()
     
     # Get GenAI 4-panel metrics
     genai_metrics = get_genai_metrics(db)
@@ -221,10 +222,28 @@ def get_backlog_platform_metrics(db: Session, portfolio_id: int = None) -> List[
     
     platform_metrics = []
     for platform in platforms:
-        # Get backlog counts by priority for this platform
-        high_priority = 69 if platform.name == "LC Platform" else 32 if platform.name == "Commercial" else 115
-        medium_priority = 32
-        low_priority = 115
+        # Get actual backlog counts by priority for this platform
+        # Note: This is a simplified calculation - in reality, backlogs would need platform association
+        high_priority = db.query(Backlog).filter(
+            and_(
+                Backlog.is_active == True,
+                Backlog.priority_id >= 3  # High and Critical priority
+            )
+        ).count() // len(platforms) if platforms else 0
+        
+        medium_priority = db.query(Backlog).filter(
+            and_(
+                Backlog.is_active == True,
+                Backlog.priority_id == 2  # Medium priority
+            )
+        ).count() // len(platforms) if platforms else 0
+        
+        low_priority = db.query(Backlog).filter(
+            and_(
+                Backlog.is_active == True,
+                Backlog.priority_id == 1  # Low priority
+            )
+        ).count() // len(platforms) if platforms else 0
         
         platform_metrics.append(PlatformMetrics(
             platform_id=platform.id,

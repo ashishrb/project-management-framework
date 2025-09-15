@@ -487,7 +487,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Total Pipeline</h5>
-                            <h2 class="card-text">134</h2>
+                            <h2 class="card-text" id="total-pipeline-count">134</h2>
                             <small>Active Projects</small>
                         </div>
                     </div>
@@ -496,8 +496,8 @@
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">In Progress</h5>
-                            <h2 class="card-text">89</h2>
-                            <small>66% of Pipeline</small>
+                            <h2 class="card-text" id="in-progress-count">89</h2>
+                            <small id="in-progress-percentage">66% of Pipeline</small>
                         </div>
                     </div>
                 </div>
@@ -505,8 +505,8 @@
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Pending Start</h5>
-                            <h2 class="card-text">32</h2>
-                            <small>24% of Pipeline</small>
+                            <h2 class="card-text" id="pending-start-count">32</h2>
+                            <small id="pending-start-percentage">24% of Pipeline</small>
                         </div>
                     </div>
                 </div>
@@ -514,8 +514,8 @@
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">On Hold</h5>
-                            <h2 class="card-text">13</h2>
-                            <small>10% of Pipeline</small>
+                            <h2 class="card-text" id="on-hold-count">13</h2>
+                            <small id="on-hold-percentage">10% of Pipeline</small>
                         </div>
                     </div>
                 </div>
@@ -583,8 +583,8 @@
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Healthy Projects</h5>
-                            <h2 class="card-text">98</h2>
-                            <small>73% of Portfolio</small>
+                            <h2 class="card-text" id="healthy-projects-count">98</h2>
+                            <small id="healthy-projects-percentage">73% of Portfolio</small>
                         </div>
                     </div>
                 </div>
@@ -592,8 +592,8 @@
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">At Risk</h5>
-                            <h2 class="card-text">24</h2>
-                            <small>18% of Portfolio</small>
+                            <h2 class="card-text" id="at-risk-count">24</h2>
+                            <small id="at-risk-percentage">18% of Portfolio</small>
                         </div>
                     </div>
                 </div>
@@ -601,8 +601,8 @@
                     <div class="card bg-danger text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Critical</h5>
-                            <h2 class="card-text">12</h2>
-                            <small>9% of Portfolio</small>
+                            <h2 class="card-text" id="critical-count">12</h2>
+                            <small id="critical-percentage">9% of Portfolio</small>
                         </div>
                     </div>
                 </div>
@@ -610,7 +610,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Overall Health</h5>
-                            <h2 class="card-text">85%</h2>
+                            <h2 class="card-text" id="overall-health-score">85%</h2>
                             <small>Portfolio Score</small>
                         </div>
                     </div>
@@ -680,7 +680,7 @@
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Data Completeness</h5>
-                            <h2 class="card-text">92%</h2>
+                            <h2 class="card-text" id="data-completeness-score">92%</h2>
                             <small>High Quality</small>
                         </div>
                     </div>
@@ -689,7 +689,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Data Accuracy</h5>
-                            <h2 class="card-text">88%</h2>
+                            <h2 class="card-text" id="data-accuracy-score">88%</h2>
                             <small>Good Quality</small>
                         </div>
                     </div>
@@ -698,7 +698,7 @@
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Data Consistency</h5>
-                            <h2 class="card-text">85%</h2>
+                            <h2 class="card-text" id="data-consistency-score">85%</h2>
                             <small>Needs Improvement</small>
                         </div>
                     </div>
@@ -707,7 +707,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Overall Quality</h5>
-                            <h2 class="card-text">88%</h2>
+                            <h2 class="card-text" id="overall-quality-score">88%</h2>
                             <small>Portfolio Score</small>
                         </div>
                     </div>
@@ -776,7 +776,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Total Actual Cost</h5>
-                            <h2 class="card-text">$28.6M</h2>
+                            <h2 class="card-text" id="total-actual-cost-display">$28.6M</h2>
                             <small>Year to Date</small>
                         </div>
                     </div>
@@ -785,7 +785,7 @@
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Budget Variance</h5>
-                            <h2 class="card-text">-79.9%</h2>
+                            <h2 class="card-text" id="budget-variance-display">-79.9%</h2>
                             <small>Under Budget</small>
                         </div>
                     </div>
@@ -794,7 +794,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Actual Benefits</h5>
-                            <h2 class="card-text">$28.1M</h2>
+                            <h2 class="card-text" id="actual-benefits-display">$28.1M</h2>
                             <small>Realized Value</small>
                         </div>
                     </div>
@@ -803,7 +803,7 @@
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">ROI</h5>
-                            <h2 class="card-text">-1.7%</h2>
+                            <h2 class="card-text" id="roi-display">-1.7%</h2>
                             <small>Needs Improvement</small>
                         </div>
                     </div>
@@ -873,7 +873,7 @@
                     <div class="card bg-primary text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Upcoming Milestones</h5>
-                            <h2 class="card-text">47</h2>
+                            <h2 class="card-text" id="upcoming-milestones-count">47</h2>
                             <small>Next 30 Days</small>
                         </div>
                     </div>
@@ -882,7 +882,7 @@
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Completed This Month</h5>
-                            <h2 class="card-text">23</h2>
+                            <h2 class="card-text" id="completed-milestones-count">23</h2>
                             <small>Milestones</small>
                         </div>
                     </div>
@@ -891,7 +891,7 @@
                     <div class="card bg-warning text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Overdue</h5>
-                            <h2 class="card-text">8</h2>
+                            <h2 class="card-text" id="overdue-count">8</h2>
                             <small>Requires Attention</small>
                         </div>
                     </div>
@@ -900,7 +900,7 @@
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
                             <h5 class="card-title">Project Starts</h5>
-                            <h2 class="card-text">12</h2>
+                            <h2 class="card-text" id="project-starts-count">12</h2>
                             <small>This Quarter</small>
                         </div>
                     </div>
@@ -991,7 +991,7 @@
                             <h5 class="mb-0">Upcoming Milestones</h5>
                         </div>
                         <div class="card-body">
-                            <div class="list-group list-group-flush">
+                            <div class="list-group list-group-flush" id="upcoming-milestones-list">
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>Project P-00001</strong><br>
@@ -1039,7 +1039,7 @@
                                             <th>Status</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="project-deadlines-table">
                                         <tr>
                                             <td>P-00001</td>
                                             <td>Sep 15, 2024</td>
@@ -2004,5 +2004,5 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', path='/js/comprehensive_dashboard.js') }}?v=2.0"></script>
+<script src="{{ url_for('static', path='/js/comprehensive_dashboard.js') }}?v=21.0"></script>
 {% endblock %}
