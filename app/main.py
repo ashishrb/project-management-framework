@@ -4,6 +4,7 @@ Simplified FastAPI application for GenAI Metrics Dashboard Demo
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 import time
 import logging
 
@@ -77,6 +78,13 @@ async def health_check():
         "timestamp": time.time(),
         "version": settings.VERSION
     }
+
+# Direct login endpoint for frontend compatibility
+@app.post("/api/login")
+async def login_endpoint(request: Request, response: Response):
+    """Direct login endpoint for frontend compatibility"""
+    from app.api.v1.endpoints.auth import login
+    return await login(request, response)
 
 # API status endpoint
 @app.get("/status")
