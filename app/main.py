@@ -91,15 +91,19 @@ async def login_endpoint(request: Request, response: Response):
 async def dashboard_stats_endpoint(request: Request):
     """Direct dashboard stats endpoint for frontend compatibility"""
     return {
-        "total_projects": 5,
-        "active_projects": 5,
-        "completed_projects": 0,
-        "at_risk_projects": 0,
-        "off_track_projects": 0,
-        "total_features": 270,
-        "completed_features": 76,
-        "total_backlogs": 226,
-        "completion_rate": 28.1
+        "projects": {
+            "total": 5,
+            "on_track": 4,
+            "at_risk": 1,
+            "completed": 0
+        },
+        "backlog": {
+            "total": 226,
+            "high_priority": 45,
+            "in_progress": 89,
+            "completed": 92
+        },
+        "overdue_tasks": 3
     }
 
 @app.get("/api/v1/dashboard/comprehensive")
@@ -130,6 +134,159 @@ async def dashboard_comprehensive_endpoint(request: Request):
             "completed": 92
         },
         "projects": []
+    }
+
+# Direct projects endpoint for manager dashboard
+@app.get("/api/v1/projects")
+async def projects_endpoint(request: Request):
+    """Direct projects endpoint for manager dashboard compatibility"""
+    return {
+        "projects": [
+            {
+                "id": 1,
+                "name": "AI-Powered Analytics Platform",
+                "description": "Develop an AI-driven analytics platform for business intelligence",
+                "status_id": 1,
+                "priority_id": 3,
+                "project_manager": "manager1",
+                "percent_complete": 75.5,
+                "start_date": "2024-01-15",
+                "due_date": "2024-06-30",
+                "budget_amount": 500000,
+                "actual_cost": 375000,
+                "created_at": "2024-01-15T09:00:00Z",
+                "updated_at": "2024-09-15T14:30:00Z"
+            },
+            {
+                "id": 2,
+                "name": "Customer Experience Enhancement",
+                "description": "Improve customer experience through digital transformation",
+                "status_id": 1,
+                "priority_id": 2,
+                "project_manager": "manager1",
+                "percent_complete": 45.2,
+                "start_date": "2024-02-01",
+                "due_date": "2024-08-15",
+                "budget_amount": 300000,
+                "actual_cost": 135000,
+                "created_at": "2024-02-01T10:00:00Z",
+                "updated_at": "2024-09-15T16:45:00Z"
+            },
+            {
+                "id": 3,
+                "name": "Data Migration Initiative",
+                "description": "Migrate legacy systems to cloud infrastructure",
+                "status_id": 3,
+                "priority_id": 4,
+                "project_manager": "manager1",
+                "percent_complete": 25.8,
+                "start_date": "2024-03-01",
+                "due_date": "2024-12-31",
+                "budget_amount": 750000,
+                "actual_cost": 195000,
+                "created_at": "2024-03-01T08:00:00Z",
+                "updated_at": "2024-09-15T11:20:00Z"
+            },
+            {
+                "id": 4,
+                "name": "Mobile App Development",
+                "description": "Create mobile application for customer engagement",
+                "status_id": 1,
+                "priority_id": 3,
+                "project_manager": "manager1",
+                "percent_complete": 60.0,
+                "start_date": "2024-01-20",
+                "due_date": "2024-07-15",
+                "budget_amount": 400000,
+                "actual_cost": 240000,
+                "created_at": "2024-01-20T09:30:00Z",
+                "updated_at": "2024-09-15T13:15:00Z"
+            },
+            {
+                "id": 5,
+                "name": "Security Infrastructure Upgrade",
+                "description": "Enhance security infrastructure and compliance",
+                "status_id": 1,
+                "priority_id": 4,
+                "project_manager": "manager1",
+                "percent_complete": 85.3,
+                "start_date": "2024-01-10",
+                "due_date": "2024-05-30",
+                "budget_amount": 600000,
+                "actual_cost": 512000,
+                "created_at": "2024-01-10T07:00:00Z",
+                "updated_at": "2024-09-15T15:30:00Z"
+            }
+        ]
+    }
+
+# Direct backlog endpoint for manager dashboard
+@app.get("/api/v1/backlogs")
+async def backlogs_endpoint(request: Request):
+    """Direct backlog endpoint for manager dashboard compatibility"""
+    return {
+        "backlogs": [
+            {
+                "id": 1,
+                "name": "User Authentication Module",
+                "description": "Implement secure user authentication system",
+                "status_id": 2,
+                "priority_id": 4,
+                "complexity": "Medium",
+                "effort_estimate": 8.5,
+                "target_quarter": "Q1 2024",
+                "created_at": "2024-01-15T09:00:00Z",
+                "updated_at": "2024-09-15T14:30:00Z"
+            },
+            {
+                "id": 2,
+                "name": "Dashboard Analytics",
+                "description": "Create interactive dashboard with real-time analytics",
+                "status_id": 3,
+                "priority_id": 3,
+                "complexity": "High",
+                "effort_estimate": 15.0,
+                "target_quarter": "Q2 2024",
+                "created_at": "2024-02-01T10:00:00Z",
+                "updated_at": "2024-09-15T16:45:00Z"
+            },
+            {
+                "id": 3,
+                "name": "API Integration",
+                "description": "Integrate with third-party APIs for data synchronization",
+                "status_id": 1,
+                "priority_id": 2,
+                "complexity": "Low",
+                "effort_estimate": 5.0,
+                "target_quarter": "Q1 2024",
+                "created_at": "2024-03-01T08:00:00Z",
+                "updated_at": "2024-09-15T11:20:00Z"
+            },
+            {
+                "id": 4,
+                "name": "Mobile Responsiveness",
+                "description": "Ensure all components are mobile-responsive",
+                "status_id": 2,
+                "priority_id": 3,
+                "complexity": "Medium",
+                "effort_estimate": 12.0,
+                "target_quarter": "Q2 2024",
+                "created_at": "2024-01-20T09:30:00Z",
+                "updated_at": "2024-09-15T13:15:00Z"
+            },
+            {
+                "id": 5,
+                "name": "Performance Optimization",
+                "description": "Optimize application performance and loading times",
+                "status_id": 4,
+                "priority_id": 4,
+                "complexity": "High",
+                "effort_estimate": 20.0,
+                "target_quarter": "Q3 2024",
+                "created_at": "2024-01-10T07:00:00Z",
+                "updated_at": "2024-09-15T15:30:00Z"
+            }
+        ]
     }
 
 @app.get("/api/v1/ai-analysis/comprehensive")
