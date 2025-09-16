@@ -184,22 +184,229 @@ graph TB
 - **Maintenance Projects**: System upkeep and support (1-3 months)
 - **Enhancement Projects**: Feature additions and improvements (1-6 months)
 
-**Project Hierarchy Example**:
+**Complete Project Hierarchy Structure**:
+
 ```
-Digital Transformation Portfolio (L1)
-├── AI/ML Initiatives (L2)
-│   ├── AI-Powered Analytics Platform (Strategic)
-│   ├── Machine Learning Model Training (Enhancement)
-│   └── Data Pipeline Optimization (Maintenance)
-├── Cloud Migration (L2)
-│   ├── Infrastructure Modernization (Strategic)
-│   ├── Application Migration (Operational)
-│   └── Security Hardening (Enhancement)
-└── Process Automation (L2)
-    ├── Workflow Automation (Strategic)
-    ├── Document Processing (Operational)
-    └── Integration Services (Enhancement)
+🏢 ENTERPRISE PROJECT MANAGEMENT FRAMEWORK
+│
+├── 📊 PORTFOLIO LEVEL (L1) - Strategic Business Units
+│   │
+│   ├── 🚀 Digital Transformation Portfolio
+│   │   ├── 📈 AI/ML Initiatives (L2)
+│   │   │   ├── P-47505: AI-Powered Analytics Platform (Strategic) [$500K, 6 months]
+│   │   │   │   ├── Features: 45 features across 8 modules
+│   │   │   │   ├── Tasks: 120+ tasks with dependencies
+│   │   │   │   ├── Resources: 8 team members, 75% allocation
+│   │   │   │   └── Risks: 12 risks (3 High, 5 Medium, 4 Low)
+│   │   │   ├── P-80008: Machine Learning Model Training (Enhancement) [$200K, 4 months]
+│   │   │   │   ├── Features: 28 features across 5 modules
+│   │   │   │   ├── Tasks: 85+ tasks with dependencies
+│   │   │   │   ├── Resources: 5 team members, 60% allocation
+│   │   │   │   └── Risks: 8 risks (2 High, 3 Medium, 3 Low)
+│   │   │   └── P-12345: Data Pipeline Optimization (Maintenance) [$100K, 3 months]
+│   │   │       ├── Features: 15 features across 3 modules
+│   │   │       ├── Tasks: 45+ tasks with dependencies
+│   │   │       ├── Resources: 3 team members, 40% allocation
+│   │   │       └── Risks: 5 risks (1 High, 2 Medium, 2 Low)
+│   │   │
+│   │   ├── ☁️ Cloud Migration (L2)
+│   │   │   ├── P-67890: Infrastructure Modernization (Strategic) [$800K, 8 months]
+│   │   │   │   ├── Features: 65 features across 12 modules
+│   │   │   │   ├── Tasks: 180+ tasks with dependencies
+│   │   │   │   ├── Resources: 12 team members, 85% allocation
+│   │   │   │   └── Risks: 18 risks (4 High, 8 Medium, 6 Low)
+│   │   │   ├── P-54321: Application Migration (Operational) [$300K, 5 months]
+│   │   │   │   ├── Features: 35 features across 7 modules
+│   │   │   │   ├── Tasks: 95+ tasks with dependencies
+│   │   │   │   ├── Resources: 6 team members, 70% allocation
+│   │   │   │   └── Risks: 10 risks (2 High, 4 Medium, 4 Low)
+│   │   │   └── P-98765: Security Hardening (Enhancement) [$150K, 3 months]
+│   │   │       ├── Features: 20 features across 4 modules
+│   │   │       ├── Tasks: 55+ tasks with dependencies
+│   │   │       ├── Resources: 4 team members, 50% allocation
+│   │   │       └── Risks: 7 risks (1 High, 3 Medium, 3 Low)
+│   │   │
+│   │   └── 🔄 Process Automation (L2)
+│   │       ├── P-11111: Workflow Automation (Strategic) [$400K, 6 months]
+│   │       │   ├── Features: 50 features across 9 modules
+│   │       │   ├── Tasks: 140+ tasks with dependencies
+│   │       │   ├── Resources: 9 team members, 80% allocation
+│   │       │   └── Risks: 14 risks (3 High, 6 Medium, 5 Low)
+│   │       ├── P-22222: Document Processing (Operational) [$180K, 4 months]
+│   │       │   ├── Features: 25 features across 5 modules
+│   │       │   ├── Tasks: 70+ tasks with dependencies
+│   │       │   ├── Resources: 4 team members, 55% allocation
+│   │       │   └── Risks: 8 risks (2 High, 3 Medium, 3 Low)
+│   │       └── P-33333: Integration Services (Enhancement) [$120K, 3 months]
+│   │           ├── Features: 18 features across 3 modules
+│   │           ├── Tasks: 50+ tasks with dependencies
+│   │           ├── Resources: 3 team members, 45% allocation
+│   │           └── Risks: 6 risks (1 High, 2 Medium, 3 Low)
+│   │
+│   ├── 👥 Customer Experience Portfolio
+│   │   ├── 📱 Mobile Applications (L2)
+│   │   │   ├── P-44444: Mobile App Development (Strategic) [$600K, 7 months]
+│   │   │   │   ├── Features: 55 features across 10 modules
+│   │   │   │   ├── Tasks: 160+ tasks with dependencies
+│   │   │   │   ├── Resources: 10 team members, 75% allocation
+│   │   │   │   └── Risks: 15 risks (3 High, 7 Medium, 5 Low)
+│   │   │   └── P-55555: Mobile Analytics (Enhancement) [$200K, 4 months]
+│   │   │       ├── Features: 30 features across 6 modules
+│   │   │       ├── Tasks: 80+ tasks with dependencies
+│   │   │       ├── Resources: 5 team members, 60% allocation
+│   │   │       └── Risks: 9 risks (2 High, 4 Medium, 3 Low)
+│   │   │
+│   │   ├── 🌐 Web Platform (L2)
+│   │   │   ├── P-66666: Web Portal Redesign (Strategic) [$350K, 5 months]
+│   │   │   │   ├── Features: 40 features across 8 modules
+│   │   │   │   ├── Tasks: 110+ tasks with dependencies
+│   │   │   │   ├── Resources: 7 team members, 70% allocation
+│   │   │   │   └── Risks: 12 risks (2 High, 5 Medium, 5 Low)
+│   │   │   └── P-77777: User Experience Optimization (Enhancement) [$150K, 3 months]
+│   │   │       ├── Features: 22 features across 4 modules
+│   │   │       ├── Tasks: 60+ tasks with dependencies
+│   │   │       ├── Resources: 4 team members, 50% allocation
+│   │   │       └── Risks: 7 risks (1 High, 3 Medium, 3 Low)
+│   │   │
+│   │   └── 📞 Customer Support (L2)
+│   │       ├── P-88888: Support System Upgrade (Operational) [$250K, 4 months]
+│   │       │   ├── Features: 35 features across 7 modules
+│   │       │   ├── Tasks: 90+ tasks with dependencies
+│   │       │   ├── Resources: 6 team members, 65% allocation
+│   │       │   └── Risks: 10 risks (2 High, 4 Medium, 4 Low)
+│   │       └── P-99999: Chatbot Implementation (Enhancement) [$100K, 2 months]
+│   │           ├── Features: 15 features across 3 modules
+│   │           ├── Tasks: 40+ tasks with dependencies
+│   │           ├── Resources: 3 team members, 40% allocation
+│   │           └── Risks: 5 risks (1 High, 2 Medium, 2 Low)
+│   │
+│   └── ⚙️ Operational Excellence Portfolio
+│       ├── 🔧 System Maintenance (L2)
+│       │   ├── P-10101: Legacy System Updates (Maintenance) [$200K, 3 months]
+│       │   │   ├── Features: 25 features across 5 modules
+│       │   │   ├── Tasks: 65+ tasks with dependencies
+│       │   │   ├── Resources: 4 team members, 55% allocation
+│       │   │   └── Risks: 8 risks (2 High, 3 Medium, 3 Low)
+│       │   └── P-20202: Performance Optimization (Maintenance) [$120K, 2 months]
+│       │       ├── Features: 18 features across 3 modules
+│       │       ├── Tasks: 45+ tasks with dependencies
+│       │       ├── Resources: 3 team members, 45% allocation
+│       │       └── Risks: 6 risks (1 High, 2 Medium, 3 Low)
+│       │
+│       ├── 📊 Business Intelligence (L2)
+│       │   ├── P-30303: BI Dashboard Development (Strategic) [$400K, 6 months]
+│       │   │   ├── Features: 45 features across 8 modules
+│       │   │   ├── Tasks: 125+ tasks with dependencies
+│       │   │   ├── Resources: 8 team members, 75% allocation
+│       │   │   └── Risks: 13 risks (3 High, 5 Medium, 5 Low)
+│       │   └── P-40404: Data Warehouse Enhancement (Enhancement) [$180K, 4 months]
+│       │       ├── Features: 28 features across 5 modules
+│       │       ├── Tasks: 75+ tasks with dependencies
+│       │       ├── Resources: 5 team members, 60% allocation
+│       │       └── Risks: 9 risks (2 High, 4 Medium, 3 Low)
+│       │
+│       └── 🔒 Security & Compliance (L2)
+│           ├── P-50505: Security Framework Implementation (Strategic) [$500K, 8 months]
+│           │   ├── Features: 60 features across 12 modules
+│           │   ├── Tasks: 170+ tasks with dependencies
+│           │   ├── Resources: 11 team members, 85% allocation
+│           │   └── Risks: 16 risks (4 High, 7 Medium, 5 Low)
+│           └── P-60606: Compliance Monitoring (Operational) [$150K, 3 months]
+│               ├── Features: 20 features across 4 modules
+│               ├── Tasks: 55+ tasks with dependencies
+│               ├── Resources: 4 team members, 50% allocation
+│               └── Risks: 7 risks (1 High, 3 Medium, 3 Low)
+│
+├── 👥 RESOURCE ALLOCATION MATRIX
+│   │
+│   ├── 🧑‍💼 Project Managers (5 total)
+│   │   ├── PM-001: Sarah Johnson (Senior) - Digital Transformation Portfolio
+│   │   ├── PM-002: Michael Chen (Senior) - Customer Experience Portfolio
+│   │   ├── PM-003: Emily Rodriguez (Mid-level) - Operational Excellence Portfolio
+│   │   ├── PM-004: David Kim (Mid-level) - AI/ML Initiatives
+│   │   └── PM-005: Lisa Wang (Junior) - Cloud Migration
+│   │
+│   ├── 👨‍💻 Development Team (25 total)
+│   │   ├── Frontend Developers (8): React, Vue, Angular specialists
+│   │   ├── Backend Developers (10): Python, Java, Node.js specialists
+│   │   ├── DevOps Engineers (4): AWS, Azure, Docker specialists
+│   │   └── QA Engineers (3): Manual and automated testing specialists
+│   │
+│   ├── 🎨 Design Team (6 total)
+│   │   ├── UX Designers (3): User experience and interface design
+│   │   ├── UI Designers (2): Visual design and prototyping
+│   │   └── Design System Manager (1): Design standards and guidelines
+│   │
+│   └── 📊 Analytics Team (4 total)
+│       ├── Data Scientists (2): Machine learning and AI specialists
+│       ├── Business Analysts (2): Requirements and process analysis
+│       └── Data Engineers (2): Data pipeline and warehouse specialists
+│
+├── 📈 PORTFOLIO METRICS SUMMARY
+│   │
+│   ├── 📊 Overall Portfolio Health
+│   │   ├── Total Projects: 20 active projects
+│   │   ├── Total Budget: $6.2M across all portfolios
+│   │   ├── Total Features: 270+ features in development
+│   │   ├── Total Backlog Items: 226+ items prioritized
+│   │   ├── Total Resources: 40+ team members allocated
+│   │   └── Total Risks: 180+ risks tracked and managed
+│   │
+│   ├── 🎯 Portfolio Distribution
+│   │   ├── Digital Transformation: 8 projects (40%) - $2.5M budget
+│   │   ├── Customer Experience: 6 projects (30%) - $1.8M budget
+│   │   └── Operational Excellence: 6 projects (30%) - $1.9M budget
+│   │
+│   ├── 📅 Timeline Distribution
+│   │   ├── Strategic Projects (6+ months): 8 projects (40%)
+│   │   ├── Operational Projects (3-6 months): 7 projects (35%)
+│   │   ├── Enhancement Projects (1-6 months): 3 projects (15%)
+│   │   └── Maintenance Projects (1-3 months): 2 projects (10%)
+│   │
+│   └── 🚨 Risk Distribution
+│       ├── High/Critical Risks: 35 risks (19%)
+│       ├── Medium Risks: 85 risks (47%)
+│       └── Low Risks: 60 risks (34%)
+│
+└── 🔄 DEPENDENCY MATRIX
+    │
+    ├── Cross-Portfolio Dependencies
+    │   ├── AI Platform → Mobile App (Data API integration)
+    │   ├── Cloud Migration → Security Framework (Infrastructure)
+    │   ├── BI Dashboard → Data Warehouse (Data source)
+    │   └── Workflow Automation → Support System (Process integration)
+    │
+    ├── Resource Dependencies
+    │   ├── Senior Developers: Shared across Strategic projects
+    │   ├── DevOps Engineers: Supporting all Cloud Migration projects
+    │   ├── Data Scientists: Focused on AI/ML Initiatives
+    │   └── Security Specialists: Supporting Security Framework
+    │
+    └── Technology Dependencies
+        ├── Database Systems: PostgreSQL → Data Warehouse
+        ├── AI Services: Ollama → AI Platform → Mobile Analytics
+        ├── Cloud Infrastructure: AWS → All Cloud Migration projects
+        └── Security Tools: Security Framework → All other projects
 ```
+
+### Project Classification Matrix
+
+| Project Type | Duration | Budget Range | Team Size | Risk Level | Examples |
+|--------------|----------|--------------|-----------|------------|----------|
+| **Strategic** | 6-12 months | $400K-$800K | 8-12 people | High | AI Platform, Cloud Migration, Security Framework |
+| **Operational** | 3-6 months | $150K-$350K | 5-8 people | Medium | Application Migration, Support System, BI Dashboard |
+| **Enhancement** | 1-6 months | $100K-$200K | 3-5 people | Low-Medium | Mobile Analytics, UX Optimization, Data Warehouse |
+| **Maintenance** | 1-3 months | $50K-$200K | 2-4 people | Low | Legacy Updates, Performance Optimization, Compliance |
+
+### Resource Allocation by Portfolio
+
+| Portfolio | PM Count | Dev Team | Design Team | Analytics Team | Total Resources |
+|-----------|----------|----------|-------------|----------------|-----------------|
+| **Digital Transformation** | 2 | 12 | 3 | 2 | 17 (42.5%) |
+| **Customer Experience** | 2 | 8 | 2 | 1 | 11 (27.5%) |
+| **Operational Excellence** | 1 | 5 | 1 | 1 | 7 (17.5%) |
+| **Shared Services** | 0 | 0 | 0 | 0 | 5 (12.5%) |
+| **Total** | 5 | 25 | 6 | 4 | 40 (100%) |
 
 ### Deployment Architecture
 
