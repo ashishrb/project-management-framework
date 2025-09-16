@@ -140,6 +140,142 @@ async def ai_analysis_comprehensive_endpoint(request: Request):
         "health_score": 85.0
     }
 
+# Additional missing endpoints for charts and analytics
+@app.get("/api/v1/dashboards/summary-metrics")
+async def dashboards_summary_metrics_endpoint(request: Request):
+    """Dashboard summary metrics endpoint"""
+    return {
+        "total_projects": 5,
+        "active_projects": 5,
+        "completed_projects": 0,
+        "at_risk_projects": 0,
+        "off_track_projects": 0,
+        "total_features": 270,
+        "completed_features": 76,
+        "total_backlogs": 226,
+        "completion_rate": 28.1
+    }
+
+@app.get("/api/v1/dashboards/genai-metrics")
+async def dashboards_genai_metrics_endpoint(request: Request):
+    """GenAI metrics endpoint"""
+    return {
+        "ai_adoption_rate": 75.5,
+        "automation_level": 68.2,
+        "data_quality_score": 82.1,
+        "model_accuracy": 89.3,
+        "processing_speed": 95.7,
+        "cost_reduction": 34.8
+    }
+
+@app.get("/api/v1/dashboards/metrics")
+async def dashboards_metrics_endpoint(request: Request):
+    """Dashboard metrics endpoint"""
+    return {
+        "kpis": {
+            "total_projects": 5,
+            "active_projects": 5,
+            "completed_projects": 0,
+            "at_risk_projects": 0,
+            "avg_portfolio_health": 85,
+            "budget_utilization": 72.0,
+            "total_budget": 2500000,
+            "total_actual_cost": 1800000,
+            "total_planned_benefits": 3200000
+        },
+        "projects": []
+    }
+
+@app.get("/api/v1/analytics/trend-analysis")
+async def analytics_trend_analysis_endpoint(request: Request):
+    """Trend analysis endpoint"""
+    return {
+        "period": "30",
+        "metrics": "all",
+        "trends": {
+            "project_completion": [20, 25, 30, 28, 32, 35, 38],
+            "budget_utilization": [65, 68, 72, 70, 75, 78, 80],
+            "team_productivity": [75, 78, 82, 80, 85, 88, 90],
+            "quality_score": [85, 87, 89, 88, 91, 93, 95]
+        },
+        "labels": ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5", "Week 6", "Week 7"]
+    }
+
+@app.get("/api/v1/analytics/predictive-analytics")
+async def analytics_predictive_endpoint(request: Request):
+    """Predictive analytics endpoint"""
+    return {
+        "predictions": {
+            "completion_forecast": 92.5,
+            "budget_variance": -8.2,
+            "risk_probability": 15.3,
+            "quality_trend": "improving",
+            "resource_utilization": 78.9
+        },
+        "confidence_scores": {
+            "completion_forecast": 87.2,
+            "budget_variance": 91.5,
+            "risk_probability": 82.8
+        }
+    }
+
+@app.get("/api/v1/analytics/comparative-analysis")
+async def analytics_comparative_endpoint(request: Request):
+    """Comparative analysis endpoint"""
+    return {
+        "compare_by": "function",
+        "metric": "completion",
+        "comparisons": {
+            "IT": {"completion_rate": 85.2, "projects": 3, "avg_health": 88},
+            "Finance": {"completion_rate": 78.5, "projects": 2, "avg_health": 82},
+            "Operations": {"completion_rate": 92.1, "projects": 1, "avg_health": 95}
+        },
+        "benchmarks": {
+            "industry_average": 76.8,
+            "company_target": 85.0,
+            "best_performer": "Operations"
+        }
+    }
+
+@app.get("/api/v1/analytics/real-time-metrics")
+async def analytics_realtime_endpoint(request: Request):
+    """Real-time metrics endpoint"""
+    return {
+        "timestamp": "2024-01-15T10:30:00Z",
+        "active_users": 12,
+        "system_load": 45.2,
+        "response_time": 125,
+        "error_rate": 0.8,
+        "throughput": 1250,
+        "queue_length": 3
+    }
+
+@app.get("/api/v1/ai-insights/insights")
+async def ai_insights_endpoint(request: Request):
+    """AI insights endpoint"""
+    return {
+        "insights": [
+            {
+                "title": "Project Performance Optimization",
+                "description": "AI analysis suggests focusing on resource allocation for Project Alpha to improve completion rate by 15%",
+                "severity": "medium",
+                "confidence": 87.5
+            },
+            {
+                "title": "Budget Variance Alert",
+                "description": "Project Beta is trending 12% over budget. Recommend immediate cost review and scope adjustment",
+                "severity": "high",
+                "confidence": 92.3
+            },
+            {
+                "title": "Quality Improvement Opportunity",
+                "description": "Implementing automated testing could reduce defect rate by 25% across all projects",
+                "severity": "low",
+                "confidence": 78.9
+            }
+        ]
+    }
+
 # API status endpoint
 @app.get("/status")
 async def api_status():
